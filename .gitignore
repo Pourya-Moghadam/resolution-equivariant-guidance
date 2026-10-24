@@ -1,0 +1,51 @@
+# Generated images and large outputs live on server storage, never in git
+results/**/*.png
+results/**/*.jpg
+results/**/*.jpeg
+results/**/*.webp
+results/**/*.npz
+results/**/*.pt
+images/
+outputs/
+samples/
+
+# Model weights, caches, embeddings
+weights/
+checkpoints/
+*.safetensors
+*.ckpt
+*.bin
+*.pth
+text_embeds/
+.cache/
+hf_cache/
+
+# Data
+data/
+*.parquet
+*.tar
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# LaTeX build
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.synctex.gz
+paper/*.fdb_latexmk
+paper/*.fls
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
