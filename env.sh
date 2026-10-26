@@ -21,7 +21,7 @@ unset _h
 # Every server's large disk is /data1; the same path is used everywhere.
 export REG_DATA=${REG_DATA:-/data1/moghadamp/reg_data}
 export HF_HOME=$REG_DATA/weights/hf
-export HF_HUB_ENABLE_HF_TRANSFER=1
+export HF_XET_HIGH_PERFORMANCE=1    # fast downloads; replaces the deprecated HF_HUB_ENABLE_HF_TRANSFER in huggingface_hub 2.x
 
 # Project venv (built by scripts/setup_env.sh); silently skipped on a server where it isn't built yet.
 _venv="$(dirname "${BASH_SOURCE[0]}")/.venv/bin/activate"
