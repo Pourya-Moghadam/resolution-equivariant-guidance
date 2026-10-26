@@ -27,7 +27,9 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 - [x] 2026-10-26: FLUX.1-dev loader (two-phase, true CFG, FP8 option): 1K 20.4 s; bf16 OOMs at 4K on 32 GB → FP8/allocator fix pending test
 - [x] 2026-10-26: DyPE implemented in our code (`reg/extrap/dype.py`, tested); FLUX 2K base vs DyPE both coherent (+2% time); **Lumina + DyPE: 2K clean, 4K coherent with residual repetition** (see 07)
 - [x] 2026-10-26: job runner `scripts/run_grid.py` (rows split across servers, resume-safe); `jobs/smoke.jsonl` 5-way split test
-- [ ] Run smoke grid on all 5; FLUX 4K (bf16+allocator fix vs FP8) on workers; Lumina 4K extrapolation variants (`jobs/extrap_4k.jsonl`)
+- [x] 2026-10-26: smoke grid split across the servers (10/10 rows, no duplicates); FLUX 4K needs FP8 (bf16 OOMs on shared cards); DyPE on FLUX at 4K: base collapses, DyPE coherent
+- [x] 2026-10-26: Lumina 4K extrapolation choice — 24-image comparison → **dynamic NTK** as default (less subject repetition than YaRN); open issue: speckle texture at 4K (`jobs/speckle_4k.jsonl` running)
+- [ ] reg2 unusable while another user's 30 GB kernel is resident; reg1/reg5 shared too (see SERVER_SETUP)
 - [x] 2026-10-26: Qwen-Image loader (FP8 weight-only via torchao, two-phase): 1K 145 s/image at 50 steps, 19.9 GB — 3.2× the estimate; Phase 3c budget note in 06. **Phase 0 step 3 complete for all three models.**
 - [ ] Eval pipeline (step 7); datasets/prompts (step 6); Qwen 2K timing before Phase 3 planning
 - [ ] Paste `scripts/server_audit.sh` output into 06 (optional now; key facts already recorded)

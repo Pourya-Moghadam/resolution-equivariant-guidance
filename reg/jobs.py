@@ -9,7 +9,8 @@ Row keys (all optional except ``prompt``):
   id            unique stem for the output files; default ``r{idx:06d}``
   model         lumina | flux | qwen (default lumina)
   prompt, negative, height, width, steps, guidance, seed
-  extrap        none | yarn | ntk;  static_extrap: bool (plain YaRN/NTK, no DyPE dynamics)
+  extrap        none | yarn | ntk;  static_extrap: bool (plain YaRN/NTK, no DyPE dynamics);
+                extrap_mscale: bool (default True; False drops YaRN's attention temperature, diagnostic)
   Lumina: cfg_trunc_ratio, cfg_normalization, shift
   FLUX:   true_cfg_scale, shift_mu, quant (fp8)
   tags          free-form dict copied into the result JSON

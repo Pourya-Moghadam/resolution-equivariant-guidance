@@ -83,7 +83,8 @@ class DyPEFluxPosEmbed(nn.Module):
     1024 px / 16 for FLUX).
     """
 
-    def __init__(self, theta: float, axes_dim: list[int], method: str = "yarn", dype: bool = True, base_patches: int = 64):
+    def __init__(self, theta: float, axes_dim: list[int], method: str = "yarn", dype: bool = True, base_patches: int = 64,
+                 use_mscale: bool = True):
         super().__init__()
         if method not in ("base", "ntk", "yarn"):
             raise ValueError(f"method must be base|ntk|yarn, got {method!r}")
@@ -92,6 +93,7 @@ class DyPEFluxPosEmbed(nn.Module):
         self.method = method
         self.dype = dype and method != "base"
         self.base_patches = base_patches
+        self.use_mscale = use_mscale  # YaRN attention-temperature factor; False = diagnostic
         self.t = 1.0  # normalized noise level of the current step; 1 = pure noise
 
     def set_timestep(self, t: float) -> None:
@@ -112,6 +114,8 @@ class DyPEFluxPosEmbed(nn.Module):
             mscale = 1.0
             if self.method == "yarn" and scale > 1:
                 freqs, mscale = yarn_freqs(dim, self.theta, scale, self.kappa, self.base_patches, fdtype, device)
+                if not self.use_mscale:
+                    mscale = 1.0
             elif self.method == "ntk" and scale > 1:
                 freqs = ntk_freqs(dim, self.theta, scale, self.kappa, fdtype, device)
             else:
@@ -135,9 +139,10 @@ class DyPELuminaRope:
     level DyPE wants is ``1 - timestep``; ``set_timestep`` takes the noise level directly.
     """
 
-    def __init__(self, rope: nn.Module, method: str = "yarn", dype: bool = True, base_patches: int = 64):
+    def __init__(self, rope: nn.Module, method: str = "yarn", dype: bool = True, base_patches: int = 64, use_mscale: bool = True):
         if method not in ("base", "ntk", "yarn"):
             raise ValueError(f"method must be base|ntk|yarn, got {method!r}")
+        self.use_mscale = use_mscale
         self.rope = rope
         self.theta = float(rope.theta)
         self.axes_dim = list(rope.axes_dim)
@@ -169,6 +174,8 @@ class DyPELuminaRope:
             mscale = 1.0
             if self.method == "yarn" and scale > 1:
                 freqs, mscale = yarn_freqs(dim, self.theta, scale, self.kappa, self.base_patches, fdtype, device)
+                if not self.use_mscale:
+                    mscale = 1.0
             elif self.method == "ntk" and scale > 1:
                 freqs = ntk_freqs(dim, self.theta, scale, self.kappa, fdtype, device)
             else:
@@ -180,7 +187,7 @@ class DyPELuminaRope:
         return torch.cat(out, dim=-1)
 
 
-def apply_dype(transformer: nn.Module, method: str = "yarn", dype: bool = True, base_patches: int = 64):
+def apply_dype(transformer: nn.Module, method: str = "yarn", dype: bool = True, base_patches: int = 64, use_mscale: bool = True):
     """Enable DyPE on a FLUX (``pos_embed``) or Lumina-2 (``rope_embedder``) transformer.
 
     Wraps ``forward`` so the per-step timestep reaches the position embedding: FLUX passes
@@ -191,13 +198,13 @@ def apply_dype(transformer: nn.Module, method: str = "yarn", dype: bool = True, 
         if not hasattr(transformer, "_dype_orig"):
             transformer._dype_orig = ("flux", transformer.pos_embed, transformer.forward)
         stock = transformer._dype_orig[1]
-        pe = DyPEFluxPosEmbed(stock.theta, stock.axes_dim, method=method, dype=dype, base_patches=base_patches)
+        pe = DyPEFluxPosEmbed(stock.theta, stock.axes_dim, method=method, dype=dype, base_patches=base_patches, use_mscale=use_mscale)
         transformer.pos_embed = pe
         to_noise_level = lambda ts: float(ts.reshape(-1)[0])  # noqa: E731
     elif hasattr(transformer, "rope_embedder"):  # Lumina-Image 2.0
         if not hasattr(transformer, "_dype_orig"):
             transformer._dype_orig = ("lumina", transformer.rope_embedder._get_freqs_cis, transformer.forward)
-        pe = DyPELuminaRope(transformer.rope_embedder, method=method, dype=dype, base_patches=base_patches)
+        pe = DyPELuminaRope(transformer.rope_embedder, method=method, dype=dype, base_patches=base_patches, use_mscale=use_mscale)
         pe._stock_get = transformer._dype_orig[1]
         transformer.rope_embedder._get_freqs_cis = pe
         to_noise_level = lambda ts: 1.0 - float(ts.reshape(-1)[0])  # noqa: E731

@@ -131,7 +131,7 @@ def main() -> None:
             if r["extrap"] == "none":
                 remove_dype(pipe.transformer)
             else:
-                apply_dype(pipe.transformer, method=r["extrap"], dype=not r["static_extrap"])
+                apply_dype(pipe.transformer, method=r["extrap"], dype=not r["static_extrap"], use_mscale=r.get("extrap_mscale", True))
             t0 = time.perf_counter()
             try:
                 images, info = model.generate([r["prompt"]], **generate_kwargs(r))
