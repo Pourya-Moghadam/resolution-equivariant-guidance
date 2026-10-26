@@ -1,0 +1,10 @@
+{"id": "smoke_p0_s0", "model": "lumina", "prompt": "A red fox standing in fresh snow at dawn, soft golden light, photorealistic", "seed": 0, "height": 1024, "width": 1024}
+{"id": "smoke_p0_s1", "model": "lumina", "prompt": "A red fox standing in fresh snow at dawn, soft golden light, photorealistic", "seed": 1, "height": 1024, "width": 1024}
+{"id": "smoke_p1_s0", "model": "lumina", "prompt": "A lighthouse on a rocky coast under a storm, dramatic waves", "seed": 0, "height": 1024, "width": 1024}
+{"id": "smoke_p1_s1", "model": "lumina", "prompt": "A lighthouse on a rocky coast under a storm, dramatic waves", "seed": 1, "height": 1024, "width": 1024}
+{"id": "smoke_p2_s0", "model": "lumina", "prompt": "A bowl of ramen on a wooden table, steam rising, shallow depth of field", "seed": 0, "height": 1024, "width": 1024}
+{"id": "smoke_p2_s1", "model": "lumina", "prompt": "A bowl of ramen on a wooden table, steam rising, shallow depth of field", "seed": 1, "height": 1024, "width": 1024}
+{"id": "smoke_p3_s0", "model": "lumina", "prompt": "An astronaut riding a bicycle on the moon, Earth in the sky", "seed": 0, "height": 1024, "width": 1024}
+{"id": "smoke_p3_s1", "model": "lumina", "prompt": "An astronaut riding a bicycle on the moon, Earth in the sky", "seed": 1, "height": 1024, "width": 1024}
+{"id": "smoke_p4_s0", "model": "lumina", "prompt": "A cathedral interior with stained glass, volumetric light", "seed": 0, "height": 1024, "width": 1024}
+{"id": "smoke_p4_s1", "model": "lumina", "prompt": "A cathedral interior with stained glass, volumetric light", "seed": 1, "height": 1024, "width": 1024}
