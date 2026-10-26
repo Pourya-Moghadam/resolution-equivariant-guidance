@@ -32,6 +32,27 @@ def git_sha() -> str:
         return "unknown"
 
 
+NEEDED_GB = {"lumina": 14, "flux": 26, "qwen": 22}  # bf16 Lumina / bf16 FLUX / fp8 Qwen at 1K, from measured peaks + headroom
+
+
+def wait_for_gpu(needed_gb: float, timeout_s: float, poll_s: float = 60.0) -> float:
+    """Block until `needed_gb` of GPU memory is free (the servers are shared with other users).
+
+    Returns the free GB when the wait ended; raises TimeoutError if it never came free.
+    """
+    import torch
+
+    t0 = time.perf_counter()
+    while True:
+        free_gb = torch.cuda.mem_get_info()[0] / 2**30
+        if free_gb >= needed_gb:
+            return free_gb
+        if time.perf_counter() - t0 > timeout_s:
+            raise TimeoutError(f"only {free_gb:.1f} GB free after {timeout_s:.0f}s, need {needed_gb} GB (another user on the GPU?)")
+        print(f"[{socket.gethostname()}] waiting for GPU: {free_gb:.1f} GB free, need {needed_gb} GB", flush=True)
+        time.sleep(poll_s)
+
+
 def load_model(model: str, quant: str | None):
     if model == "lumina":
         from reg.models.lumina import Lumina
@@ -69,6 +90,7 @@ def main() -> None:
     ap.add_argument("--server-id", type=int, default=int(os.environ.get("REG_SERVER_ID", 0)))
     ap.add_argument("--num-servers", type=int, default=int(os.environ.get("REG_NUM_SERVERS", 1)))
     ap.add_argument("--dry-run", action="store_true", help="list this server's pending rows and exit")
+    ap.add_argument("--gpu-wait", type=float, default=6 * 3600, help="seconds to wait for a shared GPU to free up before loading a model (0 = don't wait)")
     args = ap.parse_args()
 
     out = Path(args.out)
@@ -95,6 +117,10 @@ def main() -> None:
 
     n_ok = n_fail = 0
     for (model_name, quant), group in groups.items():
+        needed = NEEDED_GB[model_name] + (6 if max(r["height"] * r["width"] for r in group) > 2048**2 else 0)
+        if args.gpu_wait > 0:
+            free = wait_for_gpu(needed, args.gpu_wait)
+            print(f"[{host}] loading {model_name} ({quant or 'bf16'}): {free:.1f} GB free, need ~{needed} GB", flush=True)
         model = load_model(model_name, quant)
         if model_name != "lumina":  # two-phase models: fill the cache with encoders resident, then free them
             for r in group:

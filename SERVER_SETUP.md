@@ -16,6 +16,8 @@ GitHub (private, backup)  <--git push/pull-->  reg1 (hub)  --ssh: push_code / rs
 
 All five are Ubuntu 24.04 with Python 3.12.3, one RTX 5000 Ada (32 GB), and an 11 TB `/data1` disk. No shared filesystem.
 
+**The GPUs are shared with other users.** Seen on 2026-10-26: a 1.3 GB process (`alatrashs`) on reg1 all day, and a 30 GB Jupyter kernel (`dehghanim`) on reg2 that made every job there fail at model load. `run_grid.py` therefore waits (default up to 6 h, `--gpu-wait`) for enough free memory before loading a model instead of crashing, and a crashed host's rows stay pending, so re-running its server id on an idle host (`--server-id N`) picks them up. Check before planning a long job: `bash scripts/fanout.sh 'nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader'`.
+
 - **reg1 = hub**: the only machine you log in to. Holds the working repo at `/data1/moghadamp/reg-research` (symlinked as `~/reg`) and the data root `/data1/moghadamp/reg_data` (weights, datasets, text-embedding caches, all collected outputs).
 - **reg2–5 = workers**: identical environment at the identical paths. They never contact GitHub or reg1; reg1 pushes code and data to them and pulls outputs back.
 - **GitHub** = backup and history for code, configs, job files, notes, result CSVs. Only reg1 talks to it (works non-interactively from reg1). Never scp code.
