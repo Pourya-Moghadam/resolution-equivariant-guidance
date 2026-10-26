@@ -7,3 +7,5 @@ lumina2,bf16,none,2048,2048,30,4.0,1,93.1,93.1,12.3,NVIDIA RTX 5000 Ada Generati
 lumina2,bf16,none,3072,3072,30,4.0,1,281.8,281.8,14.1,NVIDIA RTX 5000 Ada Generation,9c5296a
 lumina2,bf16,none,4096,4096,30,4.0,1,693.2,693.2,17.4,NVIDIA RTX 5000 Ada Generation,af2bad0
 qwen-image,fp8,none,1024,1024,50,4.0,1,144.8,144.8,19.9,NVIDIA RTX 5000 Ada Generation,18e1b76
+qwen-image,fp8,none,2048,2048,50,4.0,2,443.1,442.2,20.7,NVIDIA RTX 5000 Ada Generation,aa7b38f
+qwen-image,fp8,none,4096,4096,50,4.0,1,3098.6,3098.6,25.0,NVIDIA RTX 5000 Ada Generation,5fe01aa
