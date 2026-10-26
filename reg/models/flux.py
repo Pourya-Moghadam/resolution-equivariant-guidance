@@ -46,9 +46,14 @@ def schedule_mu(pipe: FluxPipeline, height: int, width: int) -> float:
 
 
 class Flux:
-    def __init__(self, device: str = "cuda", dtype: torch.dtype = torch.bfloat16):
+    def __init__(self, device: str = "cuda", dtype: torch.dtype = torch.bfloat16, quant: str | None = None):
+        """``quant="fp8"`` quantizes the transformer weights to float8 (torchao, weight-only,
+        ~12 GB instead of ~24 GB) after loading; needed for 4K on a 32 GB card."""
+        if quant not in (None, "fp8"):
+            raise ValueError(f"quant must be None or 'fp8', got {quant!r}")
         self.device = torch.device(device)
         self.dtype = dtype
+        self.quant = quant
         self.cache = TextEmbedCache(NAME, max_sequence_length=MAX_SEQ_LEN)
         self._enc: FluxPipeline | None = None
         self._pipe: FluxPipeline | None = None
@@ -95,6 +100,12 @@ class Flux:
                 torch_dtype=self.dtype,
             )
             self._pipe.to(self.device)
+            if self.quant == "fp8":
+                from torchao.quantization import Float8WeightOnlyConfig, quantize_
+
+                quantize_(self._pipe.transformer, Float8WeightOnlyConfig())
+                gc.collect()
+                torch.cuda.empty_cache()
             self._pipe.vae.enable_tiling()
             self._pipe.set_progress_bar_config(disable=True)
         return self._pipe
@@ -143,6 +154,7 @@ class Flux:
         torch.cuda.synchronize(self.device)
         info = {
             "model": NAME,
+            "quant": self.quant or "bf16",
             "true_cfg_scale": true_cfg_scale,
             "shift_mu": mu_used,
             "seconds": time.perf_counter() - t0,

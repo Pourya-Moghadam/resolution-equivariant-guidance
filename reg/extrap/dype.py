@@ -122,29 +122,108 @@ class DyPEFluxPosEmbed(nn.Module):
         return torch.cat(cos_out, dim=-1), torch.cat(sin_out, dim=-1)
 
 
-def apply_dype(transformer: nn.Module, method: str = "yarn", dype: bool = True, base_patches: int = 64) -> DyPEFluxPosEmbed:
-    """Swap the transformer's pos_embed for DyPE and feed it the per-step timestep.
+class DyPELuminaRope:
+    """DyPE for diffusers' ``Lumina2RotaryPosEmbed`` (complex ``freqs_cis``, gathered by position).
 
-    FLUX's pipeline passes ``timestep`` in (0, 1] with 1 = pure noise, which is DyPE's t.
-    Idempotent: calling again just reconfigures.
+    Replaces the module's ``_get_freqs_cis(ids)`` (ids: (B, S, 3) int; axis 0 = caption/time,
+    axes 1, 2 = patch rows/cols). Axis 0 keeps the stock gather; the spatial axes get the same
+    YaRN/NTK frequencies as the FLUX version, as complex exponentials with ``mscale`` as the
+    magnitude (q and k are both multiplied, so attention logits scale by mscale^2, exactly as
+    scaling cos and sin does for FLUX).
+
+    Lumina's transformer receives ``timestep = 1 - t/1000`` (1 = clean image), so the noise
+    level DyPE wants is ``1 - timestep``; ``set_timestep`` takes the noise level directly.
     """
-    if not hasattr(transformer, "_dype_orig"):
-        transformer._dype_orig = (transformer.pos_embed, transformer.forward)
-    stock = transformer._dype_orig[0]
-    pe = DyPEFluxPosEmbed(stock.theta, stock.axes_dim, method=method, dype=dype, base_patches=base_patches)
-    transformer.pos_embed = pe
-    orig_forward = transformer._dype_orig[1]
+
+    def __init__(self, rope: nn.Module, method: str = "yarn", dype: bool = True, base_patches: int = 64):
+        if method not in ("base", "ntk", "yarn"):
+            raise ValueError(f"method must be base|ntk|yarn, got {method!r}")
+        self.rope = rope
+        self.theta = float(rope.theta)
+        self.axes_dim = list(rope.axes_dim)
+        self.method = method
+        self.dype = dype and method != "base"
+        self.base_patches = base_patches
+        self.t = 1.0
+        self._stock_get = rope._get_freqs_cis
+
+    def set_timestep(self, t: float) -> None:
+        self.t = float(t)
+
+    @property
+    def kappa(self) -> float:
+        return self.t**2 if self.dype else 1.0
+
+    def __call__(self, ids: torch.Tensor) -> torch.Tensor:
+        device = ids.device
+        fdtype = torch.float64 if device.type != "mps" else torch.float32
+        out = []
+        for i, dim in enumerate(self.axes_dim):
+            table = self.rope.freqs_cis[i].to(device)  # (axes_len, dim/2) complex
+            if i == 0:
+                index = ids[:, :, i : i + 1].repeat(1, 1, table.shape[-1]).to(torch.int64)
+                out.append(torch.gather(table.unsqueeze(0).repeat(index.shape[0], 1, 1), dim=1, index=index))
+                continue
+            pos = ids[:, :, i].to(fdtype)  # (B, S)
+            scale = (pos.max().item() + 1) / self.base_patches
+            mscale = 1.0
+            if self.method == "yarn" and scale > 1:
+                freqs, mscale = yarn_freqs(dim, self.theta, scale, self.kappa, self.base_patches, fdtype, device)
+            elif self.method == "ntk" and scale > 1:
+                freqs = ntk_freqs(dim, self.theta, scale, self.kappa, fdtype, device)
+            else:
+                index = ids[:, :, i : i + 1].repeat(1, 1, table.shape[-1]).to(torch.int64)
+                out.append(torch.gather(table.unsqueeze(0).repeat(index.shape[0], 1, 1), dim=1, index=index))
+                continue
+            ang = pos.unsqueeze(-1) * freqs  # (B, S, dim/2)
+            out.append(torch.polar(torch.full_like(ang, mscale), ang).to(table.dtype))
+        return torch.cat(out, dim=-1)
+
+
+def apply_dype(transformer: nn.Module, method: str = "yarn", dype: bool = True, base_patches: int = 64):
+    """Enable DyPE on a FLUX (``pos_embed``) or Lumina-2 (``rope_embedder``) transformer.
+
+    Wraps ``forward`` so the per-step timestep reaches the position embedding: FLUX passes
+    ``timestep`` in (0, 1] with 1 = pure noise; Lumina passes ``1 - t/1000`` (1 = clean) and is
+    inverted here. Idempotent: calling again just reconfigures. Returns the DyPE object.
+    """
+    if hasattr(transformer, "pos_embed"):  # FLUX
+        if not hasattr(transformer, "_dype_orig"):
+            transformer._dype_orig = ("flux", transformer.pos_embed, transformer.forward)
+        stock = transformer._dype_orig[1]
+        pe = DyPEFluxPosEmbed(stock.theta, stock.axes_dim, method=method, dype=dype, base_patches=base_patches)
+        transformer.pos_embed = pe
+        to_noise_level = lambda ts: float(ts.reshape(-1)[0])  # noqa: E731
+    elif hasattr(transformer, "rope_embedder"):  # Lumina-Image 2.0
+        if not hasattr(transformer, "_dype_orig"):
+            transformer._dype_orig = ("lumina", transformer.rope_embedder._get_freqs_cis, transformer.forward)
+        pe = DyPELuminaRope(transformer.rope_embedder, method=method, dype=dype, base_patches=base_patches)
+        pe._stock_get = transformer._dype_orig[1]
+        transformer.rope_embedder._get_freqs_cis = pe
+        to_noise_level = lambda ts: 1.0 - float(ts.reshape(-1)[0])  # noqa: E731
+    else:
+        raise TypeError(f"{type(transformer).__name__}: no pos_embed (FLUX) or rope_embedder (Lumina2) found")
+
+    orig_forward = transformer._dype_orig[2]
 
     def forward(*args, timestep=None, **kwargs):
+        if timestep is None and len(args) >= 2:  # Lumina's forward(hidden_states, timestep, ...) may be positional
+            timestep = args[1]
         if timestep is not None:
-            pe.set_timestep(float(timestep.reshape(-1)[0]))
-        return orig_forward(*args, timestep=timestep, **kwargs)
+            pe.set_timestep(to_noise_level(timestep))
+        return orig_forward(*args, **({} if timestep is None or len(args) >= 2 else {"timestep": timestep}), **kwargs)
 
     transformer.forward = forward
     return pe
 
 
 def remove_dype(transformer: nn.Module) -> None:
-    if hasattr(transformer, "_dype_orig"):
-        transformer.pos_embed, transformer.forward = transformer._dype_orig
-        del transformer._dype_orig
+    if not hasattr(transformer, "_dype_orig"):
+        return
+    kind, stock, orig_forward = transformer._dype_orig
+    if kind == "flux":
+        transformer.pos_embed = stock
+    else:
+        transformer.rope_embedder._get_freqs_cis = stock
+    transformer.forward = orig_forward
+    del transformer._dype_orig

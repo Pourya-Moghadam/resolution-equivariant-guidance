@@ -42,6 +42,9 @@ def main() -> None:
     ap.add_argument("--shift", type=float, default=None, help="Lumina: override the fixed scheduler shift (default 6)")
     ap.add_argument("--true-cfg", type=float, default=1.0, help="FLUX: real CFG scale with --negative (>1 enables)")
     ap.add_argument("--shift-mu", type=float, default=None, help="FLUX: override the dynamic-shift mu")
+    ap.add_argument("--quant", default=None, choices=[None, "fp8"], help="FLUX: float8 weight-only transformer (needed at 4K on 32 GB)")
+    ap.add_argument("--extrap", default="none", choices=["none", "yarn", "ntk"], help="RoPE extrapolation (DyPE unless --static-extrap)")
+    ap.add_argument("--static-extrap", action="store_true", help="plain YaRN/NTK without DyPE's kappa(t) dynamics")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--n", type=int, default=1, help="images (seeds seed..seed+n-1), one batch")
     ap.add_argument("--out", default=os.path.join(os.environ.get("REG_DATA", "."), "outputs", "smoke"))
@@ -67,13 +70,22 @@ def main() -> None:
     else:
         from reg.models.flux import Flux
 
-        model = Flux()
+        model = Flux(quant=args.quant)
         extra = dict(true_cfg_scale=args.true_cfg, shift_mu=args.shift_mu)
-        variant_tag = (f"_cfg{args.true_cfg:g}" if args.true_cfg > 1 else "") + (
+        variant_tag = (f"_{args.quant}" if args.quant else "") + (f"_cfg{args.true_cfg:g}" if args.true_cfg > 1 else "") + (
             f"_mu{args.shift_mu:g}" if args.shift_mu is not None else "")
+    if args.extrap != "none":
+        from reg.extrap.dype import apply_dype
+
+        if args.model == "flux":  # load order matters for memory: encoders first, then the DiT
+            model.encode([args.prompt] * args.n, args.negative if args.true_cfg > 1 else None)
+            model.free_text_encoders()
+        apply_dype(model.pipe.transformer, method=args.extrap, dype=not args.static_extrap)
+        variant_tag += f"_{'' if args.static_extrap else 'dy_'}{args.extrap}"
     load_s = time.perf_counter() - t_load  # for FLUX the real loading happens inside generate()
 
     images, info = model.generate([args.prompt] * args.n, **common, **extra)
+    info["extrap"] = f"{'' if args.static_extrap else 'dy_'}{args.extrap}" if args.extrap != "none" else "none"
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)

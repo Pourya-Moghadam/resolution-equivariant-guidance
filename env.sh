@@ -22,6 +22,8 @@ unset _h
 export REG_DATA=${REG_DATA:-/data1/moghadamp/reg_data}
 export HF_HOME=$REG_DATA/weights/hf
 export HF_XET_HIGH_PERFORMANCE=1    # fast downloads; replaces the deprecated HF_HUB_ENABLE_HF_TRANSFER in huggingface_hub 2.x
+# Avoid allocator fragmentation: FLUX bf16 at 4K failed with 2.3 GB reserved-but-unallocated on a 32 GB card.
+export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}
 
 # Project venv (built by scripts/setup_env.sh); silently skipped on a server where it isn't built yet.
 _venv="$(dirname "${BASH_SOURCE[0]}")/.venv/bin/activate"

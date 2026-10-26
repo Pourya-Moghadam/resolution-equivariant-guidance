@@ -33,6 +33,7 @@ def main() -> None:
     ap.add_argument("--methods", default="base,yarn", help="comma list of base|ntk|yarn")
     ap.add_argument("--no-dype", action="store_true", help="static ntk/yarn instead of DyPE's kappa(t) dynamics")
     ap.add_argument("--shift-mu", type=float, default=DYPE_MU, help="schedule mu for all methods")
+    ap.add_argument("--quant", default=None, choices=[None, "fp8"], help="float8 weight-only transformer (4K on 32 GB)")
     ap.add_argument("--out", default=os.path.join(os.environ.get("REG_DATA", "."), "outputs", "dype_repro"))
     args = ap.parse_args()
 
@@ -41,7 +42,7 @@ def main() -> None:
     from reg.extrap.dype import apply_dype, remove_dype
     from reg.models.flux import Flux
 
-    model = Flux()
+    model = Flux(quant=args.quant)
     model.encode([args.prompt])  # fill the cache while only the text encoders are resident
     model.free_text_encoders()
     pipe = model.pipe
@@ -60,7 +61,7 @@ def main() -> None:
             [args.prompt], height=args.size, width=args.size, steps=args.steps,
             guidance_scale=args.guidance, seed=args.seed, shift_mu=args.shift_mu,
         )
-        stem = f"flux1-dev_{args.size}x{args.size}_{tag}_s{args.seed}"
+        stem = f"flux1-dev{'_' + args.quant if args.quant else ''}_{args.size}x{args.size}_{tag}_s{args.seed}"
         images[0].save(out / f"{stem}.png")
         rec = {
             **info, "method": tag, "dype": use_dype, "prompt": args.prompt, "height": args.size, "width": args.size,
