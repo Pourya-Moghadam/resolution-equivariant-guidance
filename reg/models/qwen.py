@@ -1,0 +1,163 @@
+"""Qwen-Image (20B DiT, 2D RoPE, real CFG): the large model for the main results.
+
+Memory on a 32 GB card: the bf16 transformer is 39 GB, so it is loaded into host RAM and
+quantized to float8 weight-only layer by layer onto the GPU (~20 GB) with torchao. The
+Qwen2.5-VL text encoder (16 GB) runs in a separate first phase that fills the embedding
+cache and is freed before the transformer loads, as for FLUX.
+
+Guidance is real CFG (``true_cfg_scale``, default 4.0; the pipeline has no embedded
+guidance). The negative prompt the authors use is a single space.
+
+Schedule: dynamic shifting calibrated to 256..8192 tokens (max_shift 0.9, exponential), so
+2K (16384 tokens) and 4K (65536) extrapolate mu; ``shift_mu`` overrides it.
+"""
+
+from __future__ import annotations
+
+import contextlib
+import gc
+import time
+from unittest import mock
+
+import torch
+from diffusers import QwenImagePipeline, QwenImageTransformer2DModel
+from diffusers.pipelines.qwenimage import pipeline_qwenimage
+
+from .embed_cache import TextEmbedCache
+
+MODEL_ID = "Qwen/Qwen-Image"
+NAME = "qwen-image"
+MAX_SEQ_LEN = 512  # the pipeline's __call__ default; encode_prompt truncates to it
+NEGATIVE_DEFAULT = " "
+
+
+def schedule_mu(pipe: QwenImagePipeline, height: int, width: int) -> float:
+    c = pipe.scheduler.config
+    return pipeline_qwenimage.calculate_shift(
+        (height // 16) * (width // 16),
+        c.get("base_image_seq_len", 256),
+        c.get("max_image_seq_len", 8192),
+        c.get("base_shift", 0.5),
+        c.get("max_shift", 0.9),
+    )
+
+
+class Qwen:
+    def __init__(self, device: str = "cuda", dtype: torch.dtype = torch.bfloat16, quant: str | None = "fp8"):
+        if quant not in (None, "fp8"):
+            raise ValueError(f"quant must be None or 'fp8', got {quant!r}")
+        self.device = torch.device(device)
+        self.dtype = dtype
+        self.quant = quant
+        self.cache = TextEmbedCache(NAME, max_sequence_length=MAX_SEQ_LEN)
+        self._enc: QwenImagePipeline | None = None
+        self._pipe: QwenImagePipeline | None = None
+
+    # -- text ---------------------------------------------------------------------------
+    def _encoder(self) -> QwenImagePipeline:
+        if self._enc is None:
+            self._enc = QwenImagePipeline.from_pretrained(MODEL_ID, transformer=None, vae=None, torch_dtype=self.dtype)
+            self._enc.to(self.device)
+        return self._enc
+
+    def _encode_raw(self, text: str) -> dict[str, torch.Tensor]:
+        """Unpadded (len, 3584) hidden states after the chat template is stripped (len <= 512)."""
+        embeds, mask = self._encoder()._get_qwen_prompt_embeds([text], device=self.device)
+        n = int(mask[0].sum().item())
+        return {"embeds": embeds[0, :n][:MAX_SEQ_LEN]}
+
+    def _batch(self, texts: list[str]) -> tuple[torch.Tensor, torch.Tensor]:
+        items = [self.cache.get(t, self._encode_raw, device=self.device)["embeds"] for t in texts]
+        n = max(e.shape[0] for e in items)
+        embeds = torch.stack([torch.cat([e, e.new_zeros(n - e.shape[0], e.shape[1])]) for e in items])
+        mask = torch.stack([torch.cat([torch.ones(e.shape[0], dtype=torch.long, device=e.device),
+                                       torch.zeros(n - e.shape[0], dtype=torch.long, device=e.device)]) for e in items])
+        return embeds, mask
+
+    def encode(self, prompts: list[str], negative_prompt: str | None = NEGATIVE_DEFAULT) -> dict[str, torch.Tensor]:
+        embeds, mask = self._batch(prompts)
+        out = {"prompt_embeds": embeds, "prompt_embeds_mask": mask}
+        if negative_prompt is not None:
+            n_embeds, n_mask = self._batch([negative_prompt or NEGATIVE_DEFAULT] * len(prompts))
+            out["negative_prompt_embeds"] = n_embeds
+            out["negative_prompt_embeds_mask"] = n_mask
+        return out
+
+    def free_text_encoders(self) -> None:
+        if self._enc is not None:
+            self._enc = None
+            gc.collect()
+            torch.cuda.empty_cache()
+
+    # -- images -------------------------------------------------------------------------
+    @property
+    def pipe(self) -> QwenImagePipeline:
+        if self._pipe is None:
+            transformer = QwenImageTransformer2DModel.from_pretrained(MODEL_ID, subfolder="transformer", torch_dtype=self.dtype)
+            if self.quant == "fp8":
+                from torchao.quantization import Float8WeightOnlyConfig, quantize_
+
+                quantize_(transformer, Float8WeightOnlyConfig(), device=self.device)  # CPU bf16 -> GPU fp8, layer by layer
+            transformer.to(self.device)
+            gc.collect()
+            self._pipe = QwenImagePipeline.from_pretrained(
+                MODEL_ID, transformer=transformer, text_encoder=None, tokenizer=None, torch_dtype=self.dtype
+            )
+            self._pipe.to(self.device)
+            self._pipe.vae.enable_tiling()
+            self._pipe.set_progress_bar_config(disable=True)
+            torch.cuda.empty_cache()
+        return self._pipe
+
+    @torch.inference_mode()
+    def generate(
+        self,
+        prompts: list[str],
+        height: int = 1024,
+        width: int = 1024,
+        steps: int = 50,
+        guidance_scale: float = 4.0,
+        seed: int = 0,
+        negative_prompt: str = NEGATIVE_DEFAULT,
+        shift_mu: float | None = None,
+        output_type: str = "pil",
+    ):
+        """Return (images, info). ``guidance_scale`` is the true CFG scale (<= 1 disables CFG)."""
+        embeds = self.encode(prompts, negative_prompt if guidance_scale > 1 else None)
+        self.free_text_encoders()
+        pipe = self.pipe
+        generators = [torch.Generator(self.device).manual_seed(seed + i) for i in range(len(prompts))]
+        mu_used = shift_mu if shift_mu is not None else schedule_mu(pipe, height, width)
+        shift_ctx = (
+            mock.patch.object(pipeline_qwenimage, "calculate_shift", lambda *a, **k: shift_mu)
+            if shift_mu is not None
+            else contextlib.nullcontext()
+        )
+        torch.cuda.reset_peak_memory_stats(self.device)
+        torch.cuda.synchronize(self.device)
+        t0 = time.perf_counter()
+        with shift_ctx:
+            images = pipe(
+                prompt=None,
+                negative_prompt=None,
+                true_cfg_scale=guidance_scale,
+                height=height,
+                width=width,
+                num_inference_steps=steps,
+                generator=generators,
+                max_sequence_length=MAX_SEQ_LEN,
+                output_type=output_type,
+                **embeds,
+            ).images
+        torch.cuda.synchronize(self.device)
+        info = {
+            "model": NAME,
+            "quant": self.quant or "bf16",
+            "true_cfg_scale": guidance_scale,
+            "shift_mu": mu_used,
+            "seconds": time.perf_counter() - t0,
+            "peak_vram_gb": torch.cuda.max_memory_allocated(self.device) / 2**30,
+            "cache_hits": self.cache.hits,
+            "cache_misses": self.cache.misses,
+        }
+        return images, info

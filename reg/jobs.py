@@ -7,7 +7,7 @@ crashed or restarted run just skips finished rows.
 
 Row keys (all optional except ``prompt``):
   id            unique stem for the output files; default ``r{idx:06d}``
-  model         lumina | flux (default lumina)
+  model         lumina | flux | qwen (default lumina)
   prompt, negative, height, width, steps, guidance, seed
   extrap        none | yarn | ntk;  static_extrap: bool (plain YaRN/NTK, no DyPE dynamics)
   Lumina: cfg_trunc_ratio, cfg_normalization, shift
@@ -21,8 +21,9 @@ import json
 from pathlib import Path
 
 MODEL_DEFAULTS = {
-    "lumina": {"steps": 30, "guidance": 4.0},
-    "flux": {"steps": 28, "guidance": 3.5},
+    "lumina": {"steps": 30, "guidance": 4.0},  # guidance = CFG scale
+    "flux": {"steps": 28, "guidance": 3.5},  # guidance = embedded (distilled) guidance; true_cfg_scale separate
+    "qwen": {"steps": 50, "guidance": 4.0},  # guidance = true CFG scale
 }
 COMMON_DEFAULTS = {"negative": "", "height": 1024, "width": 1024, "seed": 0, "extrap": "none", "static_extrap": False}
 

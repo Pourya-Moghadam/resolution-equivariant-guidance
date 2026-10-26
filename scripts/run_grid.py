@@ -37,23 +37,29 @@ def load_model(model: str, quant: str | None):
         from reg.models.lumina import Lumina
 
         return Lumina()
-    from reg.models.flux import Flux
+    if model == "flux":
+        from reg.models.flux import Flux
 
-    return Flux(quant=quant)
+        return Flux(quant=quant)
+    from reg.models.qwen import Qwen
+
+    return Qwen(quant=quant or "fp8")
 
 
 def generate_kwargs(row: dict) -> dict:
     kw = dict(height=row["height"], width=row["width"], steps=row["steps"], guidance_scale=row["guidance"],
               seed=row["seed"], negative_prompt=row["negative"])
-    if row["model"] == "lumina":
-        for k in ("cfg_trunc_ratio", "cfg_normalization", "shift"):
-            if k in row:
-                kw[k] = row[k]
-    else:
-        for k in ("true_cfg_scale", "shift_mu"):
-            if k in row:
-                kw[k] = row[k]
+    extra = {"lumina": ("cfg_trunc_ratio", "cfg_normalization", "shift"),
+             "flux": ("true_cfg_scale", "shift_mu"),
+             "qwen": ("shift_mu",)}[row["model"]]
+    for k in extra:
+        if k in row:
+            kw[k] = row[k]
     return kw
+
+
+def needs_negative(row: dict) -> bool:
+    return (row["model"] == "flux" and row.get("true_cfg_scale", 1.0) > 1) or (row["model"] == "qwen" and row["guidance"] > 1)
 
 
 def main() -> None:
@@ -90,10 +96,9 @@ def main() -> None:
     n_ok = n_fail = 0
     for (model_name, quant), group in groups.items():
         model = load_model(model_name, quant)
-        if model_name == "flux":  # encoders first, then the DiT (32 GB card)
-            model.encode(sorted({r["prompt"] for r in group}))
-            if any(r["true_cfg_scale"] > 1 for r in group if "true_cfg_scale" in r):
-                model.encode(sorted({r["negative"] for r in group}))
+        if model_name != "lumina":  # two-phase models: fill the cache with encoders resident, then free them
+            for r in group:
+                model.encode([r["prompt"]], (r["negative"] or None) if needs_negative(r) else None)
             model.free_text_encoders()
         pipe = model.pipe
         for r in group:

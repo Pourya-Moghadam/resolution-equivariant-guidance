@@ -187,7 +187,7 @@ def apply_dype(transformer: nn.Module, method: str = "yarn", dype: bool = True, 
     ``timestep`` in (0, 1] with 1 = pure noise; Lumina passes ``1 - t/1000`` (1 = clean) and is
     inverted here. Idempotent: calling again just reconfigures. Returns the DyPE object.
     """
-    if hasattr(transformer, "pos_embed"):  # FLUX
+    if hasattr(transformer, "pos_embed") and type(getattr(transformer, "pos_embed")).__name__ in ("FluxPosEmbed", "DyPEFluxPosEmbed"):
         if not hasattr(transformer, "_dype_orig"):
             transformer._dype_orig = ("flux", transformer.pos_embed, transformer.forward)
         stock = transformer._dype_orig[1]
@@ -201,8 +201,8 @@ def apply_dype(transformer: nn.Module, method: str = "yarn", dype: bool = True, 
         pe._stock_get = transformer._dype_orig[1]
         transformer.rope_embedder._get_freqs_cis = pe
         to_noise_level = lambda ts: 1.0 - float(ts.reshape(-1)[0])  # noqa: E731
-    else:
-        raise TypeError(f"{type(transformer).__name__}: no pos_embed (FLUX) or rope_embedder (Lumina2) found")
+    else:  # e.g. Qwen-Image's QwenEmbedRope (centred pos/neg indices): not ported yet
+        raise TypeError(f"{type(transformer).__name__}: DyPE is implemented for FLUX (FluxPosEmbed) and Lumina2 (rope_embedder) only")
 
     orig_forward = transformer._dype_orig[2]
 
