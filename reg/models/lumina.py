@@ -79,29 +79,45 @@ class Lumina:
         negative_prompt: str = "",
         system_prompt: str | None = None,
         output_type: str = "pil",
+        shift: float | None = None,
     ):
-        """Return (images, info). One seed per prompt (seed + index) so rows are reproducible alone."""
+        """Return (images, info). One seed per prompt (seed + index) so rows are reproducible alone.
+
+        ``shift`` overrides the scheduler's flow-matching time shift for this call. Lumina ships
+        shift=6 with use_dynamic_shifting=False, so its sigma schedule is the same at every
+        resolution (the pipeline computes a token-count mu but the scheduler ignores it); FLUX
+        instead shifts by token count. Restored afterwards.
+        """
         embeds = self.encode(prompts, negative_prompt=negative_prompt, system_prompt=system_prompt)
         generators = [torch.Generator(self.device).manual_seed(seed + i) for i in range(len(prompts))]
+        sched = self.pipe.scheduler
+        orig_shift = sched.config.shift
+        if shift is not None:
+            sched.register_to_config(shift=shift)
         torch.cuda.reset_peak_memory_stats(self.device)
         torch.cuda.synchronize(self.device)
         t0 = time.perf_counter()
-        images = self.pipe(
-            prompt=None,
-            height=height,
-            width=width,
-            num_inference_steps=steps,
-            guidance_scale=guidance_scale,
-            generator=generators,
-            cfg_trunc_ratio=cfg_trunc_ratio,
-            cfg_normalization=cfg_normalization,
-            max_sequence_length=MAX_SEQ_LEN,
-            output_type=output_type,
-            **embeds,
-        ).images
+        try:
+            images = self.pipe(
+                prompt=None,
+                height=height,
+                width=width,
+                num_inference_steps=steps,
+                guidance_scale=guidance_scale,
+                generator=generators,
+                cfg_trunc_ratio=cfg_trunc_ratio,
+                cfg_normalization=cfg_normalization,
+                max_sequence_length=MAX_SEQ_LEN,
+                output_type=output_type,
+                **embeds,
+            ).images
+        finally:
+            if shift is not None:
+                sched.register_to_config(shift=orig_shift)
         torch.cuda.synchronize(self.device)
         info = {
             "model": NAME,
+            "shift": shift if shift is not None else orig_shift,
             "seconds": time.perf_counter() - t0,
             "peak_vram_gb": torch.cuda.max_memory_allocated(self.device) / 2**30,
             "cache_hits": self.cache.hits,

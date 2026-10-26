@@ -39,6 +39,7 @@ def main() -> None:
     ap.add_argument("--guidance", type=float, default=4.0)
     ap.add_argument("--cfg-trunc", type=float, default=1.0, help="Lumina cfg_trunc_ratio")
     ap.add_argument("--no-cfg-norm", action="store_true", help="disable Lumina cfg_normalization")
+    ap.add_argument("--shift", type=float, default=None, help="override the scheduler time shift (Lumina default 6)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--n", type=int, default=1, help="images (seeds seed..seed+n-1), one batch")
     ap.add_argument("--out", default=os.path.join(os.environ.get("REG_DATA", "."), "outputs", "smoke"))
@@ -66,11 +67,13 @@ def main() -> None:
         cfg_trunc_ratio=args.cfg_trunc,
         cfg_normalization=not args.no_cfg_norm,
         negative_prompt=args.negative,
+        shift=args.shift,
     )
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    stem = args.tag or f"{info['model']}_{args.height}x{args.width}_s{args.seed}"
+    shift_tag = f"_sh{args.shift:g}" if args.shift is not None else ""
+    stem = args.tag or f"{info['model']}_{args.height}x{args.width}{shift_tag}_s{args.seed}"
     paths = []
     for i, im in enumerate(images):
         p = out / (f"{stem}.png" if args.n == 1 else f"{stem}_{i}.png")

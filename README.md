@@ -22,7 +22,10 @@ Papers on resolution extrapolation (DyPE, SEGA, UltraImage) fix the model's RoPE
 
 Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the user + Claude Code sessions; contact the [name removed]/[name removed] group after Gate 1 passes.
 
-- [ ] From reg1, `bash scripts/fanout.sh 'bash ~/reg/scripts/server_audit.sh'` and paste the output into 06-compute-and-datasets.md (GPU confirmed RTX 5000 Ada, 32 GB on all 5)
+- [x] 2026-10-26: all 5 servers reachable from reg1, identical venvs (`SERVER_SETUP.md`); RTX 5000 Ada 32 GB confirmed on all 5
+- [x] 2026-10-26: Lumina-Image 2.0 running at native res with text-embedding cache + tiled VAE (`reg/models/`, `scripts/sample.py`); measured 17.7 s / 93 s / 282 s / 11.6 min per image at 1K/2K/3K/4K (`results/benchmark_native.csv`); vanilla ≥2K degrades, 4K collapses (see 06)
+- [ ] Paste `scripts/server_audit.sh` output into 06 (optional now; key facts already recorded)
+- [ ] FLUX.1-dev and Qwen-Image loaders + timings (Phase 0 step 3, remaining models); DyPE reproduction on FLUX (step 4)
 - [ ] Read the FreCaS (SD3 setting) and RectifiedHR full texts once more before writing related work
 - [ ] Port DyPE (and SEGA) to Lumina-Image 2.0 (~1 week)
 - [ ] Kill-or-go experiment: guidance grid search at 1K / 2K / 4K (~3–4 days on 5 GPUs)
