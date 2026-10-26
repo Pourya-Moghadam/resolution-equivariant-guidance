@@ -22,14 +22,19 @@ All numbers are **estimates**. Benchmark them on day 1; real timings can be 2× 
 
 **Memory tips:** cache text embeddings and unload the encoders; run the CFG and perturbation branches one after another; tiled VAE decode at 4K; `torch.compile` + SDPA/flash. Use the same quantization and seeds for baseline and ours.
 
-## Estimated time per image (RTX 5000 Ada, with CFG)
+## Time per image (RTX 5000 Ada, with CFG)
 
-| Model | 1K | 2K | 4K |
-|---|---|---|---|
-| Lumina-Image 2.0 | ~9 s | ~45 s | ~7 min |
-| Qwen-Image (FP8) | ~45 s | ~4–5 min | ~35–45 min |
-| FLUX.1-dev | ~20 s | ~2 min | ~15–20 min |
+Bold = **measured** on reg1 (2026-10-26, 30 steps, CFG 4, bf16, SDPA, tiled VAE; `results/benchmark_native.csv`, produced by `scripts/sample.py` + `scripts/benchmark.py`). Plain = estimate pending measurement.
 
+| Model | 1K | 2K | 4K | peak VRAM |
+|---|---|---|---|---|
+| Lumina-Image 2.0 | **17.7 s** (est. 9) | **93 s** (est. 45) | **11.6 min** (est. 7) | **12.3 / 12.3 / 17.4 GB** |
+| Qwen-Image (FP8) | ~45 s | ~4–5 min | ~35–45 min | |
+| FLUX.1-dev | ~20 s | ~2 min | ~15–20 min | |
+
+- Lumina is ~2× the estimate at 1K/2K and 1.65× at 4K. 4K costs 7.4× 2K (quadratic attention dominates at 65K tokens); 2K costs 5.3× 1K.
+- **Re-budget, Phase 1 kill-or-go as planned** (40 settings × 200 prompts at 1K and 2K; 20 × 100 at 4K): 39 + 207 + 385 ≈ **630 GPU-h ≈ 5.3 days on 5 GPUs** continuous (plan said ~350 GPU-h / 3–4 days). 4K is 60% of it: cut 4K to 20 settings × 50 prompts or use fewer steps there if the schedule bites. Later phases scale the same way (~1.8×); refine after FLUX/Qwen are measured.
+- Speed-ups not yet tried: `torch.compile` on the transformer, FlashAttention-2 kernels (vs SDPA default), 20–25 steps for grid searches.
 - Perturbation guidance adds a third branch (~1.5× cost).
 - REG's native anchor (C) adds ~1/r² extra tokens per step (negligible).
 - 8K: qualitative figures only (~10–20 images).

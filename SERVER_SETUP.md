@@ -70,9 +70,9 @@ Download **once on reg1** (`HF_HOME` already points into `$REG_DATA`), then mirr
 ```bash
 mkdir -p $REG_DATA/{weights,datasets,text_embeds,outputs,results}
 bash scripts/fanout.sh --workers 'mkdir -p $REG_DATA/outputs'
-for h in $REG_WORKERS; do rsync -a --info=progress2 $REG_DATA/weights $REG_DATA/datasets $REG_DATA/text_embeds $h:$REG_DATA/; done
+for h in $REG_WORKERS; do rsync -a --info=progress2 --exclude 'consolidated*.pth' $REG_DATA/weights $REG_DATA/datasets $REG_DATA/text_embeds $h:$REG_DATA/; done
 ```
-Re-run the rsync whenever a new model or prompt set is added.
+Re-run the rsync whenever a new model or prompt set is added. The exclude skips Lumina's 9.8 GB original-format checkpoint, which diffusers never reads (`hf download ... --exclude '*.pth'` avoids fetching it at all). The HF token file travels inside `weights/hf/`; harmless (read-only, same account) but workers never download themselves.
 
 ## Step 6 — Run the audit on all servers (Phase 0 step 1)
 ```bash
