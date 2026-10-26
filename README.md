@@ -28,7 +28,8 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 - [x] 2026-10-26: DyPE implemented in our code (`reg/extrap/dype.py`, tested); FLUX 2K base vs DyPE both coherent (+2% time); **Lumina + DyPE: 2K clean, 4K coherent with residual repetition** (see 07)
 - [x] 2026-10-26: job runner `scripts/run_grid.py` (rows split across servers, resume-safe); `jobs/smoke.jsonl` 5-way split test
 - [ ] Run smoke grid on all 5; FLUX 4K (bf16+allocator fix vs FP8) on workers; Lumina 4K extrapolation variants (`jobs/extrap_4k.jsonl`)
-- [ ] Qwen-Image FP8 loader + timings; eval pipeline (step 7); datasets/prompts (step 6)
+- [x] 2026-10-26: Qwen-Image loader (FP8 weight-only via torchao, two-phase): 1K 145 s/image at 50 steps, 19.9 GB — 3.2× the estimate; Phase 3c budget note in 06. **Phase 0 step 3 complete for all three models.**
+- [ ] Eval pipeline (step 7); datasets/prompts (step 6); Qwen 2K timing before Phase 3 planning
 - [ ] Paste `scripts/server_audit.sh` output into 06 (optional now; key facts already recorded)
 - [ ] Read the FreCaS (SD3 setting) and RectifiedHR full texts once more before writing related work
 - [ ] Port DyPE (and SEGA) to Lumina-Image 2.0 (~1 week)
