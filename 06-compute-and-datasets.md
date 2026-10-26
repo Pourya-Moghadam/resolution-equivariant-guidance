@@ -4,9 +4,9 @@ All numbers are **estimates**. Benchmark them on day 1; real timings can be 2× 
 
 ## Hardware
 - **5 servers, each with one NVIDIA RTX 5000, 32 GB VRAM.** Assumed Ada generation; confirm with `nvidia-smi`, since the older 16 GB Turing card has a similar name.
-- The workload is inference only. Each server takes the rows where `idx % REG_NUM_SERVERS == REG_SERVER_ID` (4 servers until reg5 arrives); outputs are rsynced to reg1. No multi-node code needed. See `SERVER_SETUP.md`.
+- The workload is inference only. Each server takes the rows where `idx % REG_NUM_SERVERS == REG_SERVER_ID`; outputs are rsynced to reg1. No multi-node code needed. See `SERVER_SETUP.md`.
 - An RTX 5000 Ada is roughly 0.4–0.5× an A100 for this workload. FlashAttention-2 and FP8 work on it; FlashAttention-3 doesn't (Hopper only).
-- Confirmed 2026-10-26 on reg1–4: RTX 5000 Ada Generation, 32 GB (32,760 MiB), driver 595.x, 11 TB `/data1` each, no shared filesystem.
+- Confirmed 2026-10-26 on all 5 (reg1–5 = bri-p7-1..5): RTX 5000 Ada Generation, 32 GB (32,760 MiB), driver 595.x, Ubuntu 24.04, 11 TB `/data1` each, no shared filesystem.
 
 ## Models (must be RoPE-based DiTs, ideally with real CFG)
 

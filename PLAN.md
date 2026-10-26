@@ -44,7 +44,7 @@ Goal: every later number rests on a working, timed pipeline.
 5. **Benchmark** (`scripts/benchmark.py`): seconds/image for each model at 1K/2K/4K with CFG → replace the estimates table in `06-*.md`. Re-budget phases 1–4 from real numbers.
 6. **Data:** download prompt sets (LAION-Aesthetics/HR captions or Aesthetic-4K eval split, GenEval, HPSv2, DrawBench), Unsplash Lite reference images (~10K ≥2K). Write ~200 single-subject prompts for the repetition metric. Store under `/data/reg/` on shared storage.
 7. **Evaluation pipeline** (`reg/eval/`): patch-FID (16×1024² crops), KID, CLIP score, HPSv2, ImageReward, GenEval harness, repetition count via GroundingDINO. Unit-check on 50 native images.
-8. **Job runner:** `scripts/run_grid.py --server-id k` consumes `jobs/*.jsonl`, skips done rows (resume-safe), writes one JSON per image; `rsync` results nightly to server 1. Split rows by `idx % REG_NUM_SERVERS` (4 until reg5 is up), not a hard-coded 5.
+8. **Job runner:** `scripts/run_grid.py --server-id k` consumes `jobs/*.jsonl`, skips done rows (resume-safe), writes one JSON per image; `rsync` results nightly to server 1. Split rows by `idx % REG_NUM_SERVERS`, not a hard-coded 5.
 9. **Git:** init repo, `.gitignore` images/weights, first commit.
 
 **Deliverable:** benchmark table + working eval on native-res images + 5 servers runnable from one job file.

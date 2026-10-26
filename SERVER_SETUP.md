@@ -12,9 +12,9 @@ GitHub (private, backup)  <--git push/pull-->  reg1 (hub)  --ssh: push_code / rs
 | reg2 | bri-p7-2 | 10.206.10.44 | 1 | SSH ok |
 | reg3 | bri-p7-3 | 10.206.10.45 | 2 | SSH ok; venv already built (Phase 0 was started here) |
 | reg4 | bri-p7-4 | 10.206.10.46 | 3 | SSH ok |
-| reg5 | pending | pending | 4 | not delivered yet |
+| reg5 | bri-p7-5 | 10.206.10.47 | 4 | SSH ok (added 2026-10-26) |
 
-All four are Ubuntu with Python 3.12.3, one RTX 5000 Ada (32 GB), and an 11 TB `/data1` disk. No shared filesystem.
+All five are Ubuntu 24.04 with Python 3.12.3, one RTX 5000 Ada (32 GB), and an 11 TB `/data1` disk. No shared filesystem.
 
 - **reg1 = hub**: the only machine you log in to. Holds the working repo at `/data1/moghadamp/reg-research` (symlinked as `~/reg`) and the data root `/data1/moghadamp/reg_data` (weights, datasets, text-embedding caches, all collected outputs).
 - **reg2–5 = workers**: identical environment at the identical paths. They never contact GitHub or reg1; reg1 pushes code and data to them and pulls outputs back.
@@ -25,7 +25,7 @@ All four are Ubuntu with Python 3.12.3, one RTX 5000 Ada (32 GB), and an 11 TB `
 
 | Variable | Value | Notes |
 |---|---|---|
-| `REG_NUM_SERVERS` | 4 | **The one knob.** Change to 5 when reg5 is up. |
+| `REG_NUM_SERVERS` | 5 | **The one knob.** Lower it temporarily if a server is down for long. |
 | `REG_HOSTS`, `REG_WORKERS` | `reg1 … regN`, `reg2 … regN` | derived |
 | `REG_SERVER_ID` | hostname `bri-p7-N` → `N-1` | derived; preset it only on a host with a different naming scheme |
 | `REG_DATA` | `/data1/moghadamp/reg_data` | same path on every server |
@@ -33,14 +33,14 @@ All four are Ubuntu with Python 3.12.3, one RTX 5000 Ada (32 GB), and an 11 TB `
 
 It also activates `.venv` if that server has one. Nothing cluster-specific goes in `~/.bashrc` or `~/.profile` (non-interactive SSH shells skip `~/.bashrc` on Ubuntu anyway, which is why the scripts source `env.sh` explicitly).
 
-## Step 1 — SSH from reg1 to the workers (done for reg2–4)
-`~/.ssh/config` on reg1 maps `reg2`–`reg4` to the IPs above with `User moghadamp`, `IdentityFile ~/.ssh/id_ed25519_reilly`, `IdentitiesOnly yes`. reg1 never SSHes to itself; `fanout.sh` runs the reg1 part locally.
+## Step 1 — SSH from reg1 to the workers (done)
+`~/.ssh/config` on reg1 maps `reg2`–`reg5` to the IPs above with `User moghadamp`, `IdentityFile ~/.ssh/id_ed25519_reilly`, `IdentitiesOnly yes`. reg1 never SSHes to itself; `fanout.sh` runs the reg1 part locally.
 
 Test: `bash scripts/fanout.sh --workers hostname`
 
-**When reg5 arrives:** uncomment the `reg5` block in `~/.ssh/config` and fill in its IP; `ssh-copy-id -i ~/.ssh/id_ed25519_reilly reg5`; set `REG_NUM_SERVERS=5` in `env.sh`; copy tmux (Step 2); run Steps 3–5 for it. If its hostname is not `bri-p7-5`, extend the `case` in `env.sh`.
+**Adding a server later:** add a `Host regN` block to `~/.ssh/config`; `ssh-copy-id -i ~/.ssh/id_ed25519_reilly.pub regN` (needs the password once); set `REG_NUM_SERVERS` in `env.sh`; copy tmux (Step 2); run Steps 3–5 for it. If its hostname is not `bri-p7-N`, extend the `case` in `env.sh`.
 
-## Step 2 — tmux on the workers (done for reg2, reg4)
+## Step 2 — tmux on the workers (done for reg2, reg4, reg5)
 Workers have no system tmux and no sudo. reg1 has a self-contained copy under `~/.local` (`bin/tmux` wrapper + `bin/tmux.real` + `lib/libutempter*`), mirrored to each worker with rsync. `~/.profile` already puts `~/.local/bin` on `PATH`.
 
 Check: `bash scripts/fanout.sh 'command -v tmux'`
@@ -93,7 +93,7 @@ There is no scheduler. A job file is a list of rows; each server takes the rows 
 4. Attach if something looks wrong: `ssh reg3 -t tmux attach -t job` (on reg1 itself: `tmux attach -t job`).
 5. The runner is resume-safe (skips rows whose output JSON exists), so after a crash just repeat step 2.
 
-Changing `REG_NUM_SERVERS` reshuffles which server owns which row. Finish a job (or `sync_results.sh` and restart it everywhere) before adding reg5, because the resume check only sees the outputs already on each machine.
+Changing `REG_NUM_SERVERS` reshuffles which server owns which row. Finish a job (or `sync_results.sh` and restart it everywhere) before changing it, because the resume check only sees the outputs already on each machine.
 
 ## Step 8 — Results flow back to reg1, then to git
 - Images and per-image JSON: workers → reg1 with `bash scripts/sync_results.sh` (nightly in reg1's crontab: `0 3 * * * bash ~/reg/scripts/sync_results.sh >> ~/sync.log 2>&1`).

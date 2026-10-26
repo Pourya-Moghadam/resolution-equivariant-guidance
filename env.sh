@@ -4,7 +4,7 @@
 #
 # Servers: reg1 = bri-p7-1 (hub, where everything is run), reg2..reg5 = bri-p7-2..5 (workers).
 
-export REG_NUM_SERVERS=${REG_NUM_SERVERS:-4}        # set to 5 once reg5 is up
+export REG_NUM_SERVERS=${REG_NUM_SERVERS:-5}
 export REG_HOSTS=$(seq -s ' ' -f 'reg%g' 1 "$REG_NUM_SERVERS")
 export REG_WORKERS=$(seq -s ' ' -f 'reg%g' 2 "$REG_NUM_SERVERS")
 
