@@ -31,6 +31,12 @@ Facts read from the authors' code on 2026-10-26, so the port does not have to re
 - `scripts/repro_dype_flux.py`: same prompt/seed per method through `reg.models.flux.Flux` with `shift_mu=1.15` for all methods.
 - **2026-10-26, FLUX.1-dev, 2048², 28 steps, guidance 3.5, seed 0** (`$REG_DATA/outputs/dype_repro/`): `base` 100 s, `dy_yarn` 102 s (+2%), both 24.7 GB. Both coherent — with the clamped schedule FLUX handles 2K on its own; DyPE adds fine high-frequency content (falling snow, grass stalks) and a different composition. 2K is therefore not a discriminating test for FLUX; 4K is (run next).
 
+## Lumina port — first results (2026-10-26, same fox prompt/seed as the vanilla images in 06)
+- `DyPELuminaRope` in `reg/extrap/dype.py`, enabled via `apply_dype(pipe.transformer)` / `sample.py --extrap yarn`. Zero overhead: 2K 93 s, 4K 681 s, same VRAM as vanilla.
+- **2K (`dy_yarn`): clean.** The vanilla duplication (second tail, body at the frame edge) is gone; sharp subject, coherent background. Validation target met.
+- **4K (`dy_yarn`): a real scene instead of the vanilla flat colour** (pixel std 44 vs 18), fox and snowfield legible, but residual artefacts: the fox has extra legs (subject-level repetition) and dense grass texture dominates the frame. DyPE's constants (base 64 patches, β/γ, λ_t = 2) were tuned on FLUX 12B; a 2.6B model trained at 1K is a harder case. `jobs/extrap_4k.jsonl` compares yarn/ntk × dynamic/static before any constant tuning.
+- Working interpretation for the project: at 4K with DyPE, Lumina is in the "coherent but fragile" regime where guidance settings plausibly matter most — the right place for the kill-or-go grid.
+
 ## Port to Lumina (Phase 1 step 1) — where it hooks
 - diffusers `Lumina2RotaryPosEmbed` precomputes complex `freqs_cis` tables per axis (`axes_lens=(300,512,512)`, `axes_dim=(32,32,32)`, θ=10000, float64) and gathers rows by integer position; image rows/cols are axes 1 and 2, axis 0 carries caption positions (image tokens all get `cap_seq_len` there). Native 1024² = 64×64 patches, matching DyPE's `base_patches=64`.
 - Minimal port: replace the gathered spatial-axis frequencies with the YaRN/NTK-scaled ones computed from the same `get_1d_rotary_pos_embed` math (complex form instead of cos/sin), recomputed per step from the pipeline's `current_timestep` (Lumina passes `1 − t/1000`, so **1 = clean image** there — invert before computing κ). Leave axis 0 untouched. Apply `mscale` the same way.

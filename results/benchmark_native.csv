@@ -1,5 +1,8 @@
-model,height,width,steps,guidance,n,sec_per_image,sec_min,peak_vram_gb,gpu,git
-lumina2,1024,1024,30,4.0,1,17.7,17.7,12.3,NVIDIA RTX 5000 Ada Generation,ab70120
-lumina2,2048,2048,30,4.0,1,93.1,93.1,12.3,NVIDIA RTX 5000 Ada Generation,ab70120
-lumina2,3072,3072,30,4.0,1,281.8,281.8,14.1,NVIDIA RTX 5000 Ada Generation,9c5296a
-lumina2,4096,4096,30,4.0,1,693.2,693.2,17.4,NVIDIA RTX 5000 Ada Generation,af2bad0
+model,quant,extrap,height,width,steps,guidance,n,sec_per_image,sec_min,peak_vram_gb,gpu,git
+flux1-dev,bf16,none,1024,1024,28,3.5,1,20.4,20.4,24.7,NVIDIA RTX 5000 Ada Generation,2459e9c
+lumina2,bf16,dy_yarn,2048,2048,30,4.0,1,93.4,93.4,12.3,NVIDIA RTX 5000 Ada Generation,94c1e3c
+lumina2,bf16,dy_yarn,4096,4096,30,4.0,1,681.0,681.0,17.4,NVIDIA RTX 5000 Ada Generation,b83d20f
+lumina2,bf16,none,1024,1024,30,4.0,1,17.7,17.7,12.3,NVIDIA RTX 5000 Ada Generation,ab70120
+lumina2,bf16,none,2048,2048,30,4.0,1,93.1,93.1,12.3,NVIDIA RTX 5000 Ada Generation,ab70120
+lumina2,bf16,none,3072,3072,30,4.0,1,281.8,281.8,14.1,NVIDIA RTX 5000 Ada Generation,9c5296a
+lumina2,bf16,none,4096,4096,30,4.0,1,693.2,693.2,17.4,NVIDIA RTX 5000 Ada Generation,af2bad0

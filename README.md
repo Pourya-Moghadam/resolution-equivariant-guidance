@@ -24,8 +24,12 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 
 - [x] 2026-10-26: all 5 servers reachable from reg1, identical venvs (`SERVER_SETUP.md`); RTX 5000 Ada 32 GB confirmed on all 5
 - [x] 2026-10-26: Lumina-Image 2.0 running at native res with text-embedding cache + tiled VAE (`reg/models/`, `scripts/sample.py`); measured 17.7 s / 93 s / 282 s / 11.6 min per image at 1K/2K/3K/4K (`results/benchmark_native.csv`); vanilla ≥2K degrades, 4K collapses (see 06)
+- [x] 2026-10-26: FLUX.1-dev loader (two-phase, true CFG, FP8 option): 1K 20.4 s; bf16 OOMs at 4K on 32 GB → FP8/allocator fix pending test
+- [x] 2026-10-26: DyPE implemented in our code (`reg/extrap/dype.py`, tested); FLUX 2K base vs DyPE both coherent (+2% time); **Lumina + DyPE: 2K clean, 4K coherent with residual repetition** (see 07)
+- [x] 2026-10-26: job runner `scripts/run_grid.py` (rows split across servers, resume-safe); `jobs/smoke.jsonl` 5-way split test
+- [ ] Run smoke grid on all 5; FLUX 4K (bf16+allocator fix vs FP8) on workers; Lumina 4K extrapolation variants (`jobs/extrap_4k.jsonl`)
+- [ ] Qwen-Image FP8 loader + timings; eval pipeline (step 7); datasets/prompts (step 6)
 - [ ] Paste `scripts/server_audit.sh` output into 06 (optional now; key facts already recorded)
-- [ ] FLUX.1-dev and Qwen-Image loaders + timings (Phase 0 step 3, remaining models); DyPE reproduction on FLUX (step 4)
 - [ ] Read the FreCaS (SD3 setting) and RectifiedHR full texts once more before writing related work
 - [ ] Port DyPE (and SEGA) to Lumina-Image 2.0 (~1 week)
 - [ ] Kill-or-go experiment: guidance grid search at 1K / 2K / 4K (~3–4 days on 5 GPUs)

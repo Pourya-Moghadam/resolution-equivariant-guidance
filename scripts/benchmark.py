@@ -37,13 +37,16 @@ def main() -> None:
                 continue
             if "seconds_per_image" not in r:
                 continue
-            groups[(r["model"], r["height"], r["width"], r["steps"], r["guidance"])].append(r)
+            key = (r["model"], r.get("quant", "bf16"), r.get("extrap", "none"), r["height"], r["width"], r["steps"], r["guidance"])
+            groups[key].append(r)
 
     rows = []
-    for (model, h, w, steps, g), rs in sorted(groups.items()):
+    for (model, quant, extrap, h, w, steps, g), rs in sorted(groups.items()):
         secs = [r["seconds_per_image"] for r in rs]
         rows.append({
             "model": model,
+            "quant": quant,
+            "extrap": extrap,
             "height": h,
             "width": w,
             "steps": steps,
@@ -64,10 +67,10 @@ def main() -> None:
             for r in rows:
                 f.write(",".join(str(v) for v in r.values()) + "\n")
 
-    print("| Model | Resolution | Steps | CFG | n | s/image (mean) | min | peak VRAM GB |")
-    print("|---|---|---|---|---|---|---|---|")
+    print("| Model | Quant | Extrap | Resolution | Steps | CFG | n | s/image (mean) | min | peak VRAM GB |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
     for r in rows:
-        print(f"| {r['model']} | {r['height']}x{r['width']} | {r['steps']} | {r['guidance']} | {r['n']} | "
+        print(f"| {r['model']} | {r['quant']} | {r['extrap']} | {r['height']}x{r['width']} | {r['steps']} | {r['guidance']} | {r['n']} | "
               f"{r['sec_per_image']} | {r['sec_min']} | {r['peak_vram_gb']} |")
     print(f"\nwrote {out} ({len(rows)} rows)")
 
