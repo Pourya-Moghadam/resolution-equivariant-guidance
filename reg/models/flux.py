@@ -23,7 +23,7 @@ import time
 from unittest import mock
 
 import torch
-from diffusers import FluxPipeline
+from diffusers import FluxPipeline, FluxTransformer2DModel
 from diffusers.pipelines.flux import pipeline_flux
 
 from .embed_cache import TextEmbedCache
@@ -91,8 +91,18 @@ class Flux:
     @property
     def pipe(self) -> FluxPipeline:
         if self._pipe is None:
+            # Load the transformer in host RAM first; with fp8 it is quantized layer by layer onto the
+            # GPU, so the peak is the fp8 size (~12 GB), never the 24 GB bf16 copy (shared GPUs).
+            transformer = FluxTransformer2DModel.from_pretrained(MODEL_ID, subfolder="transformer", torch_dtype=self.dtype)
+            if self.quant == "fp8":
+                from torchao.quantization import Float8WeightOnlyConfig, quantize_
+
+                quantize_(transformer, Float8WeightOnlyConfig(), device=self.device)
+            transformer.to(self.device)
+            gc.collect()
             self._pipe = FluxPipeline.from_pretrained(
                 MODEL_ID,
+                transformer=transformer,
                 text_encoder=None,
                 text_encoder_2=None,
                 tokenizer=None,
@@ -100,12 +110,7 @@ class Flux:
                 torch_dtype=self.dtype,
             )
             self._pipe.to(self.device)
-            if self.quant == "fp8":
-                from torchao.quantization import Float8WeightOnlyConfig, quantize_
-
-                quantize_(self._pipe.transformer, Float8WeightOnlyConfig())
-                gc.collect()
-                torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
             self._pipe.vae.enable_tiling()
             self._pipe.set_progress_bar_config(disable=True)
         return self._pipe
