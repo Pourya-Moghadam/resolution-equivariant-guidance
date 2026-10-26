@@ -1,134 +1,113 @@
-# Server setup and 5-machine coordination
+# Server setup and multi-machine coordination
 
-How files move and how the 5 servers divide work. Fill in the hostnames in the first step; every command after that uses the aliases.
+How code, data and results move between the servers and how jobs are divided. **Everything is run from reg1**: Claude Code, editing, git, launching jobs, collecting results. No laptop is involved.
 
 ## Topology
 ```
-laptop (Windows, VS Code)  --ssh-->  reg1 (hub)  <--rsync-->  reg2 reg3 reg4 reg5
-        |                              |
-        +--- git push ---> remote <--- git pull on every server
+GitHub (private, backup)  <--git push/pull-->  reg1 (hub)  --ssh: push_code / rsync / fanout-->  reg2 reg3 reg4 reg5
 ```
-- **Git remote** = source of truth for code, configs, job files, notes, result CSVs. Never scp code.
-- **reg1 = hub**: holds `/data/reg/` (datasets, model weights, text-embedding caches) and collects all generated images under `/data/reg/outputs/`.
-- **reg2–5 = workers**: identical environment, pull code from git, pull data from reg1, push outputs back to reg1.
-- If the servers already share an NFS mount, put `/data/reg` on it and skip every rsync step below.
+| Alias | Host | IP | `REG_SERVER_ID` | State (2026-10-26) |
+|---|---|---|---|---|
+| reg1 | bri-p7-1 | 10.206.10.43 | 0 | hub; this machine |
+| reg2 | bri-p7-2 | 10.206.10.44 | 1 | SSH ok |
+| reg3 | bri-p7-3 | 10.206.10.45 | 2 | SSH ok; venv already built (Phase 0 was started here) |
+| reg4 | bri-p7-4 | 10.206.10.46 | 3 | SSH ok |
+| reg5 | pending | pending | 4 | not delivered yet |
 
-## Step 1 — SSH from the laptop (once, 15 min)
-In Git Bash on the laptop:
-```bash
-ssh-keygen -t ed25519 -C "reg-laptop"          # accept defaults, set a passphrase
-for h in reg1 reg2 reg3 reg4 reg5; do ssh-copy-id USER@$h; done   # or paste ~/.ssh/id_ed25519.pub into ~/.ssh/authorized_keys on each
-```
-Add to `~/.ssh/config` on the laptop (edit `HostName`/`User`):
-```
-Host reg1
-    HostName 10.0.0.11
-    User pmoghadam
-Host reg2
-    HostName 10.0.0.12
-    User pmoghadam
-Host reg3
-    HostName 10.0.0.13
-    User pmoghadam
-Host reg4
-    HostName 10.0.0.14
-    User pmoghadam
-Host reg5
-    HostName 10.0.0.15
-    User pmoghadam
-Host reg*
-    IdentityFile ~/.ssh/id_ed25519
-    ServerAliveInterval 60
-    ForwardAgent yes
-```
-Test: `ssh reg1 hostname`.
+All four are Ubuntu with Python 3.12.3, one RTX 5000 Ada (32 GB), and an 11 TB `/data1` disk. No shared filesystem.
 
-Then let reg1 reach the workers without a password (needed for rsync):
-```bash
-ssh reg1 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519 <<<y >/dev/null; cat ~/.ssh/id_ed25519.pub'
-# paste that key into ~/.ssh/authorized_keys on reg2–reg5, and copy the same Host block into reg1's ~/.ssh/config
-```
+- **reg1 = hub**: the only machine you log in to. Holds the working repo at `/data1/moghadamp/reg-research` (symlinked as `~/reg`) and the data root `/data1/moghadamp/reg_data` (weights, datasets, text-embedding caches, all collected outputs).
+- **reg2–5 = workers**: identical environment at the identical paths. They never contact GitHub or reg1; reg1 pushes code and data to them and pulls outputs back.
+- **GitHub** = backup and history for code, configs, job files, notes, result CSVs. Only reg1 talks to it (works non-interactively from reg1). Never scp code.
 
-## Step 2 — Git remote (once, 10 min)
-**Option A (preferred):** private GitHub/GitLab repo, if institutional policy allows. Nothing sensitive goes in the repo (no patient data, no images).
+## `env.sh` is the single description of the cluster
+`source env.sh` in any shell; `fanout.sh`, `push_code.sh` and `sync_results.sh` source it themselves, on every host. It sets:
 
-**Option B (no external service):** a bare repo on reg1:
-```bash
-ssh reg1 'mkdir -p ~/git && git init --bare ~/git/reg.git'
-```
-On the laptop, in the repo folder:
-```bash
-git init -b main
-git add .
-git commit -m "Initial research notes, plan, server scripts"
-git remote add origin reg1:git/reg.git          # Option B; for Option A use the https/ssh URL
-git push -u origin main
-```
-On every server:
-```bash
-git clone reg1:git/reg.git ~/reg     # or the GitHub URL
-```
+| Variable | Value | Notes |
+|---|---|---|
+| `REG_NUM_SERVERS` | 4 | **The one knob.** Change to 5 when reg5 is up. |
+| `REG_HOSTS`, `REG_WORKERS` | `reg1 … regN`, `reg2 … regN` | derived |
+| `REG_SERVER_ID` | hostname `bri-p7-N` → `N-1` | derived; preset it only on a host with a different naming scheme |
+| `REG_DATA` | `/data1/moghadamp/reg_data` | same path on every server |
+| `HF_HOME` | `$REG_DATA/weights/hf` | all HuggingFace downloads land here |
 
-## Step 3 — Run the audit on all 5 (Phase 0 step 1)
-From the laptop:
-```bash
-bash scripts/fanout.sh 'bash ~/reg/scripts/server_audit.sh' > audit_all.txt
-```
-Paste the GPU/disk/mount lines into `06-compute-and-datasets.md`. **Check now whether a shared mount exists** (section "SHARED STORAGE"); it changes Step 4.
+It also activates `.venv` if that server has one. Nothing cluster-specific goes in `~/.bashrc` or `~/.profile` (non-interactive SSH shells skip `~/.bashrc` on Ubuntu anyway, which is why the scripts source `env.sh` explicitly).
 
-## Step 4 — Data and weights live on reg1
-```bash
-ssh reg1 'sudo mkdir -p /data/reg/{weights,datasets,text_embeds,outputs,results} && sudo chown -R $USER /data/reg'
-```
-Environment on every server (append to `~/.bashrc`):
-```bash
-export REG_DATA=/data/reg
-export HF_HOME=/data/reg/weights/hf      # all HuggingFace downloads land here
-export HF_HUB_ENABLE_HF_TRANSFER=1
-```
-Download weights and datasets **once on reg1**, then mirror to workers:
-```bash
-bash scripts/fanout.sh --workers 'mkdir -p /data/reg'      # workers need the same path
-ssh reg1 'for h in reg2 reg3 reg4 reg5; do rsync -a --info=progress2 /data/reg/weights /data/reg/datasets /data/reg/text_embeds $h:/data/reg/; done'
-```
-Re-run that rsync whenever a new model or prompt set is added. (With NFS: skip, everything is already visible everywhere.)
+## Step 1 — SSH from reg1 to the workers (done for reg2–4)
+`~/.ssh/config` on reg1 maps `reg2`–`reg4` to the IPs above with `User moghadamp`, `IdentityFile ~/.ssh/id_ed25519_reilly`, `IdentitiesOnly yes`. reg1 never SSHes to itself; `fanout.sh` runs the reg1 part locally.
 
-## Step 5 — Python environment, built once and cloned
-Phase 0 step 2 builds the env on reg1 and pins it in `environment.yml` (committed). Workers then run:
-```bash
-cd ~/reg && git pull && conda env create -f environment.yml   # or: uv sync
-```
-Verify all five report the same versions:
-```bash
-bash scripts/fanout.sh 'cd ~/reg && conda run -n reg python -c "import torch,diffusers;print(torch.__version__,diffusers.__version__,torch.cuda.get_device_name())"'
-```
+Test: `bash scripts/fanout.sh --workers hostname`
 
-## Step 6 — How a job runs across 5 machines
-There is no scheduler. A job file is a list of rows; each server takes the rows where `idx % 5 == server_id`.
+**When reg5 arrives:** uncomment the `reg5` block in `~/.ssh/config` and fill in its IP; `ssh-copy-id -i ~/.ssh/id_ed25519_reilly reg5`; set `REG_NUM_SERVERS=5` in `env.sh`; copy tmux (Step 2); run Steps 3–5 for it. If its hostname is not `bri-p7-5`, extend the `case` in `env.sh`.
 
-1. Create the job file (Claude Code or `scripts/make_jobs.py`), commit, push.
+## Step 2 — tmux on the workers (done for reg2, reg4)
+Workers have no system tmux and no sudo. reg1 has a self-contained copy under `~/.local` (`bin/tmux` wrapper + `bin/tmux.real` + `lib/libutempter*`), mirrored to each worker with rsync. `~/.profile` already puts `~/.local/bin` on `PATH`.
+
+Check: `bash scripts/fanout.sh 'command -v tmux'`
+
+## Step 3 — Deploy code (every time you commit)
+```bash
+bash scripts/push_code.sh
+```
+Creates (first run) or fast-forwards a checkout on each worker at the same path as on reg1, with a `~/reg` symlink. Uncommitted changes on reg1 are not sent. The worker checkouts are mirrors; never edit them there.
+
+Then back up to GitHub: `git push`.
+
+## Step 4 — Python environment, built on each server
+`.venv` is built from `requirements.lock` (committed) by `scripts/setup_env.sh`. It is not copied between machines; each server builds its own, identically:
+```bash
+bash scripts/setup_env.sh                                            # reg1
+bash scripts/fanout.sh --workers --parallel 'cd ~/reg && bash scripts/setup_env.sh'   # reg3 already has one; the script is a no-op there
+```
+Verify all servers report the same versions:
+```bash
+bash scripts/fanout.sh 'cd ~/reg && python -c "import torch,diffusers;print(torch.__version__,diffusers.__version__,torch.cuda.get_device_name())"'
+```
+(`python` resolves to `.venv/bin/python` because `env.sh` activates the venv.)
+
+## Step 5 — Data and weights
+Download **once on reg1** (`HF_HOME` already points into `$REG_DATA`), then mirror the read-only parts to the workers:
+```bash
+mkdir -p $REG_DATA/{weights,datasets,text_embeds,outputs,results}
+bash scripts/fanout.sh --workers 'mkdir -p $REG_DATA/outputs'
+for h in $REG_WORKERS; do rsync -a --info=progress2 $REG_DATA/weights $REG_DATA/datasets $REG_DATA/text_embeds $h:$REG_DATA/; done
+```
+Re-run the rsync whenever a new model or prompt set is added.
+
+## Step 6 — Run the audit on all servers (Phase 0 step 1)
+```bash
+bash scripts/fanout.sh 'bash ~/reg/scripts/server_audit.sh' > audit_all.txt   # audit*.txt is gitignored
+```
+Paste the GPU/disk lines into `06-compute-and-datasets.md`.
+
+## Step 7 — How a job runs across the servers
+There is no scheduler. A job file is a list of rows; each server takes the rows where `idx % REG_NUM_SERVERS == REG_SERVER_ID`.
+
+1. Create the job file (Claude Code or `scripts/make_jobs.py`) on reg1, commit, `bash scripts/push_code.sh`.
 2. Start it everywhere, each inside a persistent `tmux` session:
    ```bash
-   bash scripts/fanout.sh 'cd ~/reg && git pull -q && tmux new -d -s job "conda run -n reg python scripts/run_grid.py --jobs jobs/kill_or_go.jsonl --server-id \$REG_SERVER_ID --out /data/reg/outputs/kill_or_go 2>&1 | tee -a /data/reg/outputs/kill_or_go/log_\$(hostname).txt"'
+   bash scripts/fanout.sh 'cd ~/reg && mkdir -p $REG_DATA/outputs/kill_or_go && tmux new -d -s job "python scripts/run_grid.py --jobs jobs/kill_or_go.jsonl --server-id $REG_SERVER_ID --num-servers $REG_NUM_SERVERS --out $REG_DATA/outputs/kill_or_go 2>&1 | tee -a $REG_DATA/outputs/kill_or_go/log_$(hostname -s).txt"'
    ```
-   `REG_SERVER_ID` is 0–4, set once per server in `~/.bashrc` (`export REG_SERVER_ID=0` on reg1, … `=4` on reg5).
-3. Check progress: `bash scripts/fanout.sh 'ls /data/reg/outputs/kill_or_go/*.json 2>/dev/null | wc -l; nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader'`
-4. Attach to a server if something looks wrong: `ssh reg3 -t tmux attach -t job`.
+   The single quotes keep `$REG_*` unexpanded on reg1; each host expands them after sourcing `env.sh`.
+3. Check progress: `bash scripts/fanout.sh 'ls $REG_DATA/outputs/kill_or_go/*.json 2>/dev/null | wc -l; nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader'`
+4. Attach if something looks wrong: `ssh reg3 -t tmux attach -t job` (on reg1 itself: `tmux attach -t job`).
 5. The runner is resume-safe (skips rows whose output JSON exists), so after a crash just repeat step 2.
 
-## Step 7 — Results flow back to reg1, then to git
-- Images and per-image JSON: workers → reg1 via `scripts/sync_results.sh` (run from the laptop or reg1; also put it in reg1's crontab nightly: `0 3 * * * bash ~/reg/scripts/sync_results.sh`).
-- Evaluation runs on reg1 over `/data/reg/outputs/<job>/` and writes `results/<job>.csv` into the repo.
-- Commit the CSVs (small) and push. Images never enter git.
-- Backup: copy `/data/reg/results` and `/data/reg/outputs` to an external disk weekly (`rsync -a reg1:/data/reg/results /path/to/backup/`).
+Changing `REG_NUM_SERVERS` reshuffles which server owns which row. Finish a job (or `sync_results.sh` and restart it everywhere) before adding reg5, because the resume check only sees the outputs already on each machine.
 
-## Step 8 — Where Claude Code runs
-- **Interactive development:** VS Code on the laptop → *Remote-SSH: Connect to Host* → `reg1` → open `~/reg`. The Claude Code extension then runs on reg1 with GPU access. This is the normal way to do Phase 0 steps 2–9 and all coding.
-- **Long runs:** always in `tmux` (step 6), never in a VS Code terminal that dies when the laptop sleeps.
-- Workers never need interactive sessions; they only `git pull` and run job files.
+## Step 8 — Results flow back to reg1, then to git
+- Images and per-image JSON: workers → reg1 with `bash scripts/sync_results.sh` (nightly in reg1's crontab: `0 3 * * * bash ~/reg/scripts/sync_results.sh >> ~/sync.log 2>&1`).
+- Evaluation runs on reg1 over `$REG_DATA/outputs/<job>/` and writes `results/<job>.csv` into the repo.
+- Commit the CSVs (small) and push to GitHub. Images never enter git.
+- Backup: copy `$REG_DATA/results` and `$REG_DATA/outputs` to an external disk weekly.
 
-## Daily routine
-1. Laptop/reg1: `git pull`, read `README.md` status, check `fanout.sh` progress line.
-2. Code changes on reg1 → test on 5 prompts → commit → push → `fanout.sh 'cd ~/reg && git pull'`.
-3. New job file → step 6.
+## Step 9 — Where Claude Code runs
+- **All development and orchestration:** on reg1, in `~/reg`, with GPU access. It drives the workers through `push_code.sh`, `fanout.sh` and `sync_results.sh`.
+- **Long runs:** always in `tmux` (Step 7), never in an editor terminal that dies with the session.
+- Workers never need interactive sessions; they only receive code and run job files.
+
+## Daily routine (all on reg1)
+1. Read `README.md` status; check the `fanout.sh` progress line.
+2. Code changes → test on 5 prompts → commit → `bash scripts/push_code.sh` → `git push`.
+3. New job file → Step 7.
 4. Evening: `sync_results.sh`, run eval on finished batches, commit CSVs, update `06-*.md` GPU-hours.

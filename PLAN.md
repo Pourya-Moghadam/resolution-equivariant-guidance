@@ -27,7 +27,7 @@ reg-research/
     eval/     patch_fid.py kid.py clip.py hps.py genEval.py repetition.py
   scripts/    run_grid.py run_matrix.py run_eval.py benchmark.py server_audit.sh
   configs/    *.yaml (model × extrap × guidance × resolution)
-  jobs/       job list files; each server runs rows where idx % 5 == server_id
+  jobs/       job list files; each server runs rows where idx % REG_NUM_SERVERS == REG_SERVER_ID
   results/    csv/json only (images live on server storage, not in git)
   paper/      ICML LaTeX template, figures/
 ```
@@ -38,13 +38,13 @@ reg-research/
 Goal: every later number rests on a working, timed pipeline.
 
 1. **Server audit** (user, 30 min): run `scripts/server_audit.sh` on all 5 servers; paste outputs into `06-compute-and-datasets.md`. If GPU is Turing (16 GB) rather than Ada (32 GB), stop and re-plan models.
-2. **Environment** (Claude Code on server 1, then clone to others): conda/uv env with PyTorch 2.x + CUDA, diffusers (from main), FlashAttention-2, torchao, `tmux`. Pin versions in `environment.yml`. Install identical env on servers 2–5.
+2. **Environment** (built on reg1, then on every worker): `.venv` with PyTorch 2.14 + CUDA 13, diffusers (from main), torchao, later FlashAttention-2; versions pinned in `requirements.lock`, built by `scripts/setup_env.sh` (no conda/uv on the servers). Deploy code with `scripts/push_code.sh`, then `fanout.sh --workers 'cd ~/reg && bash scripts/setup_env.sh'`. See `SERVER_SETUP.md`.
 3. **Models running at native res:** Lumina-Image 2.0, FLUX.1-dev (bf16, text encoders offloaded), Qwen-Image FP8 (torchao or prequantized). Implement text-embedding cache + tiled VAE decode in `reg/models/`.
 4. **Reproduce one baseline:** DyPE on FLUX at 2K using the authors' code → confirms RoPE extrapolation plumbing before porting.
 5. **Benchmark** (`scripts/benchmark.py`): seconds/image for each model at 1K/2K/4K with CFG → replace the estimates table in `06-*.md`. Re-budget phases 1–4 from real numbers.
 6. **Data:** download prompt sets (LAION-Aesthetics/HR captions or Aesthetic-4K eval split, GenEval, HPSv2, DrawBench), Unsplash Lite reference images (~10K ≥2K). Write ~200 single-subject prompts for the repetition metric. Store under `/data/reg/` on shared storage.
 7. **Evaluation pipeline** (`reg/eval/`): patch-FID (16×1024² crops), KID, CLIP score, HPSv2, ImageReward, GenEval harness, repetition count via GroundingDINO. Unit-check on 50 native images.
-8. **Job runner:** `scripts/run_grid.py --server-id k` consumes `jobs/*.jsonl`, skips done rows (resume-safe), writes one JSON per image; `rsync` results nightly to server 1.
+8. **Job runner:** `scripts/run_grid.py --server-id k` consumes `jobs/*.jsonl`, skips done rows (resume-safe), writes one JSON per image; `rsync` results nightly to server 1. Split rows by `idx % REG_NUM_SERVERS` (4 until reg5 is up), not a hard-coded 5.
 9. **Git:** init repo, `.gitignore` images/weights, first commit.
 
 **Deliverable:** benchmark table + working eval on native-res images + 5 servers runnable from one job file.

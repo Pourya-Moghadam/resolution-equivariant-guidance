@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Phase 0, step 1: hardware/software audit for one REG server.
-# Usage:  bash scripts/server_audit.sh | tee audit_$(hostname).txt
-# Run on all 5 servers; paste outputs into 06-compute-and-datasets.md.
+# Usage (one server):   bash scripts/server_audit.sh | tee audit_$(hostname).txt
+# Usage (all, on reg1): bash scripts/fanout.sh 'bash ~/reg/scripts/server_audit.sh' > audit_all.txt
+# Paste outputs into 06-compute-and-datasets.md.
 # Read-only: prints information, changes nothing.
 
 set -u

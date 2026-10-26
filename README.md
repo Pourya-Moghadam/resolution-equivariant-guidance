@@ -7,7 +7,7 @@ Research notes from the planning stage (2026-10-24). The goal is a top-tier pape
 | File | Contents |
 |---|---|
 | [PLAN.md](PLAN.md) | **Approved project plan**: 5 phases, 2 gates, timeline to ICML 2027 (late Jan 2027) |
-| [SERVER_SETUP.md](SERVER_SETUP.md) | How code, data and results move between the laptop, reg1 (hub) and workers reg2–5; how jobs are split 5 ways |
+| [SERVER_SETUP.md](SERVER_SETUP.md) | How everything is run from reg1 (hub): code, data and results moving to and from workers reg2–5; how jobs are split across servers |
 | [03-literature-review.md](03-literature-review.md) | Recent work on guidance and on resolution extrapolation, and the gap between them |
 | [04-novelty-check.md](04-novelty-check.md) | Search log for the novelty check, detailed reading of the closest prior art, and the verdict |
 | [05-method-and-contributions.md](05-method-and-contributions.md) | The proposed method (REG) and the paper's contributions |
@@ -22,7 +22,7 @@ Papers on resolution extrapolation (DyPE, SEGA, UltraImage) fix the model's RoPE
 
 Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the user + Claude Code sessions; contact the [name removed]/[name removed] group after Gate 1 passes.
 
-- [ ] Run `scripts/server_audit.sh` on all 5 servers and paste the output into 06-compute-and-datasets.md (assumed RTX 5000 Ada, 32 GB)
+- [ ] From reg1, `bash scripts/fanout.sh 'bash ~/reg/scripts/server_audit.sh'` (4 servers until reg5 arrives) and paste the output into 06-compute-and-datasets.md (GPU confirmed RTX 5000 Ada, 32 GB)
 - [ ] Read the FreCaS (SD3 setting) and RectifiedHR full texts once more before writing related work
 - [ ] Port DyPE (and SEGA) to Lumina-Image 2.0 (~1 week)
 - [ ] Kill-or-go experiment: guidance grid search at 1K / 2K / 4K (~3–4 days on 5 GPUs)

@@ -26,6 +26,9 @@ data/
 *.tar
 *.zip
 
+# Server audit dumps (SERVER_SETUP.md step 6)
+audit*.txt
+
 # Python
 __pycache__/
 *.pyc

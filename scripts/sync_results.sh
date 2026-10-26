@@ -1,28 +1,23 @@
 #!/usr/bin/env bash
 # Pull generated outputs from the worker servers into the hub (reg1).
-# Run from the laptop or from reg1 itself; safe to re-run (rsync is incremental).
+# Run on reg1; safe to re-run (rsync is incremental). Workers write disjoint rows
+# (idx % REG_NUM_SERVERS) and per-host log files, so nothing on reg1 is overwritten.
 #
-#   bash scripts/sync_results.sh                 # sync /data/reg/outputs from reg2..reg5 -> reg1
+#   bash scripts/sync_results.sh                 # sync $REG_DATA/outputs from all workers -> reg1
 #   bash scripts/sync_results.sh kill_or_go      # only one job directory
 #
 # Nightly on reg1:  0 3 * * * bash ~/reg/scripts/sync_results.sh >> ~/sync.log 2>&1
 
 set -u
+. "$(dirname "$0")/../env.sh"
 
-HUB=${REG_HUB:-reg1}
-WORKERS=${REG_WORKERS:-"reg2 reg3 reg4 reg5"}
-ROOT=${REG_DATA:-/data/reg}
 SUB=${1:-}
-SRC="$ROOT/outputs/${SUB:+$SUB/}"
-DST="$ROOT/outputs/${SUB:+$SUB/}"
+DIR="$REG_DATA/outputs/${SUB:+$SUB/}"
 
-# If we are already on the hub, rsync directly; otherwise tell the hub to do it.
-if [ "$(hostname -s)" = "$HUB" ] || [ "$(hostname)" = "$HUB" ]; then
-  for h in $WORKERS; do
-    echo "== $h -> $(hostname) : $SRC"
-    mkdir -p "$DST"
-    rsync -a --info=stats1 --partial --ignore-existing "$h:$SRC" "$DST" || echo "!! rsync from $h failed"
-  done
-else
-  ssh -o BatchMode=yes "$HUB" "REG_WORKERS='$WORKERS' REG_DATA='$ROOT' bash ~/reg/scripts/sync_results.sh ${SUB}"
-fi
+mkdir -p "$DIR"
+FAIL=0
+for h in $REG_WORKERS; do
+  echo "== $h -> $(hostname -s) : $DIR"
+  rsync -a --info=stats1 --partial "$h:$DIR" "$DIR" || { echo "!! rsync from $h failed"; FAIL=1; }
+done
+exit $FAIL

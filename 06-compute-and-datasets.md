@@ -4,9 +4,9 @@ All numbers are **estimates**. Benchmark them on day 1; real timings can be 2× 
 
 ## Hardware
 - **5 servers, each with one NVIDIA RTX 5000, 32 GB VRAM.** Assumed Ada generation; confirm with `nvidia-smi`, since the older 16 GB Turing card has a similar name.
-- The workload is inference only. Each server takes every 5th prompt (`idx % 5`); results go to shared storage or rsync. No multi-node code needed.
+- The workload is inference only. Each server takes the rows where `idx % REG_NUM_SERVERS == REG_SERVER_ID` (4 servers until reg5 arrives); outputs are rsynced to reg1. No multi-node code needed. See `SERVER_SETUP.md`.
 - An RTX 5000 Ada is roughly 0.4–0.5× an A100 for this workload. FlashAttention-2 and FP8 work on it; FlashAttention-3 doesn't (Hopper only).
-- Note: the laptop used for planning (Intel Arc 140V, no CUDA) is for development and writing only.
+- Confirmed 2026-10-26 on reg1–4: RTX 5000 Ada Generation, 32 GB (32,760 MiB), driver 595.x, 11 TB `/data1` each, no shared filesystem.
 
 ## Models (must be RoPE-based DiTs, ideally with real CFG)
 
@@ -68,8 +68,8 @@ No training data is needed: only prompts plus real high-resolution reference ima
 **Storage:** weights (Lumina ~6 GB, Qwen-Image ~40 GB bf16 / ~20 GB FP8, FLUX ~24 GB) plus outputs (~30K images @2K, ~5K @4K ≈ 300–500 GB as PNG). Plan for **1–2 TB**; keep full PNGs only for evaluation sets.
 
 ## Software
-- Linux (Ubuntu) preferred, or WSL2. FlashAttention on native Windows is painful.
-- PyTorch 2.x, diffusers, FlashAttention-2, torchao (FP8), `torch.compile`.
+- Ubuntu with Python 3.12.3 on every server; `.venv` built per server by `scripts/setup_env.sh` from `requirements.lock` (no conda/uv available).
+- PyTorch 2.14 (cu130), diffusers main, torchao (FP8), `torch.compile`; FlashAttention-2 to be added.
 
 ## Timeline (starting 2026-10-24)
 
