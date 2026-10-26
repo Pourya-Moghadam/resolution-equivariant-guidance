@@ -29,17 +29,19 @@ def git_sha() -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--model", default="lumina", choices=["lumina"])
+    ap.add_argument("--model", default="lumina", choices=["lumina", "flux"])
     ap.add_argument("--prompt", required=True)
     ap.add_argument("--negative", default="")
     ap.add_argument("--size", type=int, default=None, help="square shortcut for --height/--width")
     ap.add_argument("--height", type=int, default=1024)
     ap.add_argument("--width", type=int, default=1024)
-    ap.add_argument("--steps", type=int, default=30)
-    ap.add_argument("--guidance", type=float, default=4.0)
+    ap.add_argument("--steps", type=int, default=None, help="default: lumina 30, flux 28")
+    ap.add_argument("--guidance", type=float, default=None, help="default: lumina 4.0 (CFG), flux 3.5 (embedded)")
     ap.add_argument("--cfg-trunc", type=float, default=1.0, help="Lumina cfg_trunc_ratio")
     ap.add_argument("--no-cfg-norm", action="store_true", help="disable Lumina cfg_normalization")
-    ap.add_argument("--shift", type=float, default=None, help="override the scheduler time shift (Lumina default 6)")
+    ap.add_argument("--shift", type=float, default=None, help="Lumina: override the fixed scheduler shift (default 6)")
+    ap.add_argument("--true-cfg", type=float, default=1.0, help="FLUX: real CFG scale with --negative (>1 enables)")
+    ap.add_argument("--shift-mu", type=float, default=None, help="FLUX: override the dynamic-shift mu")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--n", type=int, default=1, help="images (seeds seed..seed+n-1), one batch")
     ap.add_argument("--out", default=os.path.join(os.environ.get("REG_DATA", "."), "outputs", "smoke"))
@@ -47,33 +49,35 @@ def main() -> None:
     args = ap.parse_args()
     if args.size:
         args.height = args.width = args.size
+    defaults = {"lumina": (30, 4.0), "flux": (28, 3.5)}[args.model]
+    args.steps = args.steps if args.steps is not None else defaults[0]
+    args.guidance = args.guidance if args.guidance is not None else defaults[1]
 
     import torch
 
     t_load = time.perf_counter()
+    common = dict(height=args.height, width=args.width, steps=args.steps, guidance_scale=args.guidance,
+                  seed=args.seed, negative_prompt=args.negative)
     if args.model == "lumina":
         from reg.models.lumina import Lumina
 
         model = Lumina()
-    load_s = time.perf_counter() - t_load
+        extra = dict(cfg_trunc_ratio=args.cfg_trunc, cfg_normalization=not args.no_cfg_norm, shift=args.shift)
+        variant_tag = f"_sh{args.shift:g}" if args.shift is not None else ""
+    else:
+        from reg.models.flux import Flux
 
-    images, info = model.generate(
-        [args.prompt] * args.n,
-        height=args.height,
-        width=args.width,
-        steps=args.steps,
-        guidance_scale=args.guidance,
-        seed=args.seed,
-        cfg_trunc_ratio=args.cfg_trunc,
-        cfg_normalization=not args.no_cfg_norm,
-        negative_prompt=args.negative,
-        shift=args.shift,
-    )
+        model = Flux()
+        extra = dict(true_cfg_scale=args.true_cfg, shift_mu=args.shift_mu)
+        variant_tag = (f"_cfg{args.true_cfg:g}" if args.true_cfg > 1 else "") + (
+            f"_mu{args.shift_mu:g}" if args.shift_mu is not None else "")
+    load_s = time.perf_counter() - t_load  # for FLUX the real loading happens inside generate()
+
+    images, info = model.generate([args.prompt] * args.n, **common, **extra)
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    shift_tag = f"_sh{args.shift:g}" if args.shift is not None else ""
-    stem = args.tag or f"{info['model']}_{args.height}x{args.width}{shift_tag}_s{args.seed}"
+    stem = args.tag or f"{info['model']}_{args.height}x{args.width}{variant_tag}_s{args.seed}"
     paths = []
     for i, im in enumerate(images):
         p = out / (f"{stem}.png" if args.n == 1 else f"{stem}_{i}.png")

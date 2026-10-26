@@ -1,0 +1,32 @@
+# 07 — DyPE reference implementation (for the FLUX reproduction and the Lumina port)
+
+Facts read from the authors' code on 2026-10-26, so the port does not have to re-derive them.
+
+## Source
+- Code: `https://github.com/guyyariv/DyPE` (MIT license; the "patent pending" line in the README is a notice, research use is covered by the MIT grant). Cloned read-only to `/data1/moghadamp/reg_data/third_party/DyPE-guyyariv` on reg1 (commit `436fe61`, 2026-05-18). `noamissachar/DyPE` is only the project page.
+- Paper: arXiv 2510.20766, **accepted at ICML 2026**. Models in the code: FLUX (`flux/`) and Qwen-Image (`qwen/`); no Lumina.
+- Layout: vendored copies of diffusers' `pipeline_flux.py` and `transformer_flux.py` with the changes below; `run_dype.py` is a 90-line driver.
+
+## Driver defaults (`run_dype.py`)
+- Model **FLUX.1-Krea-dev** (not FLUX.1-dev), `guidance_scale=4.5`, 28 steps, 4096×4096, `--method yarn` (choices `yarn | ntk | base`), DyPE on unless `--no_dype`, `enable_model_cpu_offload()`.
+- Our reproduction (Phase 0 step 4) uses the FLUX.1-dev weights already in `$HF_HOME`; same architecture, so their transformer class loads them. State this wherever the numbers are reported.
+
+## What the transformer change does (`flux/transformer_flux.py`)
+- `FluxPosEmbed(theta, axes_dim, method, dype)` replaces diffusers' class. `base_resolution=1024`, `patch_size=16` (8× VAE × patch 2) → `base_patches=64`. Scaling applies only to the two spatial axes (`i > 0`), only when `current_patches > base_patches`.
+- The timestep reaches it from `FluxTransformer2DModel.forward`: `self.pos_embed.set_timestep(timestep.item())`, where FLUX's `timestep` is already `t/1000 ∈ (0,1]`, 1 = pure noise. RoPE is therefore recomputed **every step** (and every pass, so twice per step with true CFG).
+- **YaRN branch** (default): `scale = current_patches / base_patches`; three frequency bands blended with linear ramps in frequency-index space:
+  - `freqs_linear = freqs_base / scale`, `freqs_ntk` from `new_base = theta · scale^(dim/(dim−2))`;
+  - first blend between linear and NTK with correction range from `β0=1.25, β1=0.75` rotations;
+  - second blend towards the unscaled `freqs_base` with range from `γ0=16, γ1=2` rotations (high-frequency dims keep their original frequencies);
+  - attention-temperature `mscale = 0.1·ln(scale) + 1` multiplied into cos and sin.
+- **NTK branch**: `ntk_factor = (scale^(dim/(dim−2)))^(2·κ)` with κ as below, floor 1.0.
+- **DyPE dynamics**: `κ(t) = t^2` (λ_t = 2). All four correction thresholds β0, β1, γ0, γ1 are multiplied by κ. At t→1 (noise) the full YaRN rescaling is active; as t→0 the thresholds shrink toward 0, i.e. ever more frequency dims fall into the "keep original frequency" band and the encoding relaxes back to the native one. `method=base` disables everything (and forces `dype=False`).
+
+## What the pipeline change does (`flux/pipeline_flux.py`)
+- The only functional change: in `calculate_shift(...)` the calibration maximum `max_image_seq_len` (4096) is replaced by the **current** `image_seq_len`, so `mu = max_shift = 1.15` at every resolution instead of extrapolating (stock diffusers gives mu ≈ 3.2 at 2K and ≈ 11.5 at 4K). This applies to their `base` baseline too, so DyPE-vs-baseline comparisons hold the schedule fixed. **Our FLUX baselines must do the same** (`Flux.generate(shift_mu=1.15)`), or 4K "vanilla" failure is partly a degenerate schedule. Lumina is unaffected (fixed `shift=6`, see 06).
+- Everything else is import-path and typing cosmetics against an older diffusers.
+
+## Port to Lumina (Phase 1 step 1) — where it hooks
+- diffusers `Lumina2RotaryPosEmbed` precomputes complex `freqs_cis` tables per axis (`axes_lens=(300,512,512)`, `axes_dim=(32,32,32)`, θ=10000, float64) and gathers rows by integer position; image rows/cols are axes 1 and 2, axis 0 carries caption positions (image tokens all get `cap_seq_len` there). Native 1024² = 64×64 patches, matching DyPE's `base_patches=64`.
+- Minimal port: replace the gathered spatial-axis frequencies with the YaRN/NTK-scaled ones computed from the same `get_1d_rotary_pos_embed` math (complex form instead of cos/sin), recomputed per step from the pipeline's `current_timestep` (Lumina passes `1 − t/1000`, so **1 = clean image** there — invert before computing κ). Leave axis 0 untouched. Apply `mscale` the same way.
+- Validation target (PLAN Phase 1): Lumina + DyPE at 2K/4K coherent vs. the vanilla collapse documented in 06.
