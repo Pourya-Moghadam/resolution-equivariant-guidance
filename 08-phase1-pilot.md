@@ -111,3 +111,11 @@ Sheets: `$REG_DATA/outputs/pert_calib_1k/sheets/calib_{pag,seg,tpg}.jpg` (6 prom
 - **One middle block is close to plain CFG** at scale ≤ 3. It is safe but barely visible, so it would make a weak baseline.
 - **Three middle blocks (15–17) give the effect the papers describe.** PAG at scale 2–3 adds local contrast and texture. SEG and TPG at scale 3 overshoot: speckled pears, striped cathedral floor, oversharpened portrait. At scale 1.5 they are clean and still visibly different from CFG.
 - **New defaults** in `reg/guidance/perturb.py`: layers 15–17, SEG σ = 5, TPG frac = 0.5. The usable scale is about 1.5–3 at these layers. The second grid sweeps scale {1, 1.5, 2, 3} at 1K and up, so no single scale default is baked in.
+
+## REG pilot: FDG band cutoff at 4K (2026-10-27, reg2, `jobs/reg_pilot_fdg.jsonl`, early look at 3 prompts)
+Question: does scaling FDG's band cutoff by the resolution ratio (down 2 at 1K → 8 at 4K, REG-A) beat the fixed cutoff? Baselines: sweep B CFG 4/8 at 4K, same prompts and seed. Sheets: `$REG_DATA/outputs/reg_pilot_fdg/sheets/early_{full,crop}.jpg`.
+
+- **The weight of the low band decides 4K, not the cutoff.** FDG w_low/w_high = 2/6 and 4/8 collapse into speckle at 4K at both cutoffs, like CFG 4. Only 8/4 is coherent, at quality comparable to CFG 8. Raising the high band to 8 does not save the image, and dropping it to 4 does not hurt.
+- **So the upward shift of the CFG optimum with resolution is a low-frequency effect.** At 4K the high band is satisfied with native-level guidance. This is direct support for band-wise guidance (05), and an early hint that "CFG 8 at 4K" over-guides the high band.
+- **Scaling the cutoff did not help yet.** At 8/4, down 8 is close to down 2, with slightly less saturated windows. Two prompts only.
+- Follow-up queued on reg2 after this job (`jobs/reg_pilot_fdg_b.jsonl`, 36 rows): w_low {6, 8, 12} × w_high {2, 4, 6} around 8/4, and cutoff {2, 4, 8}.
