@@ -42,6 +42,7 @@ def main() -> None:
     ap.add_argument("--crops", type=int, default=16)
     ap.add_argument("--csv", default=None, help="write the per-setting table here")
     ap.add_argument("--skip", nargs="*", default=[], choices=["clip", "ir", "rep", "fid"], help="metrics to skip")
+    ap.add_argument("--with-ir", action="store_true", help="also compute ImageReward (package is incompatible with transformers 5; parked, see 06)")
     ap.add_argument("--device", default="cuda")
     args = ap.parse_args()
 
@@ -59,7 +60,7 @@ def main() -> None:
         from reg.eval.clip_score import ClipScorer
 
         clip = ClipScorer(args.device)
-    if "ir" not in args.skip:
+    if args.with_ir and "ir" not in args.skip:
         from reg.eval.image_reward import ImageRewardScorer
 
         ir = ImageRewardScorer(args.device)

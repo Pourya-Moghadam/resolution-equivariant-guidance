@@ -60,7 +60,7 @@ Goal: evidence that optimal guidance shifts with resolution in the direction REG
    - CFG scale {2,3,4,5,6,8,10,12} × interval end (`cfg_trunc_ratio`) {0.5,0.7,0.9,1.0} = 32 settings at 1K (200 prompts) and 2K (100 prompts); 16 settings (CFG × {0.7,1.0}) at 3K (100 prompts); CFG only (8 settings) at 4K (50 prompts). ≈ 32 + 167 + 127 + 77 = **~400 GPU-h ≈ 4 days on 4 GPUs**. 3K replaces 4K as the main high resolution (clean, 2.4× cheaper; 4K keeps the speckle issue).
    - FDG w_low/w_high pairs and the PAG/SEG runs follow as a second job once the guidance zoo (step 2) exists.
    - Fixed seeds (one per prompt); prompts = 100 Aesthetic-4K eval captions + 100 own single-subject prompts (`prompts/`), see 06.
-   - Metrics (step 7 decision): patch-FID + KID on Aesthetic-4K references, CLIP score (OpenCLIP ViT-L/14), ImageReward, repetition count (GroundingDINO, single-subject prompts). HPSv2 and GenEval are Phase 3 additions, not gate metrics.
+   - Metrics (step 7 decision): patch-FID + KID on Aesthetic-4K references, CLIP score (OpenCLIP ViT-L/14), repetition count (GroundingDINO, single-subject prompts). ImageReward parked (package incompatible with transformers 5, see 06); HPSv2 and GenEval are Phase 3 additions, not gate metrics.
 4. **Analysis notebook** (`results/kill_or_go.ipynb`): best setting per resolution per metric; plot optimal low-band scale / interval end vs. r; compare against REG-(B) prediction (low-band guidance should end earlier at higher r; high-band roughly constant).
 
 **GATE 1 (Nov 17):**

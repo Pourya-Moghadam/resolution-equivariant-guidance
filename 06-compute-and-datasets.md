@@ -72,7 +72,7 @@ No training data is needed: only prompts plus real high-resolution reference ima
 | Qualitative / quick | DrawBench (`sayakpaul/drawbench`, Apache-2.0) | 200 prompts, downloaded |
 | Repetition metric | Own 100 single-subject prompts (`prompts/single_subject.jsonl`) + GroundingDINO counts (`IDEA-Research/grounding-dino-base`, in transformers 5.x) | to write |
 | Grid search (kill-or-go) | 100 Aesthetic-4K captions + the 100 single-subject prompts | 200 |
-| Human preference | ImageReward (`zai-org/ImageReward`) in Phase 1; HPSv2 (`xswu/HPSv2`) in Phase 3 | weights on the Hub |
+| Human preference | **Parked**: the `image-reward` package (2023) breaks against transformers 5 in three places (moved helpers, removed tokenizer attributes); two shims in `reg/eval/image_reward.py`, the third would mean rewriting its BLIP. Revisit in Phase 3 in a separate venv, together with HPSv2 (`xswu/HPSv2`). The gate uses patch-FID, KID, CLIP, repetition. | — |
 | Prompt adherence | GenEval | Phase 3 only (needs its detector stack) |
 
 Metric implementations: patch-FID/KID with `torch-fidelity`'s Inception features via `torchmetrics`; CLIP score with `open_clip_torch` (`ViT-L-14`, laion2B); `image-reward` package (installed with `--no-build-isolation`; its build metadata imports `pkg_resources`).
