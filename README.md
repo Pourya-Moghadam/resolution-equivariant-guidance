@@ -34,13 +34,15 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 - [x] 2026-10-26: 4K speckle localised (07): 3K clean, 4K speckled; YaRN without mscale collapses; **CFG 2 collapses at 4K where CFG 4 works**; FP8 benign. First evidence that the usable guidance range shifts with resolution.
 - [x] 2026-10-26: **Phase 1 pilot** (`08-phase1-pilot.md`): CFG {2..8} × {1K,2K,3K,4K} × 2 prompts on Lumina + dy_ntk — the usable and optimal guidance both shift up with resolution (native optimum ~3–4, 4K optimum ≥8; CFG 2–3 collapse at 4K). Kill-or-go direction confirmed qualitatively.
 - [x] 2026-10-27: **Sweep B** (`08`, 288 rows, 6 prompts × 2 seeds, 21.6 GPU-h overnight on 4 GPUs): with 12 images/cell, CLIP and patch-KID are flat in CFG at 1K/2K (KID lowest at CFG 2 at 2K), optimum ≥6 at 3K and 8 at 4K (CFG 2–3 collapse). **Kill-or-go direction measured, not just seen.** New: composition drifts at 4K; speckle reaches 3K on dark textured prompts.
-- [x] 2026-10-27: metric stack (open_clip, torchmetrics, torch-fidelity) installed on all 5 servers and pinned in `requirements.lock`; `scripts/contact_sheet.py`
+- [x] 2026-10-27: metric stack (open_clip, torchmetrics, torch-fidelity) installed on all 5 servers and pinned in `requirements.lock`; `scripts/contact_sheet.py`, `scripts/launch_grid.sh`
+- [x] 2026-10-27: **Sweep C** (CFG 10/12/16 at 3K/4K): CLIP optimum 6–8 at 3K, 8–10 at 4K, falling beyond; KID keeps improving to 16 while images are visibly over-guided → CLIP is the optimum detector, KID the floor detector (08)
+- [x] 2026-10-27: **Guidance zoo** (`reg/guidance/`, Phase 1 step 2): CFG interval, FDG (Laplacian band split), PAG, SEG, TPG on one `Guidance` base; Lumina samples in our own loop, bit-identical to the pipeline for CFG (`tests/test_guidance_real.py`); 1K validation job `jobs/guidance_zoo_1k.jsonl`
+- [ ] 2026-10-27 03:40: **kill-or-go grid launched** (`jobs/kill_or_go.jsonl`, 11,800 rows, ~330 GPU-h; reg1+reg3 first, reg4/5 join after the zoo validation; ETA ~4 days)
 - [ ] reg2 unusable while another user's 30 GB kernel is resident; reg1/reg5 shared too (see SERVER_SETUP)
 - [x] 2026-10-26: Qwen-Image loader (FP8 weight-only via torchao, two-phase): 1K 145 s/image at 50 steps, 19.9 GB — 3.2× the estimate; Phase 3c budget note in 06. **Phase 0 step 3 complete for all three models.**
 - [x] Eval pipeline (step 7: `scripts/run_eval.py`, CLIP + patch-FID/KID + repetition; ImageReward parked), datasets/prompts (step 6), Qwen 2K/4K timings — **Phase 0 complete** except the optional audit paste
 - [ ] Paste `scripts/server_audit.sh` output into 06 (optional now; key facts already recorded)
 - [ ] Read the FreCaS (SD3 setting) and RectifiedHR full texts once more before writing related work
-- [ ] Port DyPE (and SEGA) to Lumina-Image 2.0 (~1 week)
-- [ ] Kill-or-go experiment: guidance grid search at 1K / 2K / 4K (~3–4 days on 5 GPUs)
+- [ ] Kill-or-go analysis when the grid finishes: `run_eval.py --group-by size cfg trunc`, bootstrap CIs, gate decision (PLAN Gate 1); FDG/PAG/SEG/TPG grid as a second job
 - [ ] Re-check arXiv every ~2 weeks for scooping (watch [name removed]/[name removed]/[name removed] and Sadat et al.)
 - [ ] Target: ICML 2027 (late January 2027); fallback NeurIPS 2027 (May 2027)

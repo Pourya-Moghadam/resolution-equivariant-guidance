@@ -82,3 +82,17 @@ Same sweep (CFG {2,3,4,5,6,8} × {1K, 2K, 3K, 4K}, Lumina + dy_ntk above 1K, 30 
 - Over-guidance is visible at 1K/CFG 8 (saturated still life, street) but the metrics do not penalise it; CLIP rewards saturation. KID at 1K is a single-crop measurement and too noisy (std 0.012) to see it. Human/aesthetic preference (ImageReward/HPSv2, parked) would be needed to catch it; for the grid, treat CLIP + KID as a floor detector, not an optimum detector, at native resolution.
 
 **Methodology confirmed.** KID with 12 images × 16 crops has std ≈ 0.003, enough to separate the 3K cells (0.038 → 0.022) — so the grid's 100 prompts/cell is ample for KID. Patch-FID (205–394) is still dominated by sample-size bias at n = 192 patches; report it only in Phase 3 with ≥1,000 images per cell. `clip_patch` tracks `clip` within each resolution and adds nothing — drop it from grid tables.
+
+## Sweep C: CFG 10 / 12 / 16 at 3K and 4K (2026-10-27, `jobs/pilot_cfg_sweep_c.jsonl`)
+Same six prompts × 2 seeds, 72 rows, 9.7 GPU-h. `results/pilot_cfg_sweep_c_eval.csv`; sheets in `$REG_DATA/outputs/pilot_cfg_sweep_c/sheets/`.
+
+| | CFG 8 (sweep B) | 10 | 12 | 16 |
+|---|---|---|---|---|
+| 3K CLIP | **35.7** | 35.4 | 35.2 | 34.6 |
+| 3K KID | 0.022 | 0.023 | 0.022 | **0.020** |
+| 4K CLIP | 34.3 | **34.6** | 33.9 | 33.5 |
+| 4K KID | 0.039 | 0.030 | 0.031 | **0.026** |
+
+- **The CLIP optimum is at CFG 6–8 (3K) and 8–10 (4K) and falls beyond it**; by eye CFG 12–16 is over-guided at both resolutions (saturated colours, a second ghost lighthouse at 4K, black blotches on the 4K street, grain on flat 3K backgrounds). Together with sweep B: native optimum anywhere in 2–8 (flat), 3K ≈ 6–8, 4K ≈ 8–10, i.e. **the optimum moves up by roughly the resolution ratio and then turns over**. The kill-or-go grid's CFG axis {2 … 12, 16} at 3K/4K brackets it.
+- **KID keeps falling to CFG 16 at both resolutions while the images get visibly worse.** Inception features on 1024² crops reward the extra local contrast that over-guidance adds. For the grid: KID detects collapse and under-guidance well, but its optimum is biased upward; take CLIP (and the repetition count) as the optimum detectors and KID as the floor detector, as noted for 1K above. A human-preference metric (HPSv2/ImageReward in a separate venv) would resolve this and should be added before Phase 3.
+- The 4K speckle changes character with CFG (bright grain at 8–10, dark blotches at 12–16) but is never absent; it stays an extrapolation-port issue (07).
