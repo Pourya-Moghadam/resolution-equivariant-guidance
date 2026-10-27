@@ -33,10 +33,11 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 - [x] 2026-10-26: Lumina 4K extrapolation choice — 24-image comparison → **dynamic NTK** as default (less subject repetition than YaRN)
 - [x] 2026-10-26: 4K speckle localised (07): 3K clean, 4K speckled; YaRN without mscale collapses; **CFG 2 collapses at 4K where CFG 4 works**; FP8 benign. First evidence that the usable guidance range shifts with resolution.
 - [x] 2026-10-26: **Phase 1 pilot** (`08-phase1-pilot.md`): CFG {2..8} × {1K,2K,3K,4K} × 2 prompts on Lumina + dy_ntk — the usable and optimal guidance both shift up with resolution (native optimum ~3–4, 4K optimum ≥8; CFG 2–3 collapse at 4K). Kill-or-go direction confirmed qualitatively.
-- [ ] `jobs/pilot_cfg_sweep_b.jsonl` running overnight: 6 varied prompts × 2 seeds × same sweep (288 rows, ~5.5 h on 4 GPUs)
+- [x] 2026-10-27: **Sweep B** (`08`, 288 rows, 6 prompts × 2 seeds, 21.6 GPU-h overnight on 4 GPUs): with 12 images/cell, CLIP and patch-KID are flat in CFG at 1K/2K (KID lowest at CFG 2 at 2K), optimum ≥6 at 3K and 8 at 4K (CFG 2–3 collapse). **Kill-or-go direction measured, not just seen.** New: composition drifts at 4K; speckle reaches 3K on dark textured prompts.
+- [x] 2026-10-27: metric stack (open_clip, torchmetrics, torch-fidelity) installed on all 5 servers and pinned in `requirements.lock`; `scripts/contact_sheet.py`
 - [ ] reg2 unusable while another user's 30 GB kernel is resident; reg1/reg5 shared too (see SERVER_SETUP)
 - [x] 2026-10-26: Qwen-Image loader (FP8 weight-only via torchao, two-phase): 1K 145 s/image at 50 steps, 19.9 GB — 3.2× the estimate; Phase 3c budget note in 06. **Phase 0 step 3 complete for all three models.**
-- [ ] Eval pipeline (step 7); datasets/prompts (step 6); Qwen 2K timing before Phase 3 planning
+- [x] Eval pipeline (step 7: `scripts/run_eval.py`, CLIP + patch-FID/KID + repetition; ImageReward parked), datasets/prompts (step 6), Qwen 2K/4K timings — **Phase 0 complete** except the optional audit paste
 - [ ] Paste `scripts/server_audit.sh` output into 06 (optional now; key facts already recorded)
 - [ ] Read the FreCaS (SD3 setting) and RectifiedHR full texts once more before writing related work
 - [ ] Port DyPE (and SEGA) to Lumina-Image 2.0 (~1 week)

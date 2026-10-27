@@ -78,3 +78,11 @@ tzdata==2026.5
 urllib3==2.8.0
 wheel==0.48.0
 zipp==4.1.2
+# evaluation (Phase 0 step 7), added 2026-10-27
+ftfy==6.3.1
+lightning-utilities==0.15.3
+open_clip_torch==3.3.0
+timm==1.0.30
+torch_fidelity==0.4.0
+torchmetrics==1.9.0
+wcwidth==0.9.4
