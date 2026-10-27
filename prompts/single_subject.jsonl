@@ -1,0 +1,100 @@
+{"id": "ss00_0", "prompt": "A single red fox alone in the centre of the frame, on an empty beach at low tide, photorealistic, sharp focus", "subject": "red fox", "expected_count": 1}
+{"id": "ss00_1", "prompt": "One red fox, in a quiet meadow at golden hour, no other objects, natural light, detailed photograph", "subject": "red fox", "expected_count": 1}
+{"id": "ss01_0", "prompt": "A single golden retriever alone in the centre of the frame, in a quiet meadow at golden hour, photorealistic, sharp focus", "subject": "golden retriever", "expected_count": 1}
+{"id": "ss01_1", "prompt": "One golden retriever, on a wooden table against a plain wall, no other objects, natural light, detailed photograph", "subject": "golden retriever", "expected_count": 1}
+{"id": "ss02_0", "prompt": "A single tabby cat alone in the centre of the frame, on a wooden table against a plain wall, photorealistic, sharp focus", "subject": "tabby cat", "expected_count": 1}
+{"id": "ss02_1", "prompt": "One tabby cat, in fresh snow under an overcast sky, no other objects, natural light, detailed photograph", "subject": "tabby cat", "expected_count": 1}
+{"id": "ss03_0", "prompt": "A single brown horse alone in the centre of the frame, in fresh snow under an overcast sky, photorealistic, sharp focus", "subject": "brown horse", "expected_count": 1}
+{"id": "ss03_1", "prompt": "One brown horse, on a cobblestone street at dawn, no other objects, natural light, detailed photograph", "subject": "brown horse", "expected_count": 1}
+{"id": "ss04_0", "prompt": "A single white rabbit alone in the centre of the frame, on a cobblestone street at dawn, photorealistic, sharp focus", "subject": "white rabbit", "expected_count": 1}
+{"id": "ss04_1", "prompt": "One white rabbit, in a sunlit studio with a grey backdrop, no other objects, natural light, detailed photograph", "subject": "white rabbit", "expected_count": 1}
+{"id": "ss05_0", "prompt": "A single grey elephant alone in the centre of the frame, in a sunlit studio with a grey backdrop, photorealistic, sharp focus", "subject": "grey elephant", "expected_count": 1}
+{"id": "ss05_1", "prompt": "One grey elephant, on a mossy forest floor, no other objects, natural light, detailed photograph", "subject": "grey elephant", "expected_count": 1}
+{"id": "ss06_0", "prompt": "A single giraffe alone in the centre of the frame, on a mossy forest floor, photorealistic, sharp focus", "subject": "giraffe", "expected_count": 1}
+{"id": "ss06_1", "prompt": "One giraffe, by a calm lake at sunset, no other objects, natural light, detailed photograph", "subject": "giraffe", "expected_count": 1}
+{"id": "ss07_0", "prompt": "A single zebra alone in the centre of the frame, by a calm lake at sunset, photorealistic, sharp focus", "subject": "zebra", "expected_count": 1}
+{"id": "ss07_1", "prompt": "One zebra, on a rooftop terrace at noon, no other objects, natural light, detailed photograph", "subject": "zebra", "expected_count": 1}
+{"id": "ss08_0", "prompt": "A single panda alone in the centre of the frame, on a rooftop terrace at noon, photorealistic, sharp focus", "subject": "panda", "expected_count": 1}
+{"id": "ss08_1", "prompt": "One panda, in a bright minimalist room, no other objects, natural light, detailed photograph", "subject": "panda", "expected_count": 1}
+{"id": "ss09_0", "prompt": "A single koala alone in the centre of the frame, in a bright minimalist room, photorealistic, sharp focus", "subject": "koala", "expected_count": 1}
+{"id": "ss09_1", "prompt": "One koala, on an empty beach at low tide, no other objects, natural light, detailed photograph", "subject": "koala", "expected_count": 1}
+{"id": "ss10_0", "prompt": "A single bald eagle alone in the centre of the frame, on an empty beach at low tide, photorealistic, sharp focus", "subject": "bald eagle", "expected_count": 1}
+{"id": "ss10_1", "prompt": "One bald eagle, in a quiet meadow at golden hour, no other objects, natural light, detailed photograph", "subject": "bald eagle", "expected_count": 1}
+{"id": "ss11_0", "prompt": "A single flamingo alone in the centre of the frame, in a quiet meadow at golden hour, photorealistic, sharp focus", "subject": "flamingo", "expected_count": 1}
+{"id": "ss11_1", "prompt": "One flamingo, on a wooden table against a plain wall, no other objects, natural light, detailed photograph", "subject": "flamingo", "expected_count": 1}
+{"id": "ss12_0", "prompt": "A single owl alone in the centre of the frame, on a wooden table against a plain wall, photorealistic, sharp focus", "subject": "owl", "expected_count": 1}
+{"id": "ss12_1", "prompt": "One owl, in fresh snow under an overcast sky, no other objects, natural light, detailed photograph", "subject": "owl", "expected_count": 1}
+{"id": "ss13_0", "prompt": "A single penguin alone in the centre of the frame, in fresh snow under an overcast sky, photorealistic, sharp focus", "subject": "penguin", "expected_count": 1}
+{"id": "ss13_1", "prompt": "One penguin, on a cobblestone street at dawn, no other objects, natural light, detailed photograph", "subject": "penguin", "expected_count": 1}
+{"id": "ss14_0", "prompt": "A single parrot alone in the centre of the frame, on a cobblestone street at dawn, photorealistic, sharp focus", "subject": "parrot", "expected_count": 1}
+{"id": "ss14_1", "prompt": "One parrot, in a sunlit studio with a grey backdrop, no other objects, natural light, detailed photograph", "subject": "parrot", "expected_count": 1}
+{"id": "ss15_0", "prompt": "A single sea turtle alone in the centre of the frame, in a sunlit studio with a grey backdrop, photorealistic, sharp focus", "subject": "sea turtle", "expected_count": 1}
+{"id": "ss15_1", "prompt": "One sea turtle, on a mossy forest floor, no other objects, natural light, detailed photograph", "subject": "sea turtle", "expected_count": 1}
+{"id": "ss16_0", "prompt": "A single dolphin alone in the centre of the frame, on a mossy forest floor, photorealistic, sharp focus", "subject": "dolphin", "expected_count": 1}
+{"id": "ss16_1", "prompt": "One dolphin, by a calm lake at sunset, no other objects, natural light, detailed photograph", "subject": "dolphin", "expected_count": 1}
+{"id": "ss17_0", "prompt": "A single orange butterfly alone in the centre of the frame, by a calm lake at sunset, photorealistic, sharp focus", "subject": "orange butterfly", "expected_count": 1}
+{"id": "ss17_1", "prompt": "One orange butterfly, on a rooftop terrace at noon, no other objects, natural light, detailed photograph", "subject": "orange butterfly", "expected_count": 1}
+{"id": "ss18_0", "prompt": "A single honeybee alone in the centre of the frame, on a rooftop terrace at noon, photorealistic, sharp focus", "subject": "honeybee", "expected_count": 1}
+{"id": "ss18_1", "prompt": "One honeybee, in a bright minimalist room, no other objects, natural light, detailed photograph", "subject": "honeybee", "expected_count": 1}
+{"id": "ss19_0", "prompt": "A single frog alone in the centre of the frame, in a bright minimalist room, photorealistic, sharp focus", "subject": "frog", "expected_count": 1}
+{"id": "ss19_1", "prompt": "One frog, on an empty beach at low tide, no other objects, natural light, detailed photograph", "subject": "frog", "expected_count": 1}
+{"id": "ss20_0", "prompt": "A single red bicycle alone in the centre of the frame, on an empty beach at low tide, photorealistic, sharp focus", "subject": "red bicycle", "expected_count": 1}
+{"id": "ss20_1", "prompt": "One red bicycle, in a quiet meadow at golden hour, no other objects, natural light, detailed photograph", "subject": "red bicycle", "expected_count": 1}
+{"id": "ss21_0", "prompt": "A single vintage car alone in the centre of the frame, in a quiet meadow at golden hour, photorealistic, sharp focus", "subject": "vintage car", "expected_count": 1}
+{"id": "ss21_1", "prompt": "One vintage car, on a wooden table against a plain wall, no other objects, natural light, detailed photograph", "subject": "vintage car", "expected_count": 1}
+{"id": "ss22_0", "prompt": "A single motorcycle alone in the centre of the frame, on a wooden table against a plain wall, photorealistic, sharp focus", "subject": "motorcycle", "expected_count": 1}
+{"id": "ss22_1", "prompt": "One motorcycle, in fresh snow under an overcast sky, no other objects, natural light, detailed photograph", "subject": "motorcycle", "expected_count": 1}
+{"id": "ss23_0", "prompt": "A single sailboat alone in the centre of the frame, in fresh snow under an overcast sky, photorealistic, sharp focus", "subject": "sailboat", "expected_count": 1}
+{"id": "ss23_1", "prompt": "One sailboat, on a cobblestone street at dawn, no other objects, natural light, detailed photograph", "subject": "sailboat", "expected_count": 1}
+{"id": "ss24_0", "prompt": "A single yellow kayak alone in the centre of the frame, on a cobblestone street at dawn, photorealistic, sharp focus", "subject": "yellow kayak", "expected_count": 1}
+{"id": "ss24_1", "prompt": "One yellow kayak, in a sunlit studio with a grey backdrop, no other objects, natural light, detailed photograph", "subject": "yellow kayak", "expected_count": 1}
+{"id": "ss25_0", "prompt": "A single hot air balloon alone in the centre of the frame, in a sunlit studio with a grey backdrop, photorealistic, sharp focus", "subject": "hot air balloon", "expected_count": 1}
+{"id": "ss25_1", "prompt": "One hot air balloon, on a mossy forest floor, no other objects, natural light, detailed photograph", "subject": "hot air balloon", "expected_count": 1}
+{"id": "ss26_0", "prompt": "A single red tractor alone in the centre of the frame, on a mossy forest floor, photorealistic, sharp focus", "subject": "red tractor", "expected_count": 1}
+{"id": "ss26_1", "prompt": "One red tractor, by a calm lake at sunset, no other objects, natural light, detailed photograph", "subject": "red tractor", "expected_count": 1}
+{"id": "ss27_0", "prompt": "A single lighthouse alone in the centre of the frame, by a calm lake at sunset, photorealistic, sharp focus", "subject": "lighthouse", "expected_count": 1}
+{"id": "ss27_1", "prompt": "One lighthouse, on a rooftop terrace at noon, no other objects, natural light, detailed photograph", "subject": "lighthouse", "expected_count": 1}
+{"id": "ss28_0", "prompt": "A single windmill alone in the centre of the frame, on a rooftop terrace at noon, photorealistic, sharp focus", "subject": "windmill", "expected_count": 1}
+{"id": "ss28_1", "prompt": "One windmill, in a bright minimalist room, no other objects, natural light, detailed photograph", "subject": "windmill", "expected_count": 1}
+{"id": "ss29_0", "prompt": "A single wooden bench alone in the centre of the frame, in a bright minimalist room, photorealistic, sharp focus", "subject": "wooden bench", "expected_count": 1}
+{"id": "ss29_1", "prompt": "One wooden bench, on an empty beach at low tide, no other objects, natural light, detailed photograph", "subject": "wooden bench", "expected_count": 1}
+{"id": "ss30_0", "prompt": "A single teapot alone in the centre of the frame, on an empty beach at low tide, photorealistic, sharp focus", "subject": "teapot", "expected_count": 1}
+{"id": "ss30_1", "prompt": "One teapot, in a quiet meadow at golden hour, no other objects, natural light, detailed photograph", "subject": "teapot", "expected_count": 1}
+{"id": "ss31_0", "prompt": "A single acoustic guitar alone in the centre of the frame, in a quiet meadow at golden hour, photorealistic, sharp focus", "subject": "acoustic guitar", "expected_count": 1}
+{"id": "ss31_1", "prompt": "One acoustic guitar, on a wooden table against a plain wall, no other objects, natural light, detailed photograph", "subject": "acoustic guitar", "expected_count": 1}
+{"id": "ss32_0", "prompt": "A single violin alone in the centre of the frame, on a wooden table against a plain wall, photorealistic, sharp focus", "subject": "violin", "expected_count": 1}
+{"id": "ss32_1", "prompt": "One violin, in fresh snow under an overcast sky, no other objects, natural light, detailed photograph", "subject": "violin", "expected_count": 1}
+{"id": "ss33_0", "prompt": "A single grand piano alone in the centre of the frame, in fresh snow under an overcast sky, photorealistic, sharp focus", "subject": "grand piano", "expected_count": 1}
+{"id": "ss33_1", "prompt": "One grand piano, on a cobblestone street at dawn, no other objects, natural light, detailed photograph", "subject": "grand piano", "expected_count": 1}
+{"id": "ss34_0", "prompt": "A single umbrella alone in the centre of the frame, on a cobblestone street at dawn, photorealistic, sharp focus", "subject": "umbrella", "expected_count": 1}
+{"id": "ss34_1", "prompt": "One umbrella, in a sunlit studio with a grey backdrop, no other objects, natural light, detailed photograph", "subject": "umbrella", "expected_count": 1}
+{"id": "ss35_0", "prompt": "A single lantern alone in the centre of the frame, in a sunlit studio with a grey backdrop, photorealistic, sharp focus", "subject": "lantern", "expected_count": 1}
+{"id": "ss35_1", "prompt": "One lantern, on a mossy forest floor, no other objects, natural light, detailed photograph", "subject": "lantern", "expected_count": 1}
+{"id": "ss36_0", "prompt": "A single backpack alone in the centre of the frame, on a mossy forest floor, photorealistic, sharp focus", "subject": "backpack", "expected_count": 1}
+{"id": "ss36_1", "prompt": "One backpack, by a calm lake at sunset, no other objects, natural light, detailed photograph", "subject": "backpack", "expected_count": 1}
+{"id": "ss37_0", "prompt": "A single wristwatch alone in the centre of the frame, by a calm lake at sunset, photorealistic, sharp focus", "subject": "wristwatch", "expected_count": 1}
+{"id": "ss37_1", "prompt": "One wristwatch, on a rooftop terrace at noon, no other objects, natural light, detailed photograph", "subject": "wristwatch", "expected_count": 1}
+{"id": "ss38_0", "prompt": "A single camera alone in the centre of the frame, on a rooftop terrace at noon, photorealistic, sharp focus", "subject": "camera", "expected_count": 1}
+{"id": "ss38_1", "prompt": "One camera, in a bright minimalist room, no other objects, natural light, detailed photograph", "subject": "camera", "expected_count": 1}
+{"id": "ss39_0", "prompt": "A single typewriter alone in the centre of the frame, in a bright minimalist room, photorealistic, sharp focus", "subject": "typewriter", "expected_count": 1}
+{"id": "ss39_1", "prompt": "One typewriter, on an empty beach at low tide, no other objects, natural light, detailed photograph", "subject": "typewriter", "expected_count": 1}
+{"id": "ss40_0", "prompt": "A single cactus in a pot alone in the centre of the frame, on an empty beach at low tide, photorealistic, sharp focus", "subject": "cactus in a pot", "expected_count": 1}
+{"id": "ss40_1", "prompt": "One cactus in a pot, in a quiet meadow at golden hour, no other objects, natural light, detailed photograph", "subject": "cactus in a pot", "expected_count": 1}
+{"id": "ss41_0", "prompt": "A single sunflower alone in the centre of the frame, in a quiet meadow at golden hour, photorealistic, sharp focus", "subject": "sunflower", "expected_count": 1}
+{"id": "ss41_1", "prompt": "One sunflower, on a wooden table against a plain wall, no other objects, natural light, detailed photograph", "subject": "sunflower", "expected_count": 1}
+{"id": "ss42_0", "prompt": "A single bonsai tree alone in the centre of the frame, on a wooden table against a plain wall, photorealistic, sharp focus", "subject": "bonsai tree", "expected_count": 1}
+{"id": "ss42_1", "prompt": "One bonsai tree, in fresh snow under an overcast sky, no other objects, natural light, detailed photograph", "subject": "bonsai tree", "expected_count": 1}
+{"id": "ss43_0", "prompt": "A single pumpkin alone in the centre of the frame, in fresh snow under an overcast sky, photorealistic, sharp focus", "subject": "pumpkin", "expected_count": 1}
+{"id": "ss43_1", "prompt": "One pumpkin, on a cobblestone street at dawn, no other objects, natural light, detailed photograph", "subject": "pumpkin", "expected_count": 1}
+{"id": "ss44_0", "prompt": "A single pineapple alone in the centre of the frame, on a cobblestone street at dawn, photorealistic, sharp focus", "subject": "pineapple", "expected_count": 1}
+{"id": "ss44_1", "prompt": "One pineapple, in a sunlit studio with a grey backdrop, no other objects, natural light, detailed photograph", "subject": "pineapple", "expected_count": 1}
+{"id": "ss45_0", "prompt": "A single wine glass alone in the centre of the frame, in a sunlit studio with a grey backdrop, photorealistic, sharp focus", "subject": "wine glass", "expected_count": 1}
+{"id": "ss45_1", "prompt": "One wine glass, on a mossy forest floor, no other objects, natural light, detailed photograph", "subject": "wine glass", "expected_count": 1}
+{"id": "ss46_0", "prompt": "A single coffee cup alone in the centre of the frame, on a mossy forest floor, photorealistic, sharp focus", "subject": "coffee cup", "expected_count": 1}
+{"id": "ss46_1", "prompt": "One coffee cup, by a calm lake at sunset, no other objects, natural light, detailed photograph", "subject": "coffee cup", "expected_count": 1}
+{"id": "ss47_0", "prompt": "A single birthday cake alone in the centre of the frame, by a calm lake at sunset, photorealistic, sharp focus", "subject": "birthday cake", "expected_count": 1}
+{"id": "ss47_1", "prompt": "One birthday cake, on a rooftop terrace at noon, no other objects, natural light, detailed photograph", "subject": "birthday cake", "expected_count": 1}
+{"id": "ss48_0", "prompt": "A single chess king alone in the centre of the frame, on a rooftop terrace at noon, photorealistic, sharp focus", "subject": "chess king", "expected_count": 1}
+{"id": "ss48_1", "prompt": "One chess king, in a bright minimalist room, no other objects, natural light, detailed photograph", "subject": "chess king", "expected_count": 1}
+{"id": "ss49_0", "prompt": "A single snowman alone in the centre of the frame, in a bright minimalist room, photorealistic, sharp focus", "subject": "snowman", "expected_count": 1}
+{"id": "ss49_1", "prompt": "One snowman, on an empty beach at low tide, no other objects, natural light, detailed photograph", "subject": "snowman", "expected_count": 1}
