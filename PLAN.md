@@ -56,11 +56,11 @@ Goal: evidence that optimal guidance shifts with resolution in the direction REG
 
 1. **Port DyPE to Lumina-Image 2.0** (`reg/extrap/dype.py`): Lumina uses 2D RoPE in its DiT blocks; apply DyPE's per-step frequency rescaling to Lumina's RoPE. Validate: Lumina + DyPE at 2K/4K produces coherent images vs. vanilla (repetition visibly reduced). ~3–4 days.
 2. **Guidance zoo** (`reg/guidance/`): a `GuidanceSignal` base class exposing Δ_t = v_cond − v_uncond (CFG) or v_clean − v_perturbed (PAG, SEG, TPG), with hooks for (a) band split, (b) per-band scale schedule and interval, (d) perturbation params. FDG implemented as CFG + band split. Verify at 1K each reproduces its paper's qualitative behavior.
-3. **Grid search** (`jobs/kill_or_go.jsonl`): Lumina + DyPE.
-   - 1K and 2K: ~40 settings (CFG scale {3,4,5,6,8}, interval end {0.5,0.7,0.9,1.0}, FDG w_low/w_high pairs) × 200 prompts.
-   - 4K: ~20 settings × 100 prompts.
-   - Fixed seeds; one run with PAG and one with SEG at default params across resolutions.
-   - Metrics: patch-FID, KID, CLIP, HPSv2, repetition count. ~350 GPU-h → 3–4 days on 5 GPUs.
+3. **Grid search** (`jobs/kill_or_go.jsonl`): Lumina + DyPE (dynamic NTK, per 07). **Decided 2026-10-26 from the pilot (08) and measured speeds (06):**
+   - CFG scale {2,3,4,5,6,8,10,12} × interval end (`cfg_trunc_ratio`) {0.5,0.7,0.9,1.0} = 32 settings at 1K (200 prompts) and 2K (100 prompts); 16 settings (CFG × {0.7,1.0}) at 3K (100 prompts); CFG only (8 settings) at 4K (50 prompts). ≈ 32 + 167 + 127 + 77 = **~400 GPU-h ≈ 4 days on 4 GPUs**. 3K replaces 4K as the main high resolution (clean, 2.4× cheaper; 4K keeps the speckle issue).
+   - FDG w_low/w_high pairs and the PAG/SEG runs follow as a second job once the guidance zoo (step 2) exists.
+   - Fixed seeds (one per prompt); prompts = 100 Aesthetic-4K eval captions + 100 own single-subject prompts (`prompts/`), see 06.
+   - Metrics (step 7 decision): patch-FID + KID on Aesthetic-4K references, CLIP score (OpenCLIP ViT-L/14), ImageReward, repetition count (GroundingDINO, single-subject prompts). HPSv2 and GenEval are Phase 3 additions, not gate metrics.
 4. **Analysis notebook** (`results/kill_or_go.ipynb`): best setting per resolution per metric; plot optimal low-band scale / interval end vs. r; compare against REG-(B) prediction (low-band guidance should end earlier at higher r; high-band roughly constant).
 
 **GATE 1 (Nov 17):**

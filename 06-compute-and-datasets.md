@@ -62,15 +62,20 @@ Bold = **measured** on reg1 (2026-10-26, 30 steps, CFG 4, bf16, SDPA, tiled VAE;
 ## Datasets
 No training data is needed: only prompts plus real high-resolution reference images.
 
-| Purpose | Dataset | Size |
+**Decided 2026-10-26** (checked on the Hub: licence, gating, size):
+
+| Purpose | Dataset | Size / status |
 |---|---|---|
-| Main quality (FID/KID, CLIP) | High-res captions: LAION-HR / LAION-Aesthetics, or the Aesthetic-4K eval split (check its count) | 1,000 prompts @2K; 300 @4K |
-| Real reference images for FID/KID | Unsplash Lite (~25K free photos) or LAION-HR subset | ~10K images ≥2K (~50–150 GB) |
-| Prompt adherence | GenEval | 553 prompts |
-| Human preference | HPSv2 benchmark (3,200 prompts, 4 styles) | 800 subset |
-| Qualitative / quick | DrawBench | 200 prompts |
-| Repetition metric | Our own single-subject prompts + detector (e.g. GroundingDINO counts) | ~200 prompts |
-| Grid search | Random subset of the main prompt set | 100–200 prompts |
+| Main quality (FID/KID, CLIP) and prompt pool | **Aesthetic-4K** (`zhang0jhon/Aesthetic-4K`, MIT, ungated; Diffusion-4K paper, arXiv 2503.18352): `eval/size_2048` and `eval/size_4096` images with captions | eval split downloaded to `$REG_DATA/datasets/aesthetic_4k` (whole repo 53.8 GB, 14,996 files) |
+| Real reference images for patch-FID/KID | the same Aesthetic-4K eval images (native 2K/4K photos) — one dataset for prompts and references | see above |
+| Fallback reference pool | `laion/relaion-high-resolution` (parquet, gated-auto, 24.6 GB metadata; images must be fetched) | not needed unless Aesthetic-4K is too small |
+| Qualitative / quick | DrawBench (`sayakpaul/drawbench`, Apache-2.0) | 200 prompts, downloaded |
+| Repetition metric | Own 100 single-subject prompts (`prompts/single_subject.jsonl`) + GroundingDINO counts (`IDEA-Research/grounding-dino-base`, in transformers 5.x) | to write |
+| Grid search (kill-or-go) | 100 Aesthetic-4K captions + the 100 single-subject prompts | 200 |
+| Human preference | ImageReward (`zai-org/ImageReward`) in Phase 1; HPSv2 (`xswu/HPSv2`) in Phase 3 | weights on the Hub |
+| Prompt adherence | GenEval | Phase 3 only (needs its detector stack) |
+
+Metric implementations: patch-FID/KID with `torch-fidelity`'s Inception features via `torchmetrics`; CLIP score with `open_clip_torch` (`ViT-L-14`, laion2B); `image-reward` package (installed with `--no-build-isolation`; its build metadata imports `pkg_resources`).
 
 - **FID at 4K:** use **patch FID** (e.g. 300 images × 16 crops of 1024² ≈ 5K patches) plus KID; standard FID is unreliable with a few hundred images.
 
