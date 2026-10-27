@@ -11,7 +11,9 @@ Research notes from the planning stage (2026-10-24). The goal is a top-tier pape
 | [03-literature-review.md](03-literature-review.md) | Recent work on guidance and on resolution extrapolation, and the gap between them |
 | [04-novelty-check.md](04-novelty-check.md) | Search log for the novelty check, detailed reading of the closest prior art, and the verdict |
 | [05-method-and-contributions.md](05-method-and-contributions.md) | The proposed method (REG) and the paper's contributions |
-| [06-compute-and-datasets.md](06-compute-and-datasets.md) | Model choice, compute budget on our 5× RTX 5000 servers, datasets, and timeline |
+| [06-compute-and-datasets.md](06-compute-and-datasets.md) | Model choice, compute budget on our 5× RTX 5000 servers, datasets, and timeline; measured timings |
+| [07-dype-reference.md](07-dype-reference.md) | DyPE: what the authors' code does, our implementation, FLUX reproduction, Lumina port results, 4K probes |
+| [08-phase1-pilot.md](08-phase1-pilot.md) | Phase 1 pilot: guidance × resolution sweep on Lumina + DyPE and what it implies for the kill-or-go grid |
 
 ## Summary in one paragraph
 
@@ -30,7 +32,8 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 - [x] 2026-10-26: smoke grid split across the servers (10/10 rows, no duplicates); FLUX 4K needs FP8 (bf16 OOMs on shared cards); DyPE on FLUX at 4K: base collapses, DyPE coherent
 - [x] 2026-10-26: Lumina 4K extrapolation choice — 24-image comparison → **dynamic NTK** as default (less subject repetition than YaRN)
 - [x] 2026-10-26: 4K speckle localised (07): 3K clean, 4K speckled; YaRN without mscale collapses; **CFG 2 collapses at 4K where CFG 4 works**; FP8 benign. First evidence that the usable guidance range shifts with resolution.
-- [ ] `jobs/pilot_cfg_sweep.jsonl` running: CFG {2..8} × {1K,2K,3K,4K} × 2 prompts, Lumina + dy_ntk — pilot of the kill-or-go grid
+- [x] 2026-10-26: **Phase 1 pilot** (`08-phase1-pilot.md`): CFG {2..8} × {1K,2K,3K,4K} × 2 prompts on Lumina + dy_ntk — the usable and optimal guidance both shift up with resolution (native optimum ~3–4, 4K optimum ≥8; CFG 2–3 collapse at 4K). Kill-or-go direction confirmed qualitatively.
+- [ ] `jobs/pilot_cfg_sweep_b.jsonl` running overnight: 6 varied prompts × 2 seeds × same sweep (144 rows)
 - [ ] reg2 unusable while another user's 30 GB kernel is resident; reg1/reg5 shared too (see SERVER_SETUP)
 - [x] 2026-10-26: Qwen-Image loader (FP8 weight-only via torchao, two-phase): 1K 145 s/image at 50 steps, 19.9 GB — 3.2× the estimate; Phase 3c budget note in 06. **Phase 0 step 3 complete for all three models.**
 - [ ] Eval pipeline (step 7); datasets/prompts (step 6); Qwen 2K timing before Phase 3 planning
