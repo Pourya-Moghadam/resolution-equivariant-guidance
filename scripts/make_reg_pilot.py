@@ -32,3 +32,16 @@ rows.sort(key=lambda r: r["height"])  # 1K first: a quick sanity check before th
 out = ROOT / "jobs" / "reg_pilot_fdg.jsonl"
 out.write_text("".join(json.dumps(r) + "\n" for r in rows))
 print(len(rows), "rows ->", out)
+
+# Stage B (2026-10-27, after the first 4K rows): only w_low = 8 rescued 4K; w_low 2-4 collapse whatever the
+# cutoff. So the 4K guidance need sits in the low band. Map w_low and w_high separately at 4K, and the cutoff
+# at the one working pair.
+STAGE_B = [(6, 4, 2), (12, 4, 2), (8, 2, 2), (8, 6, 2), (8, 4, 4), (8, 2, 8)]
+rows_b = [{
+    "id": f"fdg_{wl}_{wh}_d{d}_4096_{name}", "model": "lumina", "prompt": prompt, "height": 4096, "width": 4096,
+    "seed": 0, "extrap": "ntk", "fdg": {"w_low": float(wl), "w_high": float(wh), "down": float(d)},
+    "tags": {"experiment": "reg_pilot_fdg", "prompt_name": name, "size": 4096, "down": d, "pair": f"{wl}/{wh}"},
+} for wl, wh, d in STAGE_B for name, prompt in prompts.items()]
+out_b = ROOT / "jobs" / "reg_pilot_fdg_b.jsonl"
+out_b.write_text("".join(json.dumps(r) + "\n" for r in rows_b))
+print(len(rows_b), "rows ->", out_b)
