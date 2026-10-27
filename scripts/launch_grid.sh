@@ -6,7 +6,8 @@
 #   bash scripts/launch_grid.sh jobs/kill_or_go.jsonl kill_or_go 1 4        # explicit split (e.g. when a server is skipped)
 #   ssh reg3 "bash -lc '~/reg/scripts/launch_grid.sh jobs/kill_or_go.jsonl kill_or_go 1 4'"
 #
-# Output dir is $REG_DATA/outputs/<name>; the log is <out>/log_<host>.txt. Refuses to start if a
+# Output dir is $REG_DATA/outputs/<name>; the log is <out>/log_<host>.txt. The tmux session is "job"
+# (REG_JOB_SESSION overrides it for a side job next to a running grid). Refuses to start if such a
 # "job" session already exists. Follow up with scripts/wait_jobs.sh on reg1.
 
 set -eu
@@ -20,10 +21,11 @@ NUM=${4:-$REG_NUM_SERVERS}
 OUT=$REG_DATA/outputs/$NAME
 mkdir -p "$OUT"
 
-if tmux has-session -t job 2>/dev/null; then
-  echo "$(hostname -s): a 'job' session is already running" >&2
+SESSION=${REG_JOB_SESSION:-job}
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+  echo "$(hostname -s): a '$SESSION' session is already running" >  echo "$(hostname -s): a 'job' session is already running" >&22
   exit 1
 fi
-tmux new-session -d -s job \
+tmux new-session -d -s "$SESSION" \
   "cd $PWD && . ./env.sh && python scripts/run_grid.py --jobs $JOBS --out $OUT --server-id $SID --num-servers $NUM > $OUT/log_$(hostname -s).txt 2>&1"
 echo "$(hostname -s): started $JOBS as server $SID/$NUM -> $OUT"
