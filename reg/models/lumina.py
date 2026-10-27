@@ -6,11 +6,15 @@ embeddings only so the Gemma-2 text encoder can be moved off the GPU for 2K/4K r
 
 from __future__ import annotations
 
+import contextlib
 import time
 
+import numpy as np
 import torch
 from diffusers import Lumina2Pipeline
+from diffusers.pipelines.lumina2.pipeline_lumina2 import calculate_shift, retrieve_timesteps
 
+from ..guidance import Guidance, Step, build_guidance
 from .embed_cache import TextEmbedCache
 
 MODEL_ID = "Alpha-VLLM/Lumina-Image-2.0"
@@ -80,14 +84,24 @@ class Lumina:
         system_prompt: str | None = None,
         output_type: str = "pil",
         shift: float | None = None,
+        guidance: Guidance | None = None,
+        use_pipeline: bool = False,
     ):
         """Return (images, info). One seed per prompt (seed + index) so rows are reproducible alone.
+
+        Sampling runs in our own loop (``_sample``), a copy of Lumina2Pipeline.__call__'s loop with
+        the branch combination delegated to a ``reg.guidance.Guidance``; with the default guidance
+        (CFG ``guidance_scale`` on the interval (0, ``cfg_trunc_ratio``], ``cfg_normalization``) the
+        output is bit-identical to the pipeline (``tests/test_guidance_real.py``). ``use_pipeline``
+        runs the stock pipeline instead (CFG only), kept for that check.
 
         ``shift`` overrides the scheduler's flow-matching time shift for this call. Lumina ships
         shift=6 with use_dynamic_shifting=False, so its sigma schedule is the same at every
         resolution (the pipeline computes a token-count mu but the scheduler ignores it); FLUX
         instead shifts by token count. Restored afterwards.
         """
+        if guidance is None:
+            guidance = build_guidance({"guidance": guidance_scale, "cfg_trunc_ratio": cfg_trunc_ratio, "cfg_normalization": cfg_normalization})
         embeds = self.encode(prompts, negative_prompt=negative_prompt, system_prompt=system_prompt)
         generators = [torch.Generator(self.device).manual_seed(seed + i) for i in range(len(prompts))]
         sched = self.pipe.scheduler
@@ -98,19 +112,22 @@ class Lumina:
         torch.cuda.synchronize(self.device)
         t0 = time.perf_counter()
         try:
-            images = self.pipe(
-                prompt=None,
-                height=height,
-                width=width,
-                num_inference_steps=steps,
-                guidance_scale=guidance_scale,
-                generator=generators,
-                cfg_trunc_ratio=cfg_trunc_ratio,
-                cfg_normalization=cfg_normalization,
-                max_sequence_length=MAX_SEQ_LEN,
-                output_type=output_type,
-                **embeds,
-            ).images
+            if use_pipeline:
+                images = self.pipe(
+                    prompt=None,
+                    height=height,
+                    width=width,
+                    num_inference_steps=steps,
+                    guidance_scale=guidance_scale,
+                    generator=generators,
+                    cfg_trunc_ratio=cfg_trunc_ratio,
+                    cfg_normalization=cfg_normalization,
+                    max_sequence_length=MAX_SEQ_LEN,
+                    output_type=output_type,
+                    **embeds,
+                ).images
+            else:
+                images = self._sample(embeds, height, width, steps, generators, guidance, seed, output_type)
         finally:
             if shift is not None:
                 sched.register_to_config(shift=orig_shift)
@@ -118,9 +135,62 @@ class Lumina:
         info = {
             "model": NAME,
             "shift": shift if shift is not None else orig_shift,
+            "guidance": guidance.describe(),
             "seconds": time.perf_counter() - t0,
             "peak_vram_gb": torch.cuda.max_memory_allocated(self.device) / 2**30,
             "cache_hits": self.cache.hits,
             "cache_misses": self.cache.misses,
         }
         return images, info
+
+    def _sample(self, embeds: dict, height: int, width: int, steps: int, generators: list, guidance: Guidance, seed: int, output_type: str):
+        """Lumina2Pipeline.__call__ steps 4–7 with ``guidance`` deciding the passes per step and
+        how they combine. Kept line-for-line close to the pipeline so the CFG case stays identical
+        (including its mu computed from latents.shape[1], which the fixed-shift scheduler ignores)."""
+        pipe, sched, tr = self.pipe, self.pipe.scheduler, self.pipe.transformer
+        pos = dict(encoder_hidden_states=embeds["prompt_embeds"], encoder_attention_mask=embeds["prompt_attention_mask"])
+        neg = dict(encoder_hidden_states=embeds["negative_prompt_embeds"], encoder_attention_mask=embeds["negative_prompt_attention_mask"])
+        batch = pos["encoder_hidden_states"].shape[0]
+        latents = pipe.prepare_latents(batch, tr.config.in_channels, height, width, pos["encoder_hidden_states"].dtype, self.device, generators, None)
+        sigmas = np.linspace(1.0, 1 / steps, steps)
+        mu = calculate_shift(
+            latents.shape[1],
+            sched.config.get("base_image_seq_len", 256),
+            sched.config.get("max_image_seq_len", 4096),
+            sched.config.get("base_shift", 0.5),
+            sched.config.get("max_shift", 1.15),
+        )
+        timesteps, steps = retrieve_timesteps(sched, steps, self.device, sigmas=sigmas, mu=mu)
+        sched.set_begin_index(0)
+        attention_kwargs = getattr(pipe, "_attention_kwargs", None)
+        p = tr.config.patch_size
+        text_lens = pos["encoder_attention_mask"].sum(-1).tolist()
+        if len(set(text_lens)) != 1:
+            raise ValueError("perturbation guidance needs equal text lengths in a batch; run one prompt at a time")
+        ctx = {"text_len": int(text_lens[0]), "grid": (latents.shape[-2] // p, latents.shape[-1] // p),
+               "generator": torch.Generator("cpu").manual_seed(seed)}
+        n_train = sched.config.num_train_timesteps
+
+        def run(cond: dict) -> torch.Tensor:
+            return tr(hidden_states=latents, timestep=current_timestep, return_dict=False, attention_kwargs=attention_kwargs, **cond)[0]
+
+        for i, t in enumerate(timesteps):
+            step = Step(i, steps, float(t) / n_train)
+            current_timestep = (1 - t / n_train).expand(latents.shape[0])  # Lumina: t=0 noise, t=1 image
+            passes = guidance.passes(step)
+            preds = {"cond": run(pos)}
+            if "uncond" in passes:
+                preds["uncond"] = run(neg)
+            if "pert" in passes:
+                with contextlib.ExitStack() as stack:
+                    for term in guidance.pert_terms(step):
+                        stack.enter_context(term.perturbation(tr, ctx))
+                    preds["pert"] = run(pos)
+            noise_pred = -guidance.combine(preds, step)
+            latents = sched.step(noise_pred, t, latents, return_dict=False)[0]
+
+        if output_type == "latent":
+            return latents
+        latents = (latents / pipe.vae.config.scaling_factor) + pipe.vae.config.shift_factor
+        image = pipe.vae.decode(latents, return_dict=False)[0]
+        return pipe.image_processor.postprocess(image, output_type=output_type)

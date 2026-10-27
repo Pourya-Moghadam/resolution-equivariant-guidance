@@ -1,1 +1,36 @@
-"""Guidance zoo (CFG, FDG, PAG, SEG, TPG) built on a common GuidanceSignal base."""
+"""Guidance zoo (CFG, FDG, PAG, SEG, TPG) built on a common GuidanceSignal base.
+
+``build_guidance(row)`` turns a job row into a ``Guidance``. Row keys (all optional):
+
+  guidance            CFG scale w (1 = off); start/end of the CFG interval: cfg_start (default 0),
+                      cfg_trunc_ratio (default 1; Lumina's name for the interval end)
+  fdg                 {"w_low": .., "w_high": .., "down": 2} — replaces the CFG term by FDG's band-split CFG
+  pag / seg / tpg     {"scale": 3.0, "layers": [..], "start": 0, "end": 1, "sigma": 10 (seg), "frac": 1.0 (tpg)}
+  cfg_normalization   Lumina's norm rescale after guidance (default True)
+
+Several terms may be combined, e.g. CFG 4 + PAG 3 (the PAG/SEG papers' joint form).
+"""
+
+from __future__ import annotations
+
+from .bands import LaplacianSplit
+from .base import CFGTerm, Guidance, PertTerm, Step, Term
+from .perturb import PAG, SEG, TPG
+
+__all__ = ["Guidance", "Step", "Term", "CFGTerm", "PertTerm", "PAG", "SEG", "TPG", "LaplacianSplit", "build_guidance"]
+
+
+def build_guidance(row: dict) -> Guidance:
+    terms: list[Term] = []
+    start, end = float(row.get("cfg_start", 0.0)), float(row.get("cfg_trunc_ratio", 1.0))
+    if "fdg" in row:
+        f = row["fdg"]
+        split = LaplacianSplit(down=f.get("down", 2.0), sigma=f.get("sigma"))
+        terms.append(CFGTerm(f["w_high"], start, end, split=split, band_scales=(f["w_low"], f["w_high"])))
+    elif float(row.get("guidance", 1.0)) != 1.0:
+        terms.append(CFGTerm(float(row["guidance"]), start, end))
+    for key, cls in (("pag", PAG), ("seg", SEG), ("tpg", TPG)):
+        if key in row:
+            p = dict(row[key])
+            terms.append(cls(p.pop("scale"), **p))
+    return Guidance(terms, normalization=bool(row.get("cfg_normalization", True)))

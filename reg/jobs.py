@@ -11,7 +11,8 @@ Row keys (all optional except ``prompt``):
   prompt, negative, height, width, steps, guidance, seed
   extrap        none | yarn | ntk;  static_extrap: bool (plain YaRN/NTK, no DyPE dynamics);
                 extrap_mscale: bool (default True; False drops YaRN's attention temperature, diagnostic)
-  Lumina: cfg_trunc_ratio, cfg_normalization, shift
+  Lumina: cfg_trunc_ratio, cfg_normalization, shift, and the guidance-zoo keys of
+          reg.guidance.build_guidance: cfg_start, fdg {w_low, w_high, down}, pag/seg/tpg {scale, layers, ...}
   FLUX:   true_cfg_scale, shift_mu, quant (fp8)
   tags          free-form dict copied into the result JSON
 """
