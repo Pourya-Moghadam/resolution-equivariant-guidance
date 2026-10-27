@@ -7,8 +7,8 @@
 #   ssh reg3 "bash -lc '~/reg/scripts/launch_grid.sh jobs/kill_or_go.jsonl kill_or_go 1 4'"
 #
 # Output dir is $REG_DATA/outputs/<name>; the log is <out>/log_<host>.txt. The tmux session is "job"
-# (REG_JOB_SESSION overrides it for a side job next to a running grid). Refuses to start if such a
-# "job" session already exists. Follow up with scripts/wait_jobs.sh on reg1.
+# (REG_JOB_SESSION overrides it for a side job next to a running grid). Refuses to start if that
+# session already exists. Follow up with scripts/wait_jobs.sh on reg1 (it watches "job" sessions).
 
 set -eu
 cd "$(dirname "$0")/.."
@@ -23,7 +23,7 @@ mkdir -p "$OUT"
 
 SESSION=${REG_JOB_SESSION:-job}
 if tmux has-session -t "$SESSION" 2>/dev/null; then
-  echo "$(hostname -s): a '$SESSION' session is already running" >  echo "$(hostname -s): a 'job' session is already running" >&22
+  echo "$(hostname -s): a '$SESSION' session is already running" >&2
   exit 1
 fi
 tmux new-session -d -s "$SESSION" \
