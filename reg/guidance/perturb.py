@@ -93,9 +93,11 @@ class PerturbedAttnProcessor:
 
 
 def default_layers(transformer) -> list[int]:
-    """Middle quarter of the blocks (Lumina: 12..19 of 32). No published choice exists for Lumina; tuned at 1K."""
+    """Three middle blocks (Lumina: 15..17 of 32). Calibrated at 1K (jobs/pert_calib_1k.jsonl, 08): eight
+    blocks desaturate and flatten at any scale; three blocks at scale 1.5-2 give a visible, clean effect;
+    one block needs scale >= 3 to differ from plain CFG."""
     n = len(transformer.layers)
-    return list(range(n * 3 // 8, n * 5 // 8))
+    return list(range(n // 2 - 1, n // 2 + 2))
 
 
 class AttnPertTerm(PertTerm):
@@ -103,7 +105,7 @@ class AttnPertTerm(PertTerm):
 
     mode = "identity"
 
-    def __init__(self, scale: float, layers: list[int] | None = None, sigma: float = 10.0, start: float = 0.0, end: float = 1.0, **kw):
+    def __init__(self, scale: float, layers: list[int] | None = None, sigma: float = 5.0, start: float = 0.0, end: float = 1.0, **kw):
         super().__init__(scale, start, end, **kw)
         self.layers = layers
         self.sigma = float(sigma)
@@ -136,7 +138,7 @@ class SEG(AttnPertTerm):
 class TPG(PertTerm):
     name = "tpg"
 
-    def __init__(self, scale: float, layers: list[int] | None = None, frac: float = 1.0, start: float = 0.0, end: float = 1.0, **kw):
+    def __init__(self, scale: float, layers: list[int] | None = None, frac: float = 0.5, start: float = 0.0, end: float = 1.0, **kw):
         """``frac``: fraction of image tokens that take part in the permutation (the paper shuffles
         'a small fraction' for DiTs without giving it; 1.0 = all image tokens)."""
         super().__init__(scale, start, end, **kw)

@@ -169,7 +169,7 @@ def test_attn_pert_context_swaps_and_restores_processors():
     orig = [b.attn.processor for b in tr.layers]
     with PAG(3.0).perturbation(tr, {"text_len": 3, "grid": (4, 4)}):
         swapped = [isinstance(b.attn.processor, PerturbedAttnProcessor) for b in tr.layers]
-    assert swapped == [False, False, False, True, True, False, False, False]  # middle quarter of 8 → [3, 5)
+    assert swapped == [False, False, False, True, True, True, False, False]  # three middle blocks of 8 → [3, 6)
     assert [b.attn.processor for b in tr.layers] == orig
 
 
