@@ -35,5 +35,5 @@ Bold = visually collapsed (flat colour or ghost). Vanilla 4K reference: std 18 /
 ## Consequences for the kill-or-go grid (PLAN Phase 1, step 3)
 - Sweep CFG to at least 10–12 at 3K/4K; the optimum is above 8.
 - 3K is a good "high" resolution for Lumina (clean, 4.9 min/image, 2.4× cheaper than 4K) — use 1K/2K/3K for the quantitative grid and 4K for a reduced set, until the speckle is understood.
-- Two prompts are enough to see the effect, not to measure it: `jobs/pilot_cfg_sweep_b.jsonl` (6 varied prompts × 2 seeds × same sweep, 144 rows) runs next; the quantitative verdict needs the step-7 metrics (patch-FID/KID, CLIP, repetition count) on ≥100 prompts.
+- Two prompts are enough to see the effect, not to measure it: `jobs/pilot_cfg_sweep_b.jsonl` (6 varied prompts × 2 seeds × same sweep, 288 rows, ~22 GPU-h) runs next; the quantitative verdict needs the step-7 metrics (patch-FID/KID, CLIP, repetition count) on ≥100 prompts.
 - Band-wise behaviour (component B's specific prediction, low-band guidance switching off earlier) is not visible from scalar CFG; it needs the guidance-spectrum diagnostic (`reg/diag/`), Phase 2.
