@@ -119,3 +119,21 @@ Question: does scaling FDG's band cutoff by the resolution ratio (down 2 at 1K �
 - **So the upward shift of the CFG optimum with resolution is a low-frequency effect.** At 4K the high band is satisfied with native-level guidance. This is direct support for band-wise guidance (05), and an early hint that "CFG 8 at 4K" over-guides the high band.
 - **Scaling the cutoff did not help yet.** At 8/4, down 8 is close to down 2, with slightly less saturated windows. Two prompts only.
 - Follow-up queued on reg2 after this job (`jobs/reg_pilot_fdg_b.jsonl`, 36 rows): w_low {6, 8, 12} × w_high {2, 4, 6} around 8/4, and cutoff {2, 4, 8}.
+
+### REG pilot stage A, all 6 prompts, scored (2026-10-27 evening)
+CLIP and patch-KID, 6 prompts at seed 0, references are 400 Aesthetic-4K 2K images. The CFG baselines are re-scored on the same references (`results/reg_pilot_cfg4k_baseline_eval.csv`). FDG: `results/reg_pilot_fdg_eval.csv`. The 4K "low band" is below 1/d of the latent grid. At d = 8 that is the same image-relative band as d = 2 at 1K.
+
+| 4K setting | CLIP | ± SE | patch-KID |
+|---|---|---|---|
+| CFG 4 | 25.0 | 4.2 | 0.158 |
+| CFG 6 | 34.6 | 0.8 | 0.053 |
+| CFG 8 | 34.2 | 0.5 | 0.040 |
+| CFG 10 | 34.5 | 0.3 | 0.028 |
+| FDG 2/6, d2 / d8 | 7.1 / 9.6 | | 0.277 / 0.247 |
+| FDG 4/8, d2 / d8 | 25.4 / 27.8 | | 0.142 / 0.094 |
+| FDG 8/4, d2 | 33.9 | 0.6 | 0.063 |
+| FDG 8/4, d8 | 33.6 | 1.1 | 0.079 |
+
+- **The coarsest image-relative band is the one that needs more guidance at 4K.** FDG 8/4 with d8 guides only the band below 1/8 of the grid at 8 and everything else at 4, and it is coherent. FDG 4/8 with d8 is the mirror image, with the coarse band at 4 and the rest at 8, and it collapses. So the extra guidance 4K needs sits in the band that corresponds to the whole native-resolution image. This is the REG-A/anchor picture in 05, measured.
+- **FDG 8/4 is level with CFG 6 to 8 on CLIP, not better.** KID favours CFG 8 to 10, but KID is biased toward over-guidance (sweep C). With 6 images the difference is inside the noise. REG has to beat retuned CFG on a human-preference metric or on a larger set before it is a result.
+- Stage B (36 rows, running overnight on reg2) tests whether the high band can drop to 2 when the coarse band is at 8, and maps w_low {6, 8, 12}.
