@@ -231,3 +231,14 @@ Plain-CFG preference baselines (`results/pilot_cfg_baseline_pref.csv`, seed 0, 6
 - **By eye (3K sheet):** anchored w4 keeps the composition and the contrast; versus CFG 4 at 3K it is brighter and the subjects are complete (the mountain gets its peak and sky, the street its signage and figure). Versus CFG 8/10 the anchored images are similar in contrast and slightly different in layout, with no over-saturation. The 4K sheet: anchored w2 and w4 keep the full framing (whole portrait with window, lighthouse on its headland, cathedral nave with pews) where CFG 8 crops tight or drifts; the above-native speckle is identical across columns, as it must be.
 - **Cost:** none measurable (anchor passes are 1/r² of the tokens): 294 s at 3K and 695 s at 4K per image, the same as plain CFG.
 - Standing interpretation unchanged: resolution dependence of the guidance optimum is a symptom of the base prediction's sub-native band being off-manifold under extrapolation; supplying that band from the native model restores the native guidance weight at 3K and 4K. Stage C and the 150-row `jobs/reg_anchor_grid.jsonl` on the kill-or-go prompts (3K/4K, anchored w4, same prompts and seeds as the grid, so the comparison with the grid's CFG optimum is paired) follow on reg2.
+
+### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
+| HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1K (trunc 0.9) | 30.7 | 31.3 | 31.8 | 32.0 | 32.1 | 31.9 | 31.7 | 31.5 | – |
+| 2K (trunc 0.9) | 27.2 | 29.2 | 30.0 | 30.5 | 30.9 | 31.4 | 31.7 | 31.8 | – |
+| 3K (trunc 0.7) | 12.9 | 19.1 | 22.3 | 24.3 | 25.7 | 27.2 | 27.9 | 29.2 | 29.0 |
+| 4K (trunc 1.0) | – | 10.6 | – | 18.8 | – | 24.4 | – | 25.4 | – |
+
+- Same picture as the 6-prompt pilots, now at n ≈ 19: at 1K HPS peaks at CFG 5–6 and falls above 8; at 2K it is still rising at 12; at 3K and 4K it climbs steeply through the whole range (CFG 4 at 3K is 10 HPS below the top). ImageReward is flat from CFG 4 at 1K/2K and rises with CFG at 3K/4K. So the grid will show the optimum moving up with resolution (Gate 1, in the sign measured by the pilots), and the preference metrics will not put a ceiling on it at 3K/4K; the base-anchored comparison on the same prompts (`reg_anchor_grid`, paired seeds) is what turns that into the paper's statement. Truncation: at 1K/2K, trunc 0.9 beats 0.5 by about 1 HPS at every CFG (ending CFG at 50 % costs more than it saves at native too).
+- Final numbers with all 100/50/50/25 prompts per cell, bootstrap CIs and the repetition counts land with the grid (Friday).
