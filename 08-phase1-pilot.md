@@ -143,3 +143,17 @@ CLIP and patch-KID, 6 prompts at seed 0, references are 400 Aesthetic-4K 2K imag
 - **The coarse band has a window around 6 to 10.** At 6/4 the images are coherent but weaker: the cathedral windows lose colour and the lighthouse shrinks. At 12/4 the composition changes and starts repeating: a second lighthouse appears, the still life is rearranged, and the street turns into heavy speckle. This is the same turnover as CFG 12 to 16 in sweep C, now located in the coarse band.
 - **No guidance setting removes the 4K speckle**, with CFG 8 included (see the portrait crops). The speckle is an extrapolation artifact (07) and not REG's problem. The paper should not claim to fix it.
 - **Consequence for REG.** Lowering fine-band guidance buys no visible quality over CFG 8, so "same coherence with less over-sharpening" is not supported at 4K. What remains is the mechanism: the resolution-dependent part of guidance is the coarse image-relative band. A REG rule that sets that band from the resolution ratio, without a sweep, is the claim to test next.
+
+### REG pilot stage B scored (2026-10-28 00:40; `results/reg_pilot_fdg_eval.csv`, 6 prompts, 4K)
+| FDG w_low/w_high, cutoff | CLIP | ± SE | patch-KID |
+|---|---|---|---|
+| 6/4, d2 | 34.1 | 0.8 | 0.071 |
+| 8/4, d2 / d4 / d8 | 33.9 / 33.6 / 33.6 | | 0.063 / 0.072 / 0.079 |
+| 8/6, d2 | 34.0 | 0.6 | **0.047** |
+| 8/2, d2 | 33.6 | 0.7 | 0.082 |
+| 8/2, d8 | 31.0 | 1.4 | 0.167 |
+| 12/4, d2 | 33.7 | 0.2 | 0.048 |
+| CFG 6 / 8 / 10 (ref.) | 34.6 / 34.2 / 34.5 | | 0.053 / 0.040 / 0.028 |
+
+- **Three regimes in cycles per image at 4K** (latent side 512; cutoff d ↔ ≈ 256/d cycles/image): the band below ≈ 32 c/i (the whole native image; d8) needs ≈ 8 and collapses at 4; the band 32–128 c/i (native fine detail; between d8 and d2) needs ≥ 4 (8/2 at d8 fails, 8/4 at d8 works); the band above 128 c/i (detail that does not exist at native) is indifferent between 2 and 8 (8/2 at d2 is level with 8/4). At 1K the band below 32 c/i was happy at 2 (FDG 2/6 in the zoo). **So the band that changes its requirement with resolution is exactly the native-image band, by a factor ≈ 2–4 between 1K and 4K.** The diagnostics job (`jobs/reg_diag.jsonl`, running) measures whether the guidance signal in that band shrinks by the same factor.
+- No FDG setting beats CFG 8–10 on these metrics; 8/6 ties CFG 8 on KID with slightly lower CLIP. The quality claim for REG must come from a parameter-free rule, not from a better 4K setting.

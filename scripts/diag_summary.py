@@ -5,9 +5,11 @@ resolution, and the (B′) prediction for the coarse-band weight (05, revision 2
   source env.sh
   python scripts/diag_summary.py --out $REG_DATA/outputs/reg_diag [--csv results/reg_diag.csv] [--fig results/reg_diag.png]
 
-For every (size, cfg) cell: ρ_band = ‖Δ_low‖/‖v_cond,low‖ averaged over the CFG-active steps and the
-prompts, for each recorded cutoff; also the global ratio ‖Δ‖/‖v_cond‖. The prediction
-    w_low(r) = w_native · ρ_native(cutoff 2) / ρ_r(cutoff 2r)
+For every (size, cfg) cell: ρ_band = ‖Δ_low‖/‖v_cond,low‖ per step, averaged over prompts, for each
+recorded cutoff; also the global ratio ‖Δ‖/‖v_cond‖. ρ falls by two orders of magnitude along the
+trajectory, so cells are compared step by step (the sigma schedule is the same at every resolution)
+and summarised by the median over steps 1..n-1 (step 0, pure noise, is excluded). The prediction
+    w_low(r) = w_native · median_t[ ρ_native,t(cutoff 2) / ρ_r,t(cutoff 2r) ]
 compares the native cutoff at 1K with the same cutoff in cycles per image at ratio r.
 """
 
@@ -51,21 +53,24 @@ def main() -> None:
         cos = np.stack([d["cos_low"] for _, d in items])
         sigma = items[0][1]["sigma"]
         per_step[(size, cfg)] = (sigma, np.nanmean(ratios, axis=0), downs)
-        row = {"size": size, "cfg": cfg, "n": len(items), "ratio_global": float(np.nanmean(glob))}
+        sl = slice(1, None)  # drop step 0
+        row = {"size": size, "cfg": cfg, "n": len(items), "ratio_global": float(np.nanmedian(np.nanmean(glob, 0)[sl]))}
         for j, dn in enumerate(downs):
-            row[f"ratio_d{dn:g}"] = float(np.nanmean(ratios[:, :, j]))
+            row[f"ratio_d{dn:g}"] = float(np.nanmedian(np.nanmean(ratios[:, :, j], 0)[sl]))
             row[f"cos_d{dn:g}"] = float(np.nanmean(cos[:, :, j]))
         rows.append(row)
 
     # (B') prediction: native cutoff 2 at 1K vs cutoff 2r at size r, same cfg
-    nat = {r["cfg"]: r for r in rows if r["size"] == NATIVE}
+    nat = {cfg: v for (size, cfg), v in per_step.items() if size == NATIVE}
     for r in rows:
         ratio = r["size"] / NATIVE
-        key = f"ratio_d{2 * ratio:g}"
-        if r["cfg"] in nat and key in r and r[key] > 0:
-            r["w_low_pred"] = a.w_native * nat[r["cfg"]]["ratio_d2"] / r[key]
-        else:
-            r["w_low_pred"] = float("nan")
+        cell = per_step[(r["size"], r["cfg"])]
+        downs = list(cell[2])
+        r["w_low_pred"] = float("nan")
+        if r["cfg"] in nat and 2.0 * ratio in downs:
+            rho_nat = nat[r["cfg"]][1][1:, downs.index(2.0)]
+            rho_r = cell[1][1:, downs.index(2.0 * ratio)]
+            r["w_low_pred"] = float(a.w_native * np.nanmedian(rho_nat / rho_r))
 
     keys = ["size", "cfg", "n", "ratio_global"] + [k for k in rows[0] if k.startswith("ratio_d")] + ["w_low_pred"]
     print("  ".join(f"{k:>12}" for k in keys))
