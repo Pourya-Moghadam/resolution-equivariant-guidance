@@ -157,3 +157,17 @@ CLIP and patch-KID, 6 prompts at seed 0, references are 400 Aesthetic-4K 2K imag
 
 - **Three regimes in cycles per image at 4K** (latent side 512; cutoff d ↔ ≈ 256/d cycles/image): the band below ≈ 32 c/i (the whole native image; d8) needs ≈ 8 and collapses at 4; the band 32–128 c/i (native fine detail; between d8 and d2) needs ≥ 4 (8/2 at d8 fails, 8/4 at d8 works); the band above 128 c/i (detail that does not exist at native) is indifferent between 2 and 8 (8/2 at d2 is level with 8/4). At 1K the band below 32 c/i was happy at 2 (FDG 2/6 in the zoo). **So the band that changes its requirement with resolution is exactly the native-image band, by a factor ≈ 2–4 between 1K and 4K.** The diagnostics job (`jobs/reg_diag.jsonl`, running) measures whether the guidance signal in that band shrinks by the same factor.
 - No FDG setting beats CFG 8–10 on these metrics; 8/6 ties CFG 8 on KID with slightly lower CLIP. The quality claim for REG must come from a parameter-free rule, not from a better 4K setting.
+
+## Guidance diagnostics (2026-10-28 04:00, `jobs/reg_diag.jsonl`, 36 rows, `results/reg_diag.{csv,png}`)
+Per-step ‖Δ_low‖/‖v_cond,low‖ at six cutoffs, 6 prompts, CFG 4 at 1K–4K and CFG 8 at 3K/4K. Compared step by step (same sigma schedule at every resolution), native cutoff d2 at 1K against the same cutoff in cycles per image at ratio r (d = 2r).
+
+| | median ratio, native-image band | (B′) predicted w_low | measured window |
+|---|---|---|---|
+| 1K | 0.040 | 4 (def.) | 2–8 flat |
+| 2K | 0.035 | 5.3 | flat |
+| 3K | 0.034 | **3.8** | 6–8 |
+| 4K | 0.045 | **4.8** | 6–10 |
+
+- **(B′) magnitude matching is refuted.** The relative size of the coarse-band guidance signal is preserved under extrapolation (it even grows slightly at 4K), so "the native weight under-guides because Δ_low shrank" is wrong. The step-matched prediction lands at 4–5 where 8 is needed. What degrades at 4K is the *direction* or informativeness of Δ_low, not its size: the model's coarse-band conditional/unconditional difference is less useful per unit norm, and a larger weight partly compensates.
+- **Spectrum drift (paper Figure 2 material):** fraction of Δ power above 64 cycles/image (beyond the native Nyquist) is < 1 % at 1K and 17 % at 4K; the share in the coarsest octaves (0–4 c/i) rises from 0.37 to 0.48. The guidance signal at 4K spends a sixth of its energy on frequencies the model never guided during training — the speckle band.
+- **Decision (standing instruction: decide and proceed).** Per the 05 revision, component **(C), the native-resolution anchor**, becomes the lead method: compute the coarse-band guidance from the model queried at native resolution on the area-downsampled latent at its derived noise level, where Δ is in-distribution, and keep the native weight. If native-weight anchored guidance gives coherent 4K images where CFG 4 collapses, the paper's method claim is "native guidance extrapolates once it is evaluated where the model is native", with no retuning. The empirical rule w_low ≈ w_native·√r (2K 5.7, 3K 6.9, 4K 8.0, all inside the measured windows) is kept as the one-line baseline REG-lite, to be tested against the grid's optimum curve. Implementation and a 2K/3K/4K pilot on reg2 follow now.
