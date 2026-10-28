@@ -4,7 +4,8 @@ Every guidance method we study has the form
 
     v = v_base + Σ_terms Σ_bands  g_term,band(step) · ψ_band(Δ_term)
 
-with Δ = v_cond − v_uncond (CFG, FDG) or Δ = v_cond − v_perturbed (PAG, SEG, TPG), ψ an
+with Δ = v_cond − v_uncond (CFG, FDG, and the native-anchored CFG of ``reg.guidance.anchor``) or
+Δ = v_cond − v_perturbed (PAG, SEG, TPG), ψ an
 optional band split (``reg.guidance.bands``) and g a scalar gain that may depend on the step
 (scale, interval; later REG's per-band schedule). ``v_base`` is v_uncond while a CFG term is
 active (so plain CFG is exactly v_u + w·Δ, bit-identical to the Lumina pipeline) and v_cond
@@ -112,11 +113,16 @@ class Guidance:
     def passes(self, step: Step) -> list[str]:
         p = ["cond"]
         kinds = {t.kind for t in self.active_terms(step)}
-        if "cfg" in kinds:
+        if kinds & {"cfg", "anchor"}:
             p.append("uncond")
         if "pert" in kinds:
             p.append("pert")
+        if "anchor" in kinds:  # native-resolution passes (reg.guidance.anchor); the sampler fills anchor_cond/anchor_uncond
+            p.append("anchor")
         return p
+
+    def anchor_terms(self, step: Step) -> list[Term]:
+        return [t for t in self.active_terms(step) if t.kind == "anchor"]
 
     def pert_terms(self, step: Step) -> list[Term]:
         return [t for t in self.active_terms(step) if t.kind == "pert"]
@@ -131,7 +137,7 @@ class Guidance:
         active = self.active_terms(step)
         if not active:
             return preds["cond"]
-        cfg_active = any(t.kind == "cfg" for t in active)
+        cfg_active = any(t.kind in ("cfg", "anchor") for t in active)
         v = preds["uncond"] if cfg_active else preds["cond"]
         for t in active:
             v = v + t.contribution(preds, step)

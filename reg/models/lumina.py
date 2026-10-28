@@ -171,8 +171,10 @@ class Lumina:
                "generator": torch.Generator("cpu").manual_seed(seed)}
         n_train = sched.config.num_train_timesteps
 
-        def run(cond: dict) -> torch.Tensor:
-            return tr(hidden_states=latents, timestep=current_timestep, return_dict=False, attention_kwargs=attention_kwargs, **cond)[0]
+        def run(cond: dict, x: torch.Tensor | None = None, ts: torch.Tensor | None = None) -> torch.Tensor:
+            x = latents if x is None else x
+            ts = current_timestep if ts is None else ts
+            return tr(hidden_states=x, timestep=ts, return_dict=False, attention_kwargs=attention_kwargs, **cond)[0]
 
         for i, t in enumerate(timesteps):
             step = Step(i, steps, float(t) / n_train)
@@ -186,6 +188,15 @@ class Lumina:
                     for term in guidance.pert_terms(step):
                         stack.enter_context(term.perturbation(tr, ctx))
                     preds["pert"] = run(pos)
+            if "anchor" in passes:  # REG (C): cond/uncond at native resolution on the downsampled latent
+                anchor = guidance.anchor_terms(step)[0]
+                if anchor.ratio == 1:
+                    preds["anchor_cond"], preds["anchor_uncond"] = preds["cond"], preds["uncond"]
+                else:
+                    x_a, sigma_a = anchor.anchor_input(latents, step.sigma)
+                    ts_a = torch.full_like(current_timestep, 1.0 - sigma_a)
+                    preds["anchor_cond"] = run(pos, x_a, ts_a)
+                    preds["anchor_uncond"] = run(neg, x_a, ts_a)
             noise_pred = -guidance.combine(preds, step)
             latents = sched.step(noise_pred, t, latents, return_dict=False)[0]
 

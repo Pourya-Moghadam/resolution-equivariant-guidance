@@ -65,3 +65,33 @@ class TestLuminaGuidanceReal(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(torch.cuda.is_available(), "needs a GPU and the Lumina weights")
+class TestAnchorReal(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from reg.models.lumina import Lumina
+
+        cls.m = Lumina()
+
+    def test_anchor_ratio_one_matches_pipeline_bitwise(self):
+        ref, _ = self.m.generate([PROMPT], height=1024, width=1024, steps=6, guidance_scale=4.0, use_pipeline=True, output_type="latent")
+        g = build_guidance({"anchor": {"scale": 4.0, "ratio": 1}})
+        ours, info = self.m.generate([PROMPT], height=1024, width=1024, steps=6, guidance=g, output_type="latent")
+        self.assertTrue(torch.equal(ref, ours))
+        self.assertEqual(info["guidance"]["terms"][0]["ratio"], 1)
+
+    def test_anchor_ratio_two_runs(self):
+        from reg.extrap.dype import apply_dype, remove_dype
+
+        apply_dype(self.m.pipe.transformer, method="ntk", dype=True)
+        try:
+            g = build_guidance({"anchor": {"scale": 4.0}, "height": 2048, "width": 2048})
+            lat, info = self.m.generate([PROMPT], height=2048, width=2048, steps=4, guidance=g, output_type="latent")
+            base, _ = self.m.generate([PROMPT], height=2048, width=2048, steps=4, guidance_scale=4.0, output_type="latent")
+        finally:
+            remove_dype(self.m.pipe.transformer)
+        self.assertTrue(torch.isfinite(lat).all())
+        self.assertFalse(torch.equal(lat, base))
+        self.assertEqual(info["guidance"]["terms"][0]["ratio"], 2)

@@ -203,3 +203,44 @@ def test_recorder_records_band_norms_and_spectra(tmp_path):
     g.recorder.save(tmp_path / "d.npz")
     s = summarize(tmp_path / "d.npz")
     assert s["grid"] == (32, 32) and len(s["mean_ratio_low"]) == 2
+
+
+def test_anchor_ratio_one_is_plain_cfg():
+    from reg.guidance.anchor import AnchorCFGTerm, anchor_level
+
+    torch.manual_seed(0)
+    cond, uncond = torch.randn(1, 16, 16, 16), torch.randn(1, 16, 16, 16)
+    step = Step(2, 10, 0.7)
+    a = Guidance([AnchorCFGTerm(4.0, 1)], normalization=False)
+    c = Guidance([CFGTerm(4.0)], normalization=False)
+    assert a.passes(step) == ["cond", "uncond", "anchor"]
+    preds = {"cond": cond, "uncond": uncond, "anchor_cond": cond, "anchor_uncond": uncond}
+    assert torch.equal(a.combine(preds, step), c.combine(preds, step))
+    s1, c1 = anchor_level(0.7, 1)
+    assert abs(s1 - 0.7) < 1e-12 and abs(c1 - 1.0) < 1e-12
+
+
+def test_anchor_level_and_contribution_shapes():
+    from reg.guidance import build_guidance
+    from reg.guidance.anchor import anchor_level
+
+    # sigma=1: pure noise stays pure noise at any ratio; small sigma: sigma' ≈ sigma / r
+    assert anchor_level(1.0, 4)[0] == 1.0
+    assert abs(anchor_level(0.04, 4)[0] - 0.01) < 1e-3
+    g = build_guidance({"guidance": 4.0, "anchor": {"scale": 4.0}, "height": 4096, "width": 4096})
+    term = g.terms[0]
+    assert term.ratio == 4 and term.describe()["ratio"] == 4
+    torch.manual_seed(0)
+    lat = torch.randn(1, 16, 64, 64)
+    x_a, s_a = term.anchor_input(lat, 0.5)
+    assert x_a.shape == (1, 16, 16, 16) and 0 < s_a < 0.5
+    preds = {"cond": torch.randn(1, 16, 64, 64), "uncond": torch.randn(1, 16, 64, 64),
+             "anchor_cond": torch.randn(1, 16, 16, 16), "anchor_uncond": torch.randn(1, 16, 16, 16)}
+    out = g.combine(preds, Step(5, 30, 0.5))
+    assert out.shape == (1, 16, 64, 64) and torch.isfinite(out).all()
+    # the high band is untouched: with identical anchor passes the output equals CFG on (Δ − low(Δ))
+    preds["anchor_uncond"] = preds["anchor_cond"]
+    g2 = Guidance([term], normalization=False)
+    d = preds["cond"] - preds["uncond"]
+    expect = preds["uncond"] + 4.0 * (d - term._low.lowpass(d))
+    assert torch.allclose(g2.combine(preds, Step(5, 30, 0.5)), expect, atol=1e-5)
