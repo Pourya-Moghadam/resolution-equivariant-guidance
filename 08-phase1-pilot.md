@@ -232,6 +232,25 @@ Plain-CFG preference baselines (`results/pilot_cfg_baseline_pref.csv`, seed 0, 6
 - **Cost:** none measurable (anchor passes are 1/r² of the tokens): 294 s at 3K and 695 s at 4K per image, the same as plain CFG.
 - Standing interpretation unchanged: resolution dependence of the guidance optimum is a symptom of the base prediction's sub-native band being off-manifold under extrapolation; supplying that band from the native model restores the native guidance weight at 3K and 4K. Stage C and the 150-row `jobs/reg_anchor_grid.jsonl` on the kill-or-go prompts (3K/4K, anchored w4, same prompts and seeds as the grid, so the comparison with the grid's CFG optimum is paired) follow on reg2.
 
+### Stage C: the anchored weight curve, 3K and 4K (2026-10-28 14:45; `sheets/stageC_{3k,4k}_{full,crop}.jpg`; `results/reg_anchor_pilot_{eval,pref}.csv`; figure `results/anchor_weight_curve.png`, `scripts/anchor_weight_curve.py`)
+HPSv2.1 (×100) by CFG weight, 6 prompts, seed 0, ± SE ≈ 0.3–1.3 at 1K/2K/anchored and 1.3–2.5 for plain 3K/4K:
+
+| weight w | 2 | 4 | 6 | 8 | 10 |
+|---|---|---|---|---|---|
+| 1K plain CFG | 31.7 | 32.5 | – | 33.1 | – |
+| 2K plain CFG | 29.0 | 31.2 | 31.6 | 32.1 | – |
+| 3K plain CFG | 11.8 | 26.3 | 28.3 | 29.8 | 30.6 |
+| **3K anchor-base** | **29.3** | **31.0** | – | **32.1** | – |
+| 4K plain CFG | (noise) | 16.6 | 22.7 | 25.4 | 27.0 |
+| **4K anchor-base** | **27.2** | **29.6** | **30.5** | **31.2** | – |
+
+ImageReward: 3K anchored 1.44 / 1.51 / 1.56 at w2/4/8 (plain 3K −1.20 / 1.20 / 1.50); 4K anchored 1.33 / 1.43 / 1.51 / 1.54 at w2/4/6/8 (plain 4K −0.79 / 0.79 / 1.07 / 1.30 at w4/6/8/10). Patch-KID: 3K anchored 0.025 / 0.024 / 0.024 (plain 0.125 / 0.030 / 0.022 at w2/4/8); 4K anchored 0.099 / 0.051 / 0.038 / 0.030 (plain 0.158 / 0.053 / 0.040 / 0.028 at w4/6/8/10). CLIP is flat above w4 for both. The Δ-only anchor at 4K is below plain CFG at every weight (HPS 6.5 / 12.4 / 15.1 at w2/4/6, IR < −1.2): anchoring only the guidance difference does harm, so the base's coarse band is the whole effect.
+
+- **The anchored weight curve is the native one.** The 3K anchored curve coincides with the 2K plain curve at every weight (29.3 / 31.0 / 32.1 vs 29.0 / 31.2 / 32.1), and the 4K anchored curve sits 1.5–2 HPS below it. Plain 3K/4K CFG is 5–18 HPS below at matched weights. The weight sensitivity from w4 to w8 is 0.6 (1K), 0.8 (2K), 1.1 (3K anchored), 1.7 (4K anchored) against 3.5 (3K plain) and 8.8 (4K plain): the steep weight dependence that moves the optimum with resolution is gone once the base's sub-native band is native. Read as a shift in weight, anchored w2 ≈ plain w8 at 3K, anchored w4 ≈ plain w10 at 3K, and at 4K anchored w2 ≈ plain w10 and anchored w4 is above every plain weight tried.
+- **What "optimum returns to native" means here.** HPSv2 has no interior maximum at any resolution: it rises monotonically through w8 even at 1K (31.7 → 33.1), as the kill-or-go preview also shows (peak at 5–6 then a slow fall only at 1K). So the native optimum is not a number the metric defines, and the paper's statement is the matched-weight one above: with the anchor, each weight produces what it produces at native (collapse boundary at w2, native quality at w4, small gains to w8), and the resolution-dependent retuning disappears. The √r law (w = 5.7 / 6.9 / 8.0) stays as the no-anchor baseline.
+- **By eye, 4K sheet:** plain CFG 4 is noise on 6/6, plain 6–10 are coherent but carry dense white speckle on every surface (skin, pears, water, see the crops); anchored w2 is coherent on 6/6 but grainy (the "mildly under-guided" look of 1K CFG 2); anchored w4 has the correct framing on 6/6 and visibly less speckle than any plain column; anchored w6/w8 are the cleanest images in the set, with the speckle reduced further and no over-saturation (plain CFG 10 pushes the skin magenta). So the residual 4K speckle is also reduced by the anchor, not just the layout. **3K sheet:** anchored w2 is already as clean as plain CFG 8; anchored w4/w8 match plain 8/10 in contrast with slightly different, consistently complete layouts.
+- **Decision (standing instruction 2026-10-27):** the paper's method claim is the prescription "keep guidance native once the base's sub-native band is native" with the matched-weight curve as its evidence; the headline figure is `results/anchor_weight_curve.png` redrawn from the paired 150-row anchored run on the kill-or-go prompts (`reg_anchor_grid`, launched on reg2 14:31, ETA Thursday evening), with bootstrap CIs. Anchored w2 and w8 on the grid prompts would complete that curve at n = 50/25 and are the next job for reg2 after it (about 18 GPU-h more, 2026-10-30).
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
