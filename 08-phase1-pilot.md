@@ -199,3 +199,17 @@ Anchored CFG: the sub-native band of Δ from cond/uncond passes at native resolu
 
 - **Confirmed on 6/6 prompts: with the base's sub-native band anchored, the native weight 4 gives coherent 4K images.** Metrics are level with CFG 8 (CLIP −0.8, KID +0.01; n = 6, inside noise) and far from CFG 4. By eye the anchored images keep the native composition (the lighthouse on its rock, the full portrait framing, the figure in the street) where CFG 8 drifts; the 4K speckle is unchanged.
 - **Weight 2 is degraded but not collapsed** at 4K with the anchor, as it is at 1K — the anchored band behaves natively. Whether the anchored optimum sits at ≈ 4 (native) rather than 8 is what stage C (w6/w8 at 4K, w2/w8 at 3K) answers this afternoon; CLIP/KID will not settle a 4-vs-6 difference at n = 6, so a human-preference metric (HPSv2 / ImageReward, separate venv) is being set up now.
+
+### Human-preference scores (2026-10-28 11:00; HPSv2.1 ×100 / ImageReward, `scripts/run_pref.py`, 6 prompts, seed 0, 4K)
+| 4K | HPS | ± SE | IR | ± SE |
+|---|---|---|---|---|
+| CFG 4 / 6 / 8 / 10 | 16.6 / 22.7 / 25.4 / 27.0 | 2.4 / 1.7 / 1.3 / 0.7 | −0.79 / 0.79 / 1.07 / 1.30 | |
+| FDG best (12/4, d2) | 26.5 | 0.6 | 1.28 | 0.26 |
+| anchor-Δ w4 | 12.4 | 1.6 | −1.71 | |
+| **anchor-base w4** | **29.6** | 0.9 | **1.43** | 0.24 |
+| anchor-base w2 (n = 3) | 26.1 | 0.4 | 1.02 | 0.40 |
+| 1K reference (FDG/CFG 4) | 32.4–32.9 | 0.4 | 1.52–1.59 | |
+
+- **First quality win:** base-anchored CFG at the *native* weight beats every plain-CFG setting at 4K on both preference metrics, including the CLIP/KID-preferred CFG 10 (HPS +2.6, about 3 SE; IR +0.13). CLIP/KID had called it level with CFG 8 — the preference metrics see the composition and over-guidance that CLIP/KID miss (sweep C's KID bias, confirmed).
+- The gap to the 1K reference (HPS 32.5 vs 29.6) is the speckle and whatever else 4K extrapolation costs; the anchor closes most of the guidance part of the gap (CFG 4 → anchored 4: 16.6 → 29.6).
+- Stage C (anchored w6/w8 at 4K, w2/w8 at 3K) will say whether 4 is the anchored optimum; HPS/IR are now the metrics for that call.
