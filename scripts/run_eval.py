@@ -49,6 +49,10 @@ def main() -> None:
     out = Path(args.out)
     rows = [json.loads(Path(f).read_text()) for f in sorted(glob.glob(str(out / "*.json")))]
     rows = [r for r in rows if r.get("status") == "ok" and "image" in r]
+    missing = [r for r in rows if not os.path.exists(r["image"])]
+    if missing:  # a merged copy of a running grid: the row's json may arrive before its png
+        print(f"skipping {len(missing)} rows whose image is not here yet (e.g. {missing[0]['id']})", flush=True)
+        rows = [r for r in rows if os.path.exists(r["image"])]
     evdir = out / "eval"
     evdir.mkdir(exist_ok=True)
     print(f"{len(rows)} finished rows in {out}", flush=True)
