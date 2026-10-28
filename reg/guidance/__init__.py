@@ -7,6 +7,7 @@
   fdg                 {"w_low": .., "w_high": .., "down": 2} — replaces the CFG term by FDG's band-split CFG
   pag / seg / tpg     {"scale": 3.0, "layers": [..], "start": 0, "end": 1, "sigma": 10 (seg), "frac": 1.0 (tpg)}
   cfg_normalization   Lumina's norm rescale after guidance (default True)
+  diag                {"downs": [2, 4, 8, 16]} — record per-step band norms and spectra (reg.diag)
 
 Several terms may be combined, e.g. CFG 4 + PAG 3 (the PAG/SEG papers' joint form).
 """
@@ -33,4 +34,9 @@ def build_guidance(row: dict) -> Guidance:
         if key in row:
             p = dict(row[key])
             terms.append(cls(p.pop("scale"), **p))
-    return Guidance(terms, normalization=bool(row.get("cfg_normalization", True)))
+    g = Guidance(terms, normalization=bool(row.get("cfg_normalization", True)))
+    if "diag" in row:  # per-step guidance diagnostics (reg.diag); run_grid saves <id>_diag.npz
+        from reg.diag import Recorder
+
+        g.recorder = Recorder(**(row["diag"] or {}))
+    return g

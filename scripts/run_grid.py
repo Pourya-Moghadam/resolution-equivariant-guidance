@@ -138,11 +138,16 @@ def main() -> None:
                 apply_dype(pipe.transformer, method=r["extrap"], dype=not r["static_extrap"], use_mscale=r.get("extrap_mscale", True))
             t0 = time.perf_counter()
             try:
-                images, info = model.generate([r["prompt"]], **generate_kwargs(r))
+                kw = generate_kwargs(r)
+                images, info = model.generate([r["prompt"]], **kw)
                 png = out / f"{r['id']}.png"
                 images[0].save(png)
                 rec = {**r, **info, "image": str(png), "seconds_per_image": info["seconds"], "wall_seconds": time.perf_counter() - t0,
                        "host": host, "gpu": torch.cuda.get_device_name(), "git": sha, "status": "ok"}
+                recorder = getattr(kw.get("guidance"), "recorder", None)
+                if recorder is not None:  # reg.diag: per-step band norms / spectra
+                    recorder.save(out / f"{r['id']}_diag.npz")
+                    rec["diag"] = str(out / f"{r['id']}_diag.npz")
                 n_ok += 1
             except Exception as e:  # record the failure so the row isn't retried blindly; delete the JSON to retry
                 rec = {**r, "host": host, "git": sha, "status": "error", "error": f"{type(e).__name__}: {e}",

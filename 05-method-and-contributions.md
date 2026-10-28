@@ -12,6 +12,13 @@ When resolution grows by a factor r (tokens per side), two things happen that cu
 
 **Principle:** the right guidance at resolution r is the native-resolution guidance moved into image-relative frequency and an equivalent SNR level, separately for each band. **No new hyperparameters:** everything is inherited from the native-resolution setting.
 
+## Revision 2026-10-28: what the pilots changed
+The Phase 1 pilots (08) settled two things before the grid finished:
+
+- **The coarse band needs *more* guidance at high resolution, not less.** With FDG's cutoff placed in cycles per image (A), only the band spanning the whole native image responds to resolution: its optimal weight goes from ≈ 4 at 1K to ≈ 8 at 4K (window 6–10; 12 repeats subjects), while the finer bands are indifferent between 2 and 8. Plain CFG's optimum rises the same way because CFG raises all bands together. This is the opposite sign to the prediction under (B) as written above ("switches off earlier"), so (B) in that form is dropped as a prediction; the SNR shift still motivates the per-band treatment.
+- **(B′) Band-wise magnitude matching (replaces B).** Hypothesis: under extrapolation the model's coarse-band guidance signal Δ_low shrinks relative to its base prediction, so the native weight under-guides the layout. REG sets w_low(r) = w_low(native) · ρ_native / ρ_r with ρ = ‖Δ_low‖ / ‖v_cond,low‖ measured at matched noise level, i.e. it restores the native *effective* guidance per band. No new hyperparameters: ρ is measured at run time (or once per model and r). **Test:** `jobs/reg_diag.jsonl` records ρ per step at 1K–4K with CFG 4; the prediction w_low(4K) must land in the measured 6–10 window and w_low(3K) in 6–8, with 2K ≈ flat. If ρ does not move, (C) (native anchor) becomes the lead component and the paper's method claim is scoped to "band-wise, with the coarse weight set by a one-time calibration".
+- **What REG does not fix:** the 4K speckle is present at every guidance setting; it belongs to the extrapolation method (07).
+
 ## Method: four training-free plug-in components
 Let Δ_t be the guidance signal: v_cond − v_uncond for CFG, or v_clean − v_perturbed for PAG/SEG/TPG.
 

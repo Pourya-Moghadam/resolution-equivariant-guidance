@@ -104,6 +104,7 @@ class PertTerm(Term):
 class Guidance:
     terms: list[Term] = field(default_factory=list)
     normalization: bool = True  # Lumina's cfg_normalization: rescale the guided v to |v_cond| (over the last axis)
+    recorder: object = None  # optional reg.diag.Recorder, called with (preds, step, v) at every step
 
     def active_terms(self, step: Step) -> list[Term]:
         return [t for t in self.terms if t.active(step)]
@@ -121,6 +122,12 @@ class Guidance:
         return [t for t in self.active_terms(step) if t.kind == "pert"]
 
     def combine(self, preds: dict[str, torch.Tensor], step: Step) -> torch.Tensor:
+        v = self._combine(preds, step)
+        if self.recorder is not None:
+            self.recorder(preds, step, v)
+        return v
+
+    def _combine(self, preds: dict[str, torch.Tensor], step: Step) -> torch.Tensor:
         active = self.active_terms(step)
         if not active:
             return preds["cond"]

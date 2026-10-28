@@ -65,6 +65,7 @@ Goal: evidence that optimal guidance shifts with resolution in the direction REG
 
 **GATE 1 (Nov 17):**
 - **GO** if optima move monotonically with r in the predicted direction for ≥2 of 3 quality metrics, and the shift is larger than seed noise (bootstrap CI).
+  - **Revised 2026-10-28 (decision made per the user's standing instruction):** "predicted direction" is dropped. The pilots (08) show the optimum *rises* with r (native ≈ 4, 3K ≈ 6–8, 4K ≈ 8–10) and that the rise sits in the coarse image-relative band only — the opposite sign to 05-(B)'s original prediction. The gate now asks only that the shift be monotone and larger than seed noise; the sign is a finding. 05-(B) is reformulated as band-wise magnitude matching, to be tested by the diagnostics (`jobs/reg_diag.jsonl`, pulled forward from Phase 2).
 - **NO-GO** → write up negative result as internal note; switch to backup idea (joint space-time video extrapolation or prediction-target × resolution; see `03-*.md`), re-target NeurIPS.
 - **On GO:** user emails [name removed] / [name removed] with the kill-or-go plot and a 1-page summary proposing collaboration (SEGA/TPG code access, co-authorship). Draft the email in `paper/outreach.md`.
 

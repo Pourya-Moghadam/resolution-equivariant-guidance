@@ -179,3 +179,27 @@ def test_build_guidance_describe_roundtrip():
     assert d["terms"][0] == {"name": "cfg", "scale": 6.0, "start": 0.0, "end": 0.7}
     assert d["terms"][1]["name"] == "tpg" and d["terms"][1]["frac"] == 0.5 and d["terms"][1]["layers"] == [10, 11]
     assert build_guidance({}).passes(Step(0, 1, 1.0)) == ["cond"]
+
+
+def test_recorder_records_band_norms_and_spectra(tmp_path):
+    import numpy as np
+
+    from reg.diag import N_BINS, Recorder, summarize
+    from reg.guidance import build_guidance
+
+    g = build_guidance({"guidance": 4.0, "cfg_trunc_ratio": 0.5, "diag": {"downs": [2, 4]}})
+    assert isinstance(g.recorder, Recorder)
+    torch.manual_seed(0)
+    cond, uncond = torch.randn(1, 16, 32, 32), torch.randn(1, 16, 32, 32)
+    g.combine({"cond": cond, "uncond": uncond}, Step(0, 4, 1.0))  # CFG active
+    g.combine({"cond": cond}, Step(3, 4, 0.25))  # after truncation: no uncond pass
+    a = g.recorder.arrays()
+    assert a["low_rms_delta"].shape == (2, 2) and a["spec_cond"].shape == (2, N_BINS)
+    assert np.isfinite(a["low_rms_delta"][0]).all() and np.isnan(a["low_rms_delta"][1]).all()
+    # white noise: the low band of Δ is a small fraction of Δ, smaller at the coarser cutoff
+    assert a["low_rms_delta"][0, 1] < a["low_rms_delta"][0, 0] < a["rms_delta"][0]
+    # Parseval: spectrum bins sum to the energy of the input (up to the rfft half-plane convention)
+    assert a["spec_cond"][0].sum() > 0 and a["bin_edges_cycles"][-1] == 2 ** (N_BINS - 1)
+    g.recorder.save(tmp_path / "d.npz")
+    s = summarize(tmp_path / "d.npz")
+    assert s["grid"] == (32, 32) and len(s["mean_ratio_low"]) == 2
