@@ -187,3 +187,15 @@ Anchored CFG: the sub-native band of Δ from cond/uncond passes at native resolu
 
 ### Base-anchored variant, first image (2026-10-28 09:00, `anchor: {"base": true}`, cathedral, 4K, w = 4)
 `sheets/first_base_cathedral.jpg`: CFG 4 (speckle collapse) | CFG 8 | anchor-Δ w4 (mush) | **anchor-base w4: a coherent nave, stained glass, pews, at the native weight**. The 4K speckle (> native Nyquist) is still there, as expected — the anchor supplies nothing above 64 c/i. One prompt; the other 17 rows (4K w4/w2, 3K w4) land ~11:30. If they agree: **the resolution dependence of the guidance optimum is a symptom of a shared coarse-band error in the base prediction, not of guidance itself** — and it disappears when the sub-native band comes from where the model is native. Framing consequence to settle before writing: anchoring the base's sub-native band is a prediction-space anchor, closer to FreCaS/HiFlow/ResMaster than the Δ-only anchor 05 proposed; the novelty then rests on the finding (why guidance optima shift: the band dissection, the diagnostics, the Δ-only null result) and on deriving the anchor's noise level and weight, not on anchoring per se. Re-read 03/04 on those methods before Gate 1.
+
+### Base-anchored CFG at 4K, all six prompts (2026-10-28 10:20; `sheets/base4k_{full,crop}.jpg`, `results/reg_anchor_pilot_eval.csv`)
+| 4K, 6 prompts | CLIP | ± SE | patch-KID |
+|---|---|---|---|
+| CFG 4 | 25.0 | 4.2 | 0.158 |
+| CFG 8 | 34.2 | 0.5 | 0.040 |
+| anchor-Δ w4 | 23.9 | 4.3 | 0.219 |
+| **anchor-base w4** | **33.4** | 0.5 | **0.051** |
+| anchor-base w2 (3 prompts so far) | 30.9 | 0.9 | 0.105 |
+
+- **Confirmed on 6/6 prompts: with the base's sub-native band anchored, the native weight 4 gives coherent 4K images.** Metrics are level with CFG 8 (CLIP −0.8, KID +0.01; n = 6, inside noise) and far from CFG 4. By eye the anchored images keep the native composition (the lighthouse on its rock, the full portrait framing, the figure in the street) where CFG 8 drifts; the 4K speckle is unchanged.
+- **Weight 2 is degraded but not collapsed** at 4K with the anchor, as it is at 1K — the anchored band behaves natively. Whether the anchored optimum sits at ≈ 4 (native) rather than 8 is what stage C (w6/w8 at 4K, w2/w8 at 3K) answers this afternoon; CLIP/KID will not settle a 4-vs-6 difference at n = 6, so a human-preference metric (HPSv2 / ImageReward, separate venv) is being set up now.
