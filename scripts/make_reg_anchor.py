@@ -27,3 +27,17 @@ for size, w in cells:
 out = ROOT / "jobs" / "reg_anchor_pilot.jsonl"
 out.write_text("".join(json.dumps(r) + "\n" for r in rows))
 print(len(rows), "rows ->", out)
+
+# Stage B (2026-10-28 08:30): the Δ-only anchor failed at 4K (08). base=true also takes the coarse band of
+# the base prediction from the native pass. 4K w2/w4 (collapse points of plain CFG) and 3K w4.
+rows_b = []
+for size, w in [(4096, 4.0), (4096, 2.0), (3072, 4.0)]:
+    for name, prompt in prompts.items():
+        rows_b.append({
+            "id": f"anchorbase{w:g}_{size}_{name}", "model": "lumina", "prompt": prompt, "height": size, "width": size,
+            "seed": 0, "guidance": w, "anchor": {"scale": w, "ratio": size // 1024, "base": True}, "extrap": "ntk",
+            "tags": {"experiment": "reg_anchor_pilot", "prompt_name": name, "size": size, "cfg": w, "method": "anchor_base"},
+        })
+out_b = ROOT / "jobs" / "reg_anchor_pilot_b.jsonl"
+out_b.write_text("".join(json.dumps(r) + "\n" for r in rows_b))
+print(len(rows_b), "rows ->", out_b)
