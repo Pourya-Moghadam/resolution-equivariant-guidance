@@ -41,3 +41,18 @@ for size, w in [(4096, 4.0), (4096, 2.0), (3072, 4.0)]:
 out_b = ROOT / "jobs" / "reg_anchor_pilot_b.jsonl"
 out_b.write_text("".join(json.dumps(r) + "\n" for r in rows_b))
 print(len(rows_b), "rows ->", out_b)
+
+# Stage C (2026-10-28 09:30): does the CFG optimum return to native with the base anchor? Complete the
+# base-anchored weight sweep: 4K w6/w8 (B has w2/w4), 3K w2/w8 (B has w4). With the plain-CFG sweeps B/C
+# this gives optimum-vs-weight curves with and without the anchor at 3K and 4K.
+rows_c = []
+for size, w in [(4096, 6.0), (4096, 8.0), (3072, 2.0), (3072, 8.0)]:
+    for name, prompt in prompts.items():
+        rows_c.append({
+            "id": f"anchorbase{w:g}_{size}_{name}", "model": "lumina", "prompt": prompt, "height": size, "width": size,
+            "seed": 0, "guidance": w, "anchor": {"scale": w, "ratio": size // 1024, "base": True}, "extrap": "ntk",
+            "tags": {"experiment": "reg_anchor_pilot", "prompt_name": name, "size": size, "cfg": w, "method": "anchor_base"},
+        })
+out_c = ROOT / "jobs" / "reg_anchor_pilot_c.jsonl"
+out_c.write_text("".join(json.dumps(r) + "\n" for r in rows_c))
+print(len(rows_c), "rows ->", out_c)
