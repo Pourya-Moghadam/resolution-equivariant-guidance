@@ -40,7 +40,7 @@ def main() -> None:
         if r.get("status") != "ok" or "diag" not in r:
             continue
         d = np.load(r["diag"])
-        cells[(int(r["height"]), float(r["guidance"]))].append((r["tags"].get("prompt_name", r["id"]), d))
+        cells[(int(r["height"]), float(r["tags"]["cfg"]))].append((r["tags"].get("prompt_name", r["id"]), d))
     if not cells:
         raise SystemExit("no finished rows with diagnostics")
 
