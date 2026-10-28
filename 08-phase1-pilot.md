@@ -215,3 +215,19 @@ Anchored CFG: the sub-native band of Δ from cond/uncond passes at native resolu
 - Stage C (anchored w6/w8 at 4K, w2/w8 at 3K) will say whether 4 is the anchored optimum; HPS/IR are now the metrics for that call.
 
 Plain-CFG preference baselines (`results/pilot_cfg_baseline_pref.csv`, seed 0, 6 prompts): HPS rises with CFG at every resolution — 1K 31.7/32.5/33.1 (CFG 2/4/8), 2K 29.0/31.2/31.6/32.1 (2/4/6/8), 3K 11.8/26.3/28.3/29.8/30.6 (2/4/6/8/10), 4K 16.6/22.7/25.4/27.0 (4/6/8/10). IR is flat from CFG 4 up at 1K–3K (1.5) and still rising at 4K. **So HPS, like KID, favours stronger guidance and will not locate an optimum on its own**; the clean statements are at matched weight (anchored w4 at 4K: HPS 29.6 vs CFG 4's 16.6, and above CFG 10's 27.0) and against the best weight. "The optimum returns to native with the anchor" has to be argued from the collapse boundary (w2 survives with the anchor) and from matched-weight comparisons, not from a metric maximum.
+
+### Stage B complete: base-anchored CFG at 3K and 4K, all six prompts (2026-10-28 11:15; `sheets/base3k_{full,crop}.jpg`, `sheets/base4k_w2_{full,crop}.jpg`; `results/reg_anchor_pilot_{eval,pref}.csv`)
+| seed 0, 6 prompts | CLIP | patch-KID | HPS | ± SE | IR |
+|---|---|---|---|---|---|
+| 3K CFG 2 / 4 / 6 / 8 / 10 | 20.9 / 35.4 / 35.7 / 35.7 / 35.4 | 0.125 / 0.030 / 0.023 / 0.022 / 0.023 | 11.8 / 26.3 / 28.3 / 29.8 / 30.6 | 2.5 / 1.8 / 1.4 / 1.3 / 1.3 | −1.20 / 1.20 / 1.47 / 1.50 / 1.45 |
+| 3K anchor-Δ w4 | 34.2 | 0.040 | 22.6 | 1.7 | 0.87 |
+| **3K anchor-base w4** | 35.2 | **0.024** | **31.0** | 0.7 | **1.51** |
+| 4K CFG 4 / 8 / 10 | 25.0 / 34.2 / 34.6 | 0.158 / 0.040 / 0.030 | 16.6 / 25.4 / 27.0 | 2.4 / 1.3 / 0.7 | −0.79 / 1.07 / 1.30 |
+| 4K anchor-base w2 | 32.3 | 0.099 | 27.2 | 1.1 | 1.33 |
+| **4K anchor-base w4** | 33.4 | 0.051 | **29.6** | 0.9 | **1.43** |
+
+- **3K agrees with 4K.** At the native weight the base-anchored CFG matches the best plain-CFG setting at 3K on every metric (HPS 31.0 vs CFG 10's 30.6, KID 0.024 vs 0.022, IR 1.51 vs 1.50) and beats CFG 4 by 4.7 HPS (about 2.5 SE). The Δ-only anchor at 3K is below CFG 4 on HPS (22.6), so the 3K result also separates the two variants: it is the base's coarse band that matters, not Δ's.
+- **The collapse boundary moves back to native.** With the anchor, w2 at 4K gives whole images (HPS 27.2, level with plain CFG 10) where plain CFG 2 at 3K/4K is noise and CFG 4 at 4K is speckle. At 1K, CFG 2 is the mildly under-guided end of the usable range (HPS 31.7 vs 32.5); anchored 4K w2 sits the same way relative to anchored w4 (27.2 vs 29.6). That is the "guidance stays native" prediction at the low end; stage C (w6/w8) tests the high end this afternoon.
+- **By eye (3K sheet):** anchored w4 keeps the composition and the contrast; versus CFG 4 at 3K it is brighter and the subjects are complete (the mountain gets its peak and sky, the street its signage and figure). Versus CFG 8/10 the anchored images are similar in contrast and slightly different in layout, with no over-saturation. The 4K sheet: anchored w2 and w4 keep the full framing (whole portrait with window, lighthouse on its headland, cathedral nave with pews) where CFG 8 crops tight or drifts; the above-native speckle is identical across columns, as it must be.
+- **Cost:** none measurable (anchor passes are 1/r² of the tokens): 294 s at 3K and 695 s at 4K per image, the same as plain CFG.
+- Standing interpretation unchanged: resolution dependence of the guidance optimum is a symptom of the base prediction's sub-native band being off-manifold under extrapolation; supplying that band from the native model restores the native guidance weight at 3K and 4K. Stage C and the 150-row `jobs/reg_anchor_grid.jsonl` on the kill-or-go prompts (3K/4K, anchored w4, same prompts and seeds as the grid, so the comparison with the grid's CFG optimum is paired) follow on reg2.
