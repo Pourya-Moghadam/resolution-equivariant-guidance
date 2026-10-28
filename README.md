@@ -20,7 +20,7 @@ Research notes from the planning stage (2026-10-24). The goal is a top-tier pape
 Papers on resolution extrapolation (DyPE, SEGA, UltraImage) fix the model's RoPE and attention but keep guidance at its native-resolution settings. Papers on guidance (CFG variants, FDG, PAG/SEG/TPG) test only at native resolution. **Nobody has studied how guidance behaves at extrapolated resolution.** Our idea is **Resolution-Equivariant Guidance (REG)**. It moves guidance into image-relative frequency and band-wise matched signal-to-noise, uses an optional native-resolution anchor for the low-frequency guidance, and calibrates perturbation guidance to token count. It's training-free, adds no new hyperparameters, and plugs into any guidance method and any extrapolation method. The novelty check (arXiv, Semantic Scholar citation tracing, OpenReview ICLR 2027) found no prior work on the core idea. The closest prior art is FreCaS, RectifiedHR and ScaleCrafter, all hand-tuned and none about DiTs with RoPE.
 
 ## Status / next steps
-**Current phase:** Phase 0 (environment, baselines, measurement), Oct 27 – Nov 2. See [PLAN.md](PLAN.md).
+**Current phase:** Phase 1 (kill-or-go grid running, ETA Oct 30) with Phase 2/3 components pulled forward on the free GPU. See [PLAN.md](PLAN.md).
 
 Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the user + Claude Code sessions; contact the [name removed]/[name removed] group after Gate 1 passes.
 
@@ -38,7 +38,8 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 - [x] 2026-10-27: **Sweep C** (CFG 10/12/16 at 3K/4K): CLIP optimum 6–8 at 3K, 8–10 at 4K, falling beyond; KID keeps improving to 16 while images are visibly over-guided → CLIP is the optimum detector, KID the floor detector (08)
 - [x] 2026-10-27: **Guidance zoo** (`reg/guidance/`, Phase 1 step 2): CFG interval, FDG (Laplacian band split), PAG, SEG, TPG on one `Guidance` base; Lumina samples in our own loop, bit-identical to the pipeline for CFG (`tests/test_guidance_real.py`); 1K validation job `jobs/guidance_zoo_1k.jsonl`
 - [ ] 2026-10-27 03:40: **kill-or-go grid launched** (`jobs/kill_or_go.jsonl`, 11,800 rows, ~330 GPU-h; reg1+reg3 first, reg4/5 join after the zoo validation; ETA ~4 days)
-- [ ] reg2 unusable while another user's 30 GB kernel is resident; reg1/reg5 shared too (see SERVER_SETUP)
+- [x] 2026-10-27: reg2 freed (the other user's kernel was shut down); used since for the REG pilots while the grid runs on reg1/3/4/5
+- [x] 2026-10-27/28: **REG pilots** (08): perturbation defaults calibrated (3 middle blocks); FDG at 4K shows only the native-image band's weight changes with resolution (≈4 → ≈8), fine bands indifferent; diagnostics (`reg/diag`, `jobs/reg_diag.jsonl`) **refute magnitude matching** (Δ_low keeps its relative size), spectrum drift measured (17 % of Δ power beyond native Nyquist at 4K). **Decision 2026-10-28:** Gate 1 sign requirement dropped (PLAN), 05-(B) replaced by (B′)/(C); **native anchor (C) implemented** (`reg/guidance/anchor.py`, bit-identical to CFG at ratio 1) and its pilot `jobs/reg_anchor_pilot.jsonl` running on reg2
 - [x] 2026-10-26: Qwen-Image loader (FP8 weight-only via torchao, two-phase): 1K 145 s/image at 50 steps, 19.9 GB — 3.2× the estimate; Phase 3c budget note in 06. **Phase 0 step 3 complete for all three models.**
 - [x] Eval pipeline (step 7: `scripts/run_eval.py`, CLIP + patch-FID/KID + repetition; ImageReward parked), datasets/prompts (step 6), Qwen 2K/4K timings — **Phase 0 complete** except the optional audit paste
 - [ ] Paste `scripts/server_audit.sh` output into 06 (optional now; key facts already recorded)
