@@ -77,6 +77,10 @@ class Term:
         bands = self.split.split(d)
         return sum(gi * b for gi, b in zip(g, bands))
 
+    def base(self, preds: dict[str, torch.Tensor], step: Step, v_base: torch.Tensor) -> torch.Tensor:
+        """Hook to modify the base prediction before contributions are added (REG anchor, base=True)."""
+        return v_base
+
     def perturbation(self, transformer, ctx: dict):
         """Context manager that perturbs ``transformer`` for the 'pert' pass. ``ctx`` carries
         text_len, grid (latent patches h, w) and a torch.Generator for reproducible perturbations."""
@@ -139,6 +143,8 @@ class Guidance:
             return preds["cond"]
         cfg_active = any(t.kind in ("cfg", "anchor") for t in active)
         v = preds["uncond"] if cfg_active else preds["cond"]
+        for t in active:
+            v = t.base(preds, step, v)
         for t in active:
             v = v + t.contribution(preds, step)
         if self.normalization:

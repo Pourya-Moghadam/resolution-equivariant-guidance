@@ -244,3 +244,27 @@ def test_anchor_level_and_contribution_shapes():
     d = preds["cond"] - preds["uncond"]
     expect = preds["uncond"] + 4.0 * (d - term._low.lowpass(d))
     assert torch.allclose(g2.combine(preds, Step(5, 30, 0.5)), expect, atol=1e-5)
+
+
+def test_anchor_base_variant_replaces_sub_native_band_of_base():
+    from reg.guidance.anchor import AnchorCFGTerm, anchor_level, upsample
+
+    torch.manual_seed(1)
+    sigma, r = 0.5, 4
+    cond, uncond = torch.randn(1, 16, 64, 64), torch.randn(1, 16, 64, 64)
+    lat = torch.randn(1, 16, 64, 64)
+    term = AnchorCFGTerm(4.0, r, base=True)
+    x_a, s_a = term.anchor_input(lat, sigma)
+    a_c, a_u = torch.randn(1, 16, 16, 16), torch.randn(1, 16, 16, 16)
+    preds = {"cond": cond, "uncond": uncond, "anchor_cond": a_c, "anchor_uncond": a_u, "anchor_x": x_a}
+    step = Step(5, 30, sigma)
+    out = Guidance([term], normalization=False).combine(preds, step)
+    _, c = anchor_level(sigma, r)
+    base = uncond - term._low.lowpass(uncond) + upsample((1 - c) * x_a + s_a * a_u, (64, 64)) / sigma
+    d = cond - uncond
+    expect = base + 4.0 * (d - term._low.lowpass(d) + upsample(a_c - a_u, (64, 64)) * (s_a / sigma))
+    assert torch.allclose(out, expect, atol=1e-5)
+    # base=False leaves the base untouched; ratio 1 ignores the flag
+    out2 = Guidance([AnchorCFGTerm(4.0, r, base=False)], normalization=False).combine(preds, step)
+    assert not torch.allclose(out, out2)
+    assert torch.equal(Guidance([AnchorCFGTerm(4.0, 1, base=True)], normalization=False).combine({**preds, "anchor_cond": cond, "anchor_uncond": uncond}, step), uncond + 4.0 * d)

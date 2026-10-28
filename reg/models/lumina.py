@@ -191,9 +191,10 @@ class Lumina:
             if "anchor" in passes:  # REG (C): cond/uncond at native resolution on the downsampled latent
                 anchor = guidance.anchor_terms(step)[0]
                 if anchor.ratio == 1:
-                    preds["anchor_cond"], preds["anchor_uncond"] = preds["cond"], preds["uncond"]
+                    preds["anchor_cond"], preds["anchor_uncond"], preds["anchor_x"] = preds["cond"], preds["uncond"], latents
                 else:
                     x_a, sigma_a = anchor.anchor_input(latents, step.sigma)
+                    preds["anchor_x"] = x_a
                     ts_a = torch.full_like(current_timestep, 1.0 - sigma_a)
                     preds["anchor_cond"] = run(pos, x_a, ts_a)
                     preds["anchor_uncond"] = run(neg, x_a, ts_a)

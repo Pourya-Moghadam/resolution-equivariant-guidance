@@ -19,6 +19,14 @@ The anchor evaluates that band where the model is native:
          u = u_uncond + w · (Δ − low_r(Δ) + Δ_low),
      where low_r is the Laplacian low-pass at cutoff r (the band representable at native resolution).
 
+  ``base=True`` (variant tested 2026-10-28 after the Δ-only anchor failed at 4K, 08) also replaces
+  the coarse band of the *base* prediction u_uncond by the native one. With u = (x0 − x_σ)/σ and
+  x̂0′ = x′ + σ′·u′ the native denoised estimate, the coarse band of the base becomes
+         low(u_uncond) ← (up(x̂0′_uncond) − up(down(x_σ)))/σ = up((1−c)·x′ + σ′·u′_uncond)/σ,
+  so the guided prediction's whole sub-native band comes from where the model is native, and the
+  weight w only amplifies the native difference. Guidance cannot remove an error the two branches
+  share; this variant removes it from the base instead.
+
 No new hyperparameters: w is the native CFG scale, r the resolution ratio. At r = 1 the term is
 plain CFG, bit for bit (the sampler reuses the main passes).
 """
@@ -51,8 +59,9 @@ class AnchorCFGTerm(Term):
 
     kind, name = "anchor", "anchor_cfg"
 
-    def __init__(self, scale: float, ratio: float, start: float = 0.0, end: float = 1.0):
+    def __init__(self, scale: float, ratio: float, start: float = 0.0, end: float = 1.0, base: bool = False):
         super().__init__(scale, start, end)
+        self.anchor_base = bool(base)
         if ratio < 1 or abs(ratio - round(ratio)) > 1e-6:
             raise ValueError(f"anchor needs an integer resolution ratio >= 1, got {ratio}")
         self.ratio = int(round(ratio))
@@ -68,6 +77,15 @@ class AnchorCFGTerm(Term):
         sigma_a, c = anchor_level(sigma, self.ratio)
         return downsample(latents, self.ratio) / c, sigma_a
 
+    def base(self, preds: dict[str, torch.Tensor], step: Step, v_base: torch.Tensor) -> torch.Tensor:
+        """With ``base=True``: the base prediction with its sub-native band taken from the native pass."""
+        if not self.anchor_base or self.ratio == 1:
+            return v_base
+        sigma_a, c = anchor_level(step.sigma, self.ratio)
+        x_a = preds["anchor_x"]  # the native-resolution input x′ (sampler-provided)
+        low_native = upsample((1.0 - c) * x_a + sigma_a * preds["anchor_uncond"], v_base.shape[-2:]) / step.sigma
+        return v_base - self._low.lowpass(v_base) + low_native
+
     def contribution(self, preds: dict[str, torch.Tensor], step: Step) -> torch.Tensor:
         delta = preds["cond"] - preds["uncond"]
         if self.ratio == 1:
@@ -79,4 +97,5 @@ class AnchorCFGTerm(Term):
     def describe(self) -> dict:
         d = super().describe()
         d["ratio"] = self.ratio
+        d["base"] = self.anchor_base
         return d
