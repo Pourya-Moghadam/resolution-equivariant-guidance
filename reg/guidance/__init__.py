@@ -5,9 +5,10 @@
   guidance            CFG scale w (1 = off); start/end of the CFG interval: cfg_start (default 0),
                       cfg_trunc_ratio (default 1; Lumina's name for the interval end)
   fdg                 {"w_low": .., "w_high": .., "down": 2} — replaces the CFG term by FDG's band-split CFG
-  anchor              {"scale": w, "ratio": r, "base": false} — REG (C): CFG with the sub-native band of Δ
-                      (and of the base prediction if base) from native-resolution passes (reg.guidance.anchor);
-                      ratio defaults to height/1024
+  anchor              {"scale": w, "ratio": r, "base": false, "levels": [2], "super_scale": 1.0} — REG (C): CFG with
+                      the sub-native band of Δ (and of the base prediction if base) from native-resolution passes
+                      (reg.guidance.anchor); ratio defaults to height/1024; levels = intermediate pyramid ratios;
+                      super_scale = CFG weight above the native Nyquist (default scale)
   pag / seg / tpg     {"scale": 3.0, "layers": [..], "start": 0, "end": 1, "sigma": 10 (seg), "frac": 1.0 (tpg)}
   cfg_normalization   Lumina's norm rescale after guidance (default True)
   diag                {"downs": [2, 4, 8, 16]} — record per-step band norms and spectra (reg.diag)
@@ -31,7 +32,8 @@ def build_guidance(row: dict) -> Guidance:
     if "anchor" in row:  # REG (C): native-anchored CFG; ratio defaults to height / native 1024
         a = row["anchor"]
         ratio = a.get("ratio", int(row.get("height", 1024)) / 1024)
-        terms.append(AnchorCFGTerm(float(a["scale"]), ratio, start, end, base=bool(a.get("base", False))))
+        terms.append(AnchorCFGTerm(float(a["scale"]), ratio, start, end, base=bool(a.get("base", False)),
+                                   levels=tuple(a.get("levels", ())), super_scale=a.get("super_scale")))
     elif "fdg" in row:
         f = row["fdg"]
         split = LaplacianSplit(down=f.get("down", 2.0), sigma=f.get("sigma"))

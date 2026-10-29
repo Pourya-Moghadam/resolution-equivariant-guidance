@@ -188,16 +188,17 @@ class Lumina:
                     for term in guidance.pert_terms(step):
                         stack.enter_context(term.perturbation(tr, ctx))
                     preds["pert"] = run(pos)
-            if "anchor" in passes:  # REG (C): cond/uncond at native resolution on the downsampled latent
+            if "anchor" in passes:  # REG (C): cond/uncond on the downsampled latent, one pair per pyramid level
                 anchor = guidance.anchor_terms(step)[0]
                 if anchor.ratio == 1:
                     preds["anchor_cond"], preds["anchor_uncond"], preds["anchor_x"] = preds["cond"], preds["uncond"], latents
                 else:
-                    x_a, sigma_a = anchor.anchor_input(latents, step.sigma)
-                    preds["anchor_x"] = x_a
-                    ts_a = torch.full_like(current_timestep, 1.0 - sigma_a)
-                    preds["anchor_cond"] = run(pos, x_a, ts_a)
-                    preds["anchor_uncond"] = run(neg, x_a, ts_a)
+                    for r in anchor.levels:
+                        x_a, sigma_a = anchor.anchor_input(latents, step.sigma, r)
+                        preds[anchor.key(r, "x")] = x_a
+                        ts_a = torch.full_like(current_timestep, 1.0 - sigma_a)
+                        preds[anchor.key(r, "cond")] = run(pos, x_a, ts_a)
+                        preds[anchor.key(r, "uncond")] = run(neg, x_a, ts_a)
             noise_pred = -guidance.combine(preds, step)
             latents = sched.step(noise_pred, t, latents, return_dict=False)[0]
 

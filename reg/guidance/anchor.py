@@ -27,6 +27,16 @@ The anchor evaluates that band where the model is native:
   weight w only amplifies the native difference. Guidance cannot remove an error the two branches
   share; this variant removes it from the base instead.
 
+  **Pyramid (2026-10-29).** ``levels`` adds intermediate anchor ratios, e.g. ratio 4 with levels (2,) at 4K:
+  the band below the 1K Nyquist comes from the 1K pass, the band between the 1K and 2K Nyquists from a
+  2K pass (where the model is only 2× out of range instead of 4×), and only the band above the 2K Nyquist
+  from the 4K pass — each pass at its own derived noise level. Base and Δ are both assembled this way
+  when ``base=True``. Upsample Guidance is the single-level case. Cost: Σ 1/r² extra per pass.
+
+  **Super-native weight.** ``super_scale`` is the CFG weight applied to Δ's bands above the native
+  Nyquist (the frequencies the model never saw at training); default = ``scale``. ``super_scale = 1``
+  switches guidance off there (a test of whether the 4K speckle is guidance-amplified noise).
+
 No new hyperparameters: w is the native CFG scale, r the resolution ratio. At r = 1 the term is
 plain CFG, bit for bit (the sampler reuses the main passes).
 """
@@ -59,43 +69,81 @@ class AnchorCFGTerm(Term):
 
     kind, name = "anchor", "anchor_cfg"
 
-    def __init__(self, scale: float, ratio: float, start: float = 0.0, end: float = 1.0, base: bool = False):
+    def __init__(self, scale: float, ratio: float, start: float = 0.0, end: float = 1.0, base: bool = False,
+                 levels=(), super_scale: float | None = None):
         super().__init__(scale, start, end)
         self.anchor_base = bool(base)
         if ratio < 1 or abs(ratio - round(ratio)) > 1e-6:
             raise ValueError(f"anchor needs an integer resolution ratio >= 1, got {ratio}")
         self.ratio = int(round(ratio))
+        extra = tuple(int(round(l)) for l in levels)
+        if any(l <= 1 or l >= self.ratio or abs(l - round(l)) > 1e-6 for l in levels):
+            raise ValueError(f"pyramid levels must be integers in (1, ratio={self.ratio}), got {levels}")
+        self.levels = (self.ratio,) + tuple(sorted(set(extra), reverse=True))  # coarsest first
+        self.super_scale = self.scale if super_scale is None else float(super_scale)
         self.split = None  # bands handled here, not by Term.contribution
         self.band_scales = (self.scale,)
         self._low = LaplacianSplit(down=float(self.ratio)) if self.ratio > 1 else None
+        self._lows = {r: LaplacianSplit(down=float(r)) for r in self.levels if r > 1}
+
+    def key(self, ratio: int, name: str) -> str:
+        """preds key of a level's pass: 'anchor_<name>' for the coarsest (native) level, 'anchor<r>_<name>' otherwise."""
+        return f"anchor_{name}" if ratio == self.ratio else f"anchor{ratio}_{name}"
+
+    def _bands(self, full: dict[int, torch.Tensor], top: torch.Tensor, gains: dict[int, float] | None = None, top_gain: float = 1.0) -> torch.Tensor:
+        """Assemble a full-resolution tensor from per-level estimates: the band below the coarsest Nyquist from the
+        coarsest level, each band between two Nyquists from the finer of the two levels, the band above the
+        finest anchor level's Nyquist from ``top`` (the full-resolution pass). Optional per-band gains."""
+        gains = gains or {}
+        lv = self.levels
+        # an upsampled level-r estimate is already band-limited to its own Nyquist, so it is used as is and
+        # only the coarser Nyquist is cut from it; the single-level case is then the original formula exactly
+        out = gains.get(lv[0], 1.0) * full[lv[0]]
+        for coarse, fine in zip(lv[:-1], lv[1:]):
+            y = full[fine]
+            out = out + gains.get(fine, 1.0) * (y - self._lows[coarse].lowpass(y))
+        return out + top_gain * (top - self._lows[lv[-1]].lowpass(top))
 
     def active(self, step: Step) -> bool:
         return self.start < step.frac <= self.end and self.scale != 1.0
 
-    def anchor_input(self, latents: torch.Tensor, sigma: float) -> tuple[torch.Tensor, float]:
-        """Native-resolution latent x′ and its noise level σ′ for the anchor passes."""
-        sigma_a, c = anchor_level(sigma, self.ratio)
-        return downsample(latents, self.ratio) / c, sigma_a
+    def anchor_input(self, latents: torch.Tensor, sigma: float, ratio: int | None = None) -> tuple[torch.Tensor, float]:
+        """Anchor-level latent x′ (downsampled by ``ratio``, default the native ratio) and its noise level σ′."""
+        ratio = self.ratio if ratio is None else int(ratio)
+        sigma_a, c = anchor_level(sigma, ratio)
+        return downsample(latents, ratio) / c, sigma_a
 
     def base(self, preds: dict[str, torch.Tensor], step: Step, v_base: torch.Tensor) -> torch.Tensor:
-        """With ``base=True``: the base prediction with its sub-native band taken from the native pass."""
+        """With ``base=True``: the base prediction with each sub-native band taken from the coarsest pass that
+        represents it (single level: the sub-native band from the native pass)."""
         if not self.anchor_base or self.ratio == 1:
             return v_base
-        sigma_a, c = anchor_level(step.sigma, self.ratio)
-        x_a = preds["anchor_x"]  # the native-resolution input x′ (sampler-provided)
-        low_native = upsample((1.0 - c) * x_a + sigma_a * preds["anchor_uncond"], v_base.shape[-2:]) / step.sigma
-        return v_base - self._low.lowpass(v_base) + low_native
+        size = v_base.shape[-2:]
+        full = {}
+        for r in self.levels:
+            sigma_a, c = anchor_level(step.sigma, r)
+            x_a = preds[self.key(r, "x")]  # the level's input x′ (sampler-provided)
+            full[r] = upsample((1.0 - c) * x_a + sigma_a * preds[self.key(r, "uncond")], size) / step.sigma
+        return self._bands(full, v_base)
 
     def contribution(self, preds: dict[str, torch.Tensor], step: Step) -> torch.Tensor:
         delta = preds["cond"] - preds["uncond"]
         if self.ratio == 1:
             return self.scale * delta
-        sigma_a, _ = anchor_level(step.sigma, self.ratio)
-        delta_anchor = upsample(preds["anchor_cond"] - preds["anchor_uncond"], delta.shape[-2:]) * (sigma_a / step.sigma)
-        return self.scale * (delta - self._low.lowpass(delta) + delta_anchor)
+        size = delta.shape[-2:]
+        full, gains = {}, {}
+        for r in self.levels:
+            sigma_a, _ = anchor_level(step.sigma, r)
+            full[r] = upsample(preds[self.key(r, "cond")] - preds[self.key(r, "uncond")], size) * (sigma_a / step.sigma)
+            gains[r] = self.scale if r == self.ratio else self.super_scale  # bands above the native Nyquist get super_scale
+        return self._bands(full, delta, gains, top_gain=self.super_scale)
 
     def describe(self) -> dict:
         d = super().describe()
         d["ratio"] = self.ratio
         d["base"] = self.anchor_base
+        if len(self.levels) > 1:
+            d["levels"] = self.levels[1:]
+        if self.super_scale != self.scale:
+            d["super_scale"] = self.super_scale
         return d

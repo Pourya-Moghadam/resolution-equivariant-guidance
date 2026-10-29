@@ -268,3 +268,40 @@ def test_anchor_base_variant_replaces_sub_native_band_of_base():
     out2 = Guidance([AnchorCFGTerm(4.0, r, base=False)], normalization=False).combine(preds, step)
     assert not torch.allclose(out, out2)
     assert torch.equal(Guidance([AnchorCFGTerm(4.0, 1, base=True)], normalization=False).combine({**preds, "anchor_cond": cond, "anchor_uncond": uncond}, step), uncond + 4.0 * d)
+
+
+def test_anchor_pyramid_and_super_scale():
+    """Pyramid levels and the super-native weight: constant signals live entirely in the lowest band, so the
+    output is scale·const whatever the super weight; with zero anchor Δ and a single level the contribution is
+    super_scale·(Δ − low(Δ)); the pyramid reduces to the single level when the extra passes carry nothing."""
+    from reg.guidance.anchor import AnchorCFGTerm, anchor_level, downsample
+
+    torch.manual_seed(0)
+    step = Step(3, 10, 0.5)
+    lat = torch.randn(1, 16, 64, 64)
+    term = AnchorCFGTerm(4.0, 4, levels=(2,), super_scale=1.0, base=True)
+    assert term.levels == (4, 2) and term.key(4, "x") == "anchor_x" and term.key(2, "cond") == "anchor2_cond"
+    # constant Δ: every band operator passes a constant through, so out = scale * const for any super_scale
+    const = torch.full((1, 16, 64, 64), 0.7)
+    preds = {"cond": const, "uncond": torch.zeros_like(const)}
+    for r in (4, 2):
+        s_a, c = anchor_level(0.5, r)
+        preds[term.key(r, "x")] = downsample(lat, r) / c
+        preds[term.key(r, "cond")] = downsample(const, r) * (0.5 / s_a)  # so that up(Δ′)·σ′/σ == const
+        preds[term.key(r, "uncond")] = torch.zeros_like(preds[term.key(r, "cond")])
+    out = term.contribution(preds, step)
+    assert torch.allclose(out, 4.0 * const, atol=1e-4)
+    # base hook: shapes, and the constant part of v_base is replaced by the levels' estimate
+    v = term.base(preds, step, torch.randn(1, 16, 64, 64))
+    assert v.shape == (1, 16, 64, 64)
+    # single level, zero anchor Δ: contribution = super_scale · (Δ − low_r(Δ))
+    single = AnchorCFGTerm(4.0, 2, super_scale=1.5)
+    d = torch.randn(1, 16, 32, 32)
+    preds1 = {"cond": d, "uncond": torch.zeros_like(d), "anchor_cond": torch.zeros(1, 16, 16, 16), "anchor_uncond": torch.zeros(1, 16, 16, 16)}
+    out1 = single.contribution(preds1, step)
+    assert torch.allclose(out1, 1.5 * (d - single._low.lowpass(d)), atol=1e-5)
+    # describe records the extras only when set
+    assert "levels" not in single.describe() and single.describe()["super_scale"] == 1.5
+    assert term.describe()["levels"] == (2,)
+    g = build_guidance({"anchor": {"scale": 4.0, "base": True, "levels": [2], "super_scale": 1.0}, "height": 4096, "width": 4096})
+    assert g.terms[0].levels == (4, 2) and g.terms[0].super_scale == 1.0
