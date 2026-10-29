@@ -273,6 +273,21 @@ Two generalisations of the base anchor, from the band picture (05, 2026-10-29): 
 - **Speckle metric caveat.** `scripts/speckle.py` (full-resolution centre-crop Laplacian std, 3×3-median outlier fraction, spectral power above the native Nyquist) does not separate speckle from genuine texture: plain CFG 4K w10 has a "speck" fraction of 1.6 %, anchored w4 2.6 %, and the 2K reference 3.0 % (stained glass, pear skins). The preference scorers downscale to 1K and cannot see the speckle either. The pilot is therefore judged by the crops by eye, with the spectral fraction as a secondary number (anchored base 0.031, plain w4 0.019, w10 0.028; the anchored images carry more real fine detail). A reference-based speckle measure (energy above the native Nyquist that is spatially white) is a to-do.
 - The w2/w8 run on reg2 is paused for the pilot (25 rows done, resume-safe) and restarts automatically after it.
 
+### Pyramid pilot, stage 1 result (2026-10-29 16:30; 4K, w4, 6 prompts, seed 0; `results/reg_pyramid_pilot_{pref,eval,speckle}.csv`, sheets `reg_pyramid_pilot/sheets/pyr_4k_{full,crop4,crop8}.jpg`)
+| 4K, w4 | HPSv2 | IR | CLIP | patch-CLIP | patch-KID | speck % | p>native | s/image |
+|---|---|---|---|---|---|---|---|---|
+| single-level anchor (stage C) | 29.6 | 1.43 | 33.4 | 20.0 | 0.051 | 2.6 | 0.031 | 698 |
+| **pyramid** (levels [2]) | **30.5** | **1.51** | **33.7** | **21.5** | **0.031** | 1.9 | 0.044 | 788 |
+| super-native rule (super_scale 1) | 27.9 | 1.35 | 32.8 | 15.6 | 0.103 | 2.9 | 0.032 | 697 |
+| pyramid + super-native | 30.1 | 1.49 | 34.0 | 20.6 | 0.047 | 2.1 | 0.045 | 788 |
+
+Paired against the single-level anchor on the same prompt and seed: pyramid HPS +0.9 (5/6 prompts up; per prompt +1.9, −1.2, +0.1, +1.1, +1.5, +2.1), IR +0.08; super-native −1.7 (0/6), IR −0.07; both −0.5/+0.07 (4/6).
+
+- **(i) The pyramid improves on the single-level anchor.** Every metric moves the right way, KID at w4 (0.031) matches the single-level anchor at w8 (0.030), and the crops show it: less speckle on the cathedral, portrait skin and pear skins (the 3×3-median speck fraction drops from 2.6 % to 1.9 %), same layout and content. The one loss (lighthouse, −1.2 HPS) is white specks in the sky where the single-level image is clean; the stormy-sky prompt may read them as spray. Cost: one extra 2K pass pair per step, +13 % at 4K (788 vs 698 s; plain CFG 4K is ~690 s).
+- **(ii) The super-native rule has the wrong sign.** Removing guidance above the native Nyquist *adds* speckle on all six prompts (crop8 sheet: sky, skin, pears all worse; KID 0.103 ≈ the single-level anchor at w2) and costs 1.7 HPS. So guidance above the native Nyquist is not amplifying noise there; it is suppressing it: in that band the unconditional prediction is noisier than the conditional one, and w·Δ pulls the output toward the cleaner conditional estimate. The band dissection's "the model has seen no frequency there, so do not guide" was the wrong inference; the right one is that the band is where guidance acts as a denoiser. This predicts that *more* weight above the native Nyquist reduces the residual speckle.
+- **Stage 2 (launched 16:40 on reg2, `jobs/reg_pyramid_pilot2.jsonl`, 18 rows, ~3.2 GPU-h, ETA ~19:40; w2/w8 half paused at 25 rows again, resumes after):** pyramid + `super_scale` 8 and 12 at 4K (w4 below the native Nyquist, 8/12 above), and the pyramid at 3K (ratio 3, level 2 = a 1536-px pass) against the single-level anchor at 3K.
+- **Decision (05):** with (i) confirmed on the pilot, the paper is written as a method paper: finding, diagnosis, and the pyramid anchor as the general method, of which Upsample Guidance is the two-level case. The super-native weight becomes a third component if stage 2 confirms its sign.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
