@@ -1,0 +1,4 @@
+cfg,method,hps,hps_se,ir,ir_se,n
+4.0,anchor_base_pyr,30.4769,0.9002,1.5105,0.1486,6
+4.0,anchor_base_pyrs,30.0537,1.0122,1.4945,0.1666,6
+4.0,anchor_base_sup,27.9073,1.0588,1.354,0.2439,6

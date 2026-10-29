@@ -1,0 +1,4 @@
+cfg,method,clip,clip_patch,clip_patch_se,clip_se,n,n_patches,patch_fid,patch_kid,patch_kid_std
+4.0,anchor_base_pyr,33.7346,21.4734,1.1395,0.7464,6,96,239.867,0.03052,0.00254
+4.0,anchor_base_pyrs,34.0359,20.599,1.1812,0.8344,6,96,248.891,0.04748,0.00325
+4.0,anchor_base_sup,32.7698,15.5775,1.0046,1.0712,6,96,282.718,0.10327,0.00485
