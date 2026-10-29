@@ -251,6 +251,22 @@ ImageReward: 3K anchored 1.44 / 1.51 / 1.56 at w2/4/8 (plain 3K −1.20 / 1.20 /
 - **By eye, 4K sheet:** plain CFG 4 is noise on 6/6, plain 6–10 are coherent but carry dense white speckle on every surface (skin, pears, water, see the crops); anchored w2 is coherent on 6/6 but grainy (the "mildly under-guided" look of 1K CFG 2); anchored w4 has the correct framing on 6/6 and visibly less speckle than any plain column; anchored w6/w8 are the cleanest images in the set, with the speckle reduced further and no over-saturation (plain CFG 10 pushes the skin magenta). So the residual 4K speckle is also reduced by the anchor, not just the layout. **3K sheet:** anchored w2 is already as clean as plain CFG 8; anchored w4/w8 match plain 8/10 in contrast with slightly different, consistently complete layouts.
 - **Decision (standing instruction 2026-10-27):** the paper's method claim is the prescription "keep guidance native once the base's sub-native band is native" with the matched-weight curve as its evidence; the headline figure is `results/anchor_weight_curve.png` redrawn from the paired 150-row anchored run on the kill-or-go prompts (`reg_anchor_grid`, launched on reg2 14:31, ETA Thursday evening), with bootstrap CIs. Anchored w2 and w8 on the grid prompts would complete that curve at n = 50/25 and are the next job for reg2 after it (about 18 GPU-h more, 2026-10-30).
 
+### Paired anchored run on the kill-or-go prompts (2026-10-29 10:30; `jobs/reg_anchor_grid.jsonl`, 150 rows on reg2, all ok; `results/reg_anchor_grid_{eval,pref}.csv`, `results/anchor_paired{,_ir}.{csv,png}`, `scripts/anchor_paired.py`)
+Base-anchored CFG at the native weight 4 on the grid's own prompts and seeds (3K: 100 prompts; 4K: 50), against every plain-CFG cell of the grid scored so far (3K: 58–65 per cell, both truncations; 4K: 33–40). Paired differences are anchored − plain over the prompts present in both, bootstrap 95 % CI over prompts.
+
+| HPSv2.1 | anchored w4 | plain w4 | plain w8 | plain w10 | plain w12 | plain w16 |
+|---|---|---|---|---|---|---|
+| 3K (end 1.0) | **30.9** [30.3, 31.5] | 23.4 | 27.9 | 28.9 | 29.5 | 30.0 |
+| 3K paired diff, win | – | +7.4 [6.3, 8.6], 100 % | +2.9 [2.2, 3.5], 95 % | +2.0 [1.5, 2.5], 85 % | +1.3 [0.8, 1.7], 74 % | +0.9 [0.3, 1.4], 66 % |
+| 4K | **29.2** [28.4, 30.0] | 14.9 | 24.7 | 25.7 | 26.5 | 27.1 |
+| 4K paired diff, win | – | +13.7 [11.6, 15.7], 100 % | +4.4 [3.4, 5.5], 100 % | +2.8 [2.0, 3.8], 91 % | +2.5 [1.7, 3.4], 82 % | +1.5 [0.6, 2.5], 73 % |
+
+ImageReward: 3K anchored 1.42 [1.31, 1.52] vs plain w4 0.55 / w8 1.08 / w16 1.30 (paired +0.87 / +0.33 / +0.12, all CIs above 0); 4K anchored 1.37 [1.23, 1.50] vs plain w4 −1.08 / w8 0.47 / w16 0.80 (paired +2.46 / +0.89 / +0.57, win 94–97 %). CLIP 37.6 (3K) / 37.1 (4K); patch-KID 0.017 (3K) / 0.044 (4K); repetition: 0 duplicated subjects at 3K, 2/50 at 4K (grid baselines for these land Friday).
+
+- **The anchored native weight beats every plain-CFG weight the grid tried, up to 16, at both sizes, and every paired CI excludes zero.** The plain curve is still rising at w16 (3K 30.0, 4K 27.1) and has not reached the anchored w4 value; by the 6-prompt stage C the anchored curve itself still gains ≈ 1 HPS from w4 to w8, so the gap to plain CFG at its best is larger than the table's last column. Truncating CFG at 70 % costs 0.5–1.3 HPS at 3K at every weight (as at 1K/2K), so the interval is not the lever.
+- This is the paper's headline figure (`results/anchor_paired.png`): with the base's sub-native band native, the native weight is the right weight, and no plain weight recovers the gap. The 300-row w2/w8 run (`jobs/reg_anchor_grid_w28.jsonl`, half on reg2 from 08:37, ETA Sat; other half to the first free grid machine Friday) adds the anchored curve's ends at this sample size.
+- The 6-prompt pilot numbers (31.0 / 29.6) were within 0.4 of the n = 100/50 means; the pilots were representative.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|

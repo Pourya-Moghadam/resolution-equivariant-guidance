@@ -126,11 +126,14 @@ def main() -> None:
     ap.add_argument("--hps-version", default="v2.1", choices=sorted(HPS_FILES))
     ap.add_argument("--max-side", type=int, default=1024, help="downscale larger images to this longer side before scoring")
     ap.add_argument("--device", default="cuda")
+    ap.add_argument("--filter", nargs="*", default=[], help="key=value pairs a row must match (tags first, then row; string compare), e.g. size=4096")
     args = ap.parse_args()
+    filters = dict(f.split("=", 1) for f in args.filter)
 
     out = Path(args.out)
     rows = [json.loads(Path(f).read_text()) for f in sorted(glob.glob(str(out / "*.json")))]
     rows = [r for r in rows if r.get("status") == "ok" and "image" in r]
+    rows = [r for r in rows if all(str(r.get("tags", {}).get(k, r.get(k))) == v for k, v in filters.items())]
     missing = [r for r in rows if not os.path.exists(r["image"])]
     if missing:  # a merged copy of a running grid: the row's json may arrive before its png
         print(f"skipping {len(missing)} rows whose image is not here yet (e.g. {missing[0]['id']})", flush=True)
