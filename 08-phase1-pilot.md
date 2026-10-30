@@ -364,7 +364,7 @@ Paired against the single-level anchor on the same prompt and seed: pyramid HPS 
 | 4K, trunc 1.0 | – | 0.44 | 0.62 | 0.76 | 0.88 | 0.96 | 1.00 | 1.08 | 1.00 |
 
 - CLIP and KID tell the same story as HPS with a different ceiling: at 1K and 2K every weight from 3 up is within 0.3 CLIP and 0.005 KID of every other (no optimum at all), while at 3K and 4K both climb through 16 (3K KID 0.029 → 0.010 from w4 to w16; 4K 0.136 → 0.029). The anchored-w4 rows' CLIP/KID on the same prompts (`reg_anchor_grid`, scoring now) are what the paired table needs; on the 6-prompt pilot they were level with plain w8–w16.
-- Repetition counts are read from the tables above; their prose goes in with the final rows.
+- **Repetition is not the failure mode; a missing subject is.** Duplicate-subject rates are 0–5 % at every size and weight (the 8 % cell is 4K w12, n = 25). What moves with weight at 3K/4K is the *mean count falling below one*: 0.44 at 3K w2 and 4K w3, 0.62 at 4K w4, 1.00 from 3K w5 / 4K w10. At the native weight, extrapolated images lose the subject to texture (the collapse seen in the pilots), and raising CFG restores it; nothing duplicates. The paper's finding is therefore stated as under-guidance (loss of subject and layout) rather than the over-saturation/repetition story of the related work, which belongs to the no-RoPE-scaling setting.
 
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
