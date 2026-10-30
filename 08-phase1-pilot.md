@@ -288,6 +288,22 @@ Paired against the single-level anchor on the same prompt and seed: pyramid HPS 
 - **Stage 2 (launched 16:40 on reg2, `jobs/reg_pyramid_pilot2.jsonl`, 18 rows, ~3.2 GPU-h, ETA ~19:40; w2/w8 half paused at 25 rows again, resumes after):** pyramid + `super_scale` 8 and 12 at 4K (w4 below the native Nyquist, 8/12 above), and the pyramid at 3K (ratio 3, level 2 = a 1536-px pass) against the single-level anchor at 3K.
 - **Decision (05):** with (i) confirmed on the pilot, the paper is written as a method paper: finding, diagnosis, and the pyramid anchor as the general method, of which Upsample Guidance is the two-level case. The super-native weight becomes a third component if stage 2 confirms its sign.
 
+### Pyramid pilot, stage 2 result (2026-10-29 23:10; same six prompts; sheets `pyr2_{4k,3k}_{full,crop4,crop8}.jpg`)
+| w4, base-anchored | HPSv2 | paired Δ vs single level (wins) | IR | CLIP | patch-CLIP | patch-KID | speck % | s/image |
+|---|---|---|---|---|---|---|---|---|
+| 4K single level | 29.6 | – | 1.43 | 33.4 | 20.0 | 0.051 | 2.6 | 698 |
+| 4K pyramid | 30.5 | +0.9 (5/6) | 1.51 | 33.7 | 21.5 | 0.031 | 1.9 | 788 |
+| 4K pyramid + super_scale 8 | 31.0 | +1.4 (6/6) | 1.52 | 33.9 | 22.6 | 0.023 | 1.7 | 789 |
+| **4K pyramid + super_scale 12** | **31.1** | **+1.5 (6/6)** | 1.43 | 33.8 | **22.6** | **0.021** | **1.6** | 789 |
+| 3K single level | 31.0 | – | 1.51 | 35.2 | 28.3 | 0.024 | 2.4 | 295 |
+| 3K pyramid | 30.8 | −0.2 (2/6) | 1.45 | 34.5 | 27.8 | 0.024 | 1.9 | 341 |
+
+- **The corrected super-native rule holds.** More weight above the native Nyquist (8 or 12 on top of the pyramid, w4 below) raises HPS on all six prompts, takes patch-KID at 4K/w4 to 0.021–0.023, *below* the single-level anchor at w8 (0.030) and level with 3K (0.024), and the crop8 sheet shows the 4K speckle gone: clean sky on the lighthouse, no black or white specks on the portrait skin, none on the street. Weight 8 and 12 look alike; 12 has slightly crisper stained glass. Per prompt the lighthouse, the only loss of the plain pyramid, is now +0.2/+0.4. **4K at w4 with pyramid + super-native weight scores 31.1 HPS, within 0.1 of plain CFG w4 at 2K (31.2, stage C): native quality at 4K with the native weight.**
+- **At 3K the pyramid is neutral** (HPS −0.2, KID equal, crops identical): the single-level anchor already leaves no visible speckle there, so the extra level has nothing to fix. The pyramid matters where the gap between the anchor and the full Nyquist is wide (4× at 4K, 3× at 3K is on the edge). Stage 3 tests the super-native weight at 3K.
+- **Why the super-native band wants more guidance, not none (working explanation for the paper).** Above the native Nyquist the model has never seen signal, so its conditional and unconditional predictions there are both mostly noise, but the conditional one is the less noisy of the two (text conditioning sharpens the prediction at every scale it can), and w·Δ in that band pulls toward it: guidance there is a denoiser. The speckle is the base prediction's noise in that band, and the cure is to lean harder on the conditional estimate. A derivation that fixes the weight (rather than sweeping 8/12/16/24) is the open item: the natural candidate is a weight that matches the band's SNR to the native band's, which the diagnostics recorder can measure.
+- **Stage 3 (launched 23:15 on reg2, `jobs/reg_pyramid_pilot3.jsonl`, 30 rows, ~5 GPU-h, ETA ~04:30; w2/w8 paused at 25 rows, resumes after):** super_scale 16 and 24 on the pyramid at 4K (where it stops helping), single level + super_scale 12 at 4K (ablation: the two components separately), and single level / pyramid + super_scale 12 at 3K.
+- **Grid-scale paired run queued (`jobs/reg_pyramid_grid.jsonl`, 50 rows, ~11 GPU-h):** pyramid + super_scale 12 at w4 on the 50 4K grid prompts, same seeds as `reg_anchor_grid` and `kill_or_go`, launches on the first grid machine that frees up (Friday afternoon), ahead of the second w2/w8 half. Result: the paper's headline table gets a third column, plain CFG (every weight) / single-level anchor (UG) / REG, all paired.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
