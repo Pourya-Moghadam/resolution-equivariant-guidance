@@ -333,6 +333,39 @@ Paired against the single-level anchor on the same prompt and seed: pyramid HPS 
 
 - Gate 1 in its final shape: the HPS optimum is 6–8 at 1K (flat ±0.1 from 5 to 12), still rising at 12 at 2K, and rising through 16 at 3K and 4K, where CFG 4 sits 6.6 and 12.2 points below CFG 16. ImageReward is flat from CFG 3 at 1K and 2K and rises through 16 at 3K/4K. Truncation changes the level by ≤ 1.5 HPS and never the shape. The anchored w4 rows on the same prompts (above: 30.9 at 3K, 29.2 at 4K) are above the best plain weight at both sizes, so the figure `results/anchor_paired.png` stands with these n. Repetition counts and the CLIP/KID table follow with the CLIP/KID pass now running on reg1.
 
+**CLIP, patch-KID and repetition on the same rows (2026-10-30 12:00; `results/kill_or_go_eval_partial.csv`; KID against 400 Aesthetic-4K 2K references, 16 1024-px patches per image; repetition from the single-subject half with the OWL-ViT counter):**
+
+| CLIP by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1K, trunc 0.9 | 37.3 | 37.3 | 37.4 | 37.3 | 37.4 | 37.4 | 37.4 | 37.3 | – |
+| 2K, trunc 0.9 | 37.0 | 37.1 | 37.2 | 37.1 | 37.1 | 37.1 | 37.0 | 37.0 | – |
+| 3K, trunc 1.0 | 24.0 | 30.9 | 35.0 | 35.4 | 36.0 | 36.3 | 36.3 | 36.4 | 36.2 |
+| 4K, trunc 1.0 | – | 16.7 | 24.6 | 28.0 | 32.7 | 34.7 | 35.1 | 34.9 | 34.8 |
+
+| patch-KID by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1K, trunc 0.9 | 0.019 | 0.020 | 0.020 | 0.020 | 0.020 | 0.021 | 0.021 | 0.021 | – |
+| 2K, trunc 0.9 | 0.018 | 0.019 | 0.020 | 0.019 | 0.019 | 0.018 | 0.017 | 0.017 | – |
+| 3K, trunc 1.0 | 0.099 | 0.045 | 0.029 | 0.023 | 0.019 | 0.017 | 0.014 | 0.013 | 0.010 |
+| 4K, trunc 1.0 | – | 0.203 | 0.136 | 0.112 | 0.074 | 0.062 | 0.038 | 0.043 | 0.029 |
+
+| duplicate-subject rate by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1K, trunc 0.9 | 5 % | 4 % | 3 % | 4 % | 3 % | 2 % | 5 % | 3 % | – |
+| 2K, trunc 0.9 | 0 % | 0 % | 0 % | 0 % | 0 % | 0 % | 2 % | 2 % | – |
+| 3K, trunc 1.0 | 0 % | 0 % | 0 % | 0 % | 0 % | 0 % | 0 % | 0 % | 0 % |
+| 4K, trunc 1.0 | – | 0 % | 0 % | 4 % | 0 % | 0 % | 0 % | 8 % | 0 % |
+
+| mean subject count by CFG (single-subject prompts) | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1K, trunc 0.9 | 1.04 | 1.04 | 1.03 | 1.04 | 1.03 | 1.02 | 1.05 | 1.04 | – |
+| 2K, trunc 0.9 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.02 | 1.02 | – |
+| 3K, trunc 1.0 | 0.44 | 0.88 | 0.89 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
+| 4K, trunc 1.0 | – | 0.44 | 0.62 | 0.76 | 0.88 | 0.96 | 1.00 | 1.08 | 1.00 |
+
+- CLIP and KID tell the same story as HPS with a different ceiling: at 1K and 2K every weight from 3 up is within 0.3 CLIP and 0.005 KID of every other (no optimum at all), while at 3K and 4K both climb through 16 (3K KID 0.029 → 0.010 from w4 to w16; 4K 0.136 → 0.029). The anchored-w4 rows' CLIP/KID on the same prompts (`reg_anchor_grid`, scoring now) are what the paired table needs; on the 6-prompt pilot they were level with plain w8–w16.
+- Repetition counts are read from the tables above; their prose goes in with the final rows.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
