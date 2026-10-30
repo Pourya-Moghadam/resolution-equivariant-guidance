@@ -252,18 +252,18 @@ ImageReward: 3K anchored 1.44 / 1.51 / 1.56 at w2/4/8 (plain 3K −1.20 / 1.20 /
 - **Decision (standing instruction 2026-10-27):** the paper's method claim is the prescription "keep guidance native once the base's sub-native band is native" with the matched-weight curve as its evidence; the headline figure is `results/anchor_weight_curve.png` redrawn from the paired 150-row anchored run on the kill-or-go prompts (`reg_anchor_grid`, launched on reg2 14:31, ETA Thursday evening), with bootstrap CIs. Anchored w2 and w8 on the grid prompts would complete that curve at n = 50/25 and are the next job for reg2 after it (about 18 GPU-h more, 2026-10-30).
 
 ### Paired anchored run on the kill-or-go prompts (2026-10-29 10:30; `jobs/reg_anchor_grid.jsonl`, 150 rows on reg2, all ok; `results/reg_anchor_grid_{eval,pref}.csv`, `results/anchor_paired{,_ir}.{csv,png}`, `scripts/anchor_paired.py`)
-Base-anchored CFG at the native weight 4 on the grid's own prompts and seeds (3K: 100 prompts; 4K: 50), against every plain-CFG cell of the grid scored so far (3K: 58–65 per cell, both truncations; 4K: 33–40). Paired differences are anchored − plain over the prompts present in both, bootstrap 95 % CI over prompts.
+Base-anchored CFG at the native weight 4 on the grid's own prompts and seeds (3K: 100 prompts; 4K: 50), against every plain-CFG cell of the grid (final, all rows, 2026-10-30 19:00; first recorded at 58–65 / 33–40 prompts per cell on 2026-10-29, same picture). Paired differences are anchored − plain over the same prompts, bootstrap 95 % CI over prompts.
 
 | HPSv2.1 | anchored w4 | plain w4 | plain w8 | plain w10 | plain w12 | plain w16 |
 |---|---|---|---|---|---|---|
-| 3K (end 1.0) | **30.9** [30.3, 31.5] | 23.4 | 27.9 | 28.9 | 29.5 | 30.0 |
-| 3K paired diff, win | – | +7.4 [6.3, 8.6], 100 % | +2.9 [2.2, 3.5], 95 % | +2.0 [1.5, 2.5], 85 % | +1.3 [0.8, 1.7], 74 % | +0.9 [0.3, 1.4], 66 % |
-| 4K | **29.2** [28.4, 30.0] | 14.9 | 24.7 | 25.7 | 26.5 | 27.1 |
-| 4K paired diff, win | – | +13.7 [11.6, 15.7], 100 % | +4.4 [3.4, 5.5], 100 % | +2.8 [2.0, 3.8], 91 % | +2.5 [1.7, 3.4], 82 % | +1.5 [0.6, 2.5], 73 % |
+| 3K (end 1.0), n = 100 | **30.9** [30.3, 31.5] | 22.0 | 27.5 | 28.6 | 29.2 | 29.7 |
+| 3K paired diff, win | – | +8.9 [7.8, 10.0], 100 % | +3.4 [2.7, 4.1], 92 % | +2.3 [1.8, 2.9], 84 % | +1.7 [1.2, 2.1], 73 % | +1.2 [0.8, 1.7], 71 % |
+| 4K, n = 50 | **29.2** [28.4, 30.0] | 14.3 | 24.1 | 25.5 | 26.2 | 27.2 |
+| 4K paired diff, win | – | +15.0 [13.3, 16.7], 100 % | +5.1 [4.0, 6.4], 98 % | +3.8 [2.9, 4.8], 92 % | +3.0 [2.1, 4.1], 84 % | +2.1 [1.3, 2.8], 78 % |
 
-ImageReward: 3K anchored 1.42 [1.31, 1.52] vs plain w4 0.55 / w8 1.08 / w16 1.30 (paired +0.87 / +0.33 / +0.12, all CIs above 0); 4K anchored 1.37 [1.23, 1.50] vs plain w4 −1.08 / w8 0.47 / w16 0.80 (paired +2.46 / +0.89 / +0.57, win 94–97 %). CLIP 37.6 (3K) / 37.1 (4K); patch-KID 0.017 (3K) / 0.044 (4K); repetition: 0 duplicated subjects at 3K, 2/50 at 4K (grid baselines for these land Friday).
+ImageReward (final): 3K anchored 1.42 [1.31, 1.52] vs plain w4 0.07 / w8 0.89 / w16 1.20; 4K anchored 1.37 [1.23, 1.50] vs plain w4 −1.27 / w8 0.27 / w16 0.59 (paired +1.10 / +0.78 vs w8 / w16 at 4K, win 96–98 %; `results/anchor_paired_ir.csv`). CLIP 37.6 (3K) / 37.1 (4K); patch-KID 0.017 (3K) / 0.044 (4K); repetition: 0 duplicated subjects at 3K, 2/50 at 4K (grid baselines for these land Friday).
 
-- **The anchored native weight beats every plain-CFG weight the grid tried, up to 16, at both sizes, and every paired CI excludes zero.** The plain curve is still rising at w16 (3K 30.0, 4K 27.1) and has not reached the anchored w4 value; by the 6-prompt stage C the anchored curve itself still gains ≈ 1 HPS from w4 to w8, so the gap to plain CFG at its best is larger than the table's last column. Truncating CFG at 70 % costs 0.5–1.3 HPS at 3K at every weight (as at 1K/2K), so the interval is not the lever.
+- **The anchored native weight beats every plain-CFG weight the grid tried, up to 16, at both sizes, and every paired CI excludes zero.** The plain curve is still rising at w16 (3K 29.7, 4K 27.2) and has not reached the anchored w4 value; by the 6-prompt stage C the anchored curve itself still gains ≈ 1 HPS from w4 to w8, so the gap to plain CFG at its best is larger than the table's last column. Truncating CFG at 70 % costs 0.5–1.3 HPS at 3K at every weight (as at 1K/2K), so the interval is not the lever.
 - This is the paper's headline figure (`results/anchor_paired.png`): with the base's sub-native band native, the native weight is the right weight, and no plain weight recovers the gap. The 300-row w2/w8 run (`jobs/reg_anchor_grid_w28.jsonl`, half on reg2 from 08:37, ETA Sat; other half to the first free grid machine Friday) adds the anchored curve's ends at this sample size.
 - The 6-prompt pilot numbers (31.0 / 29.6) were within 0.4 of the n = 100/50 means; the pilots were representative.
 
@@ -323,15 +323,15 @@ Paired against the single-level anchor on the same prompt and seed: pyramid HPS 
 - **At 3K the super-native weight is a wash** (+0.3 HPS on 5/6 but IR −0.08 on 0/6, KID equal). With the 3K pyramid also neutral (stage 2), the method at 3K is the single-level anchor alone, and both extra components are 4K effects: the band above the native Nyquist, and the band between the 1K and 2K Nyquists, only matter when they are wide enough to carry visible error. This is consistent with the derivation target: the needed super-native weight grows with the ratio r (≈ native at r = 3, ≈ 12–16 at r = 4), and a rule that gives that dependence is what makes the component hyperparameter-free. Candidates: match the band's guided SNR to the native top band's (the recorder measures both), or the plain CFG optimum's own r-dependence (4 → 12–16 from 1K to 4K in the kill-or-go grid, which is the same number: the super-native weight is "what plain CFG wanted at 4K, confined to the band where it helps").
 - **Decision:** REG = base anchor + pyramid + super-native weight at 4K, base anchor at 3K; the paper's method section presents the three components with the band dissection as the reason for each and the stage 3 ablation as evidence. The r-dependence of the super-native weight is the open theory item and the main writing risk; a 5K/6K row would test it (DyPE claims 4K×; our NTK sampler may not reach it; try one prompt first).
 
-### Kill-or-go grid, preference table at 9,244 of 11,800 rows (2026-10-30 11:00; HPSv2 / ImageReward; `results/kill_or_go_pref_partial.csv`; n = 200/100/100/50 per cell at 1K/2K/3K/4K for trunc 0.5/0.9 and 1.0 at 3K/4K, about half that for the trunc 0.7/1.0 cells at 1K/2K; the last ~2,500 rows, 1K–3K on reg3/reg5, land Saturday morning)
+### Kill-or-go grid, final preference table (2026-10-30 19:00; all 11,800 rows, HPSv2 / ImageReward, `results/kill_or_go_pref.csv`; n = 200/100/100/50 prompts per cell at 1K/2K/3K/4K; first recorded at 9,244 rows at 11:00, numbers below ±1.4 of those)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
 | 1K, trunc 0.9 | 30.7 | 31.4 | 31.7 | 31.9 | 32.0 | 32.0 | 31.9 | 31.9 | – |
 | 2K, trunc 0.9 | 26.6 | 28.8 | 29.8 | 30.4 | 30.8 | 31.3 | 31.5 | 31.6 | – |
-| 3K, trunc 1.0 | 13.0 | 19.7 | 23.4 | 25.1 | 26.5 | 27.9 | 28.9 | 29.5 | 30.0 |
-| 4K, trunc 1.0 | – | 10.6 | 14.9 | 17.8 | 21.4 | 24.1 | 25.7 | 26.2 | 27.1 |
+| 3K, trunc 1.0 | 12.1 | 18.3 | 22.0 | 24.3 | 25.7 | 27.5 | 28.6 | 29.2 | 29.7 |
+| 4K, trunc 1.0 | – | 10.6 | 14.3 | 17.8 | 20.3 | 24.1 | 25.5 | 26.2 | 27.2 |
 
-- Gate 1 in its final shape: the HPS optimum is 6–8 at 1K (flat ±0.1 from 5 to 12), still rising at 12 at 2K, and rising through 16 at 3K and 4K, where CFG 4 sits 6.6 and 12.2 points below CFG 16. ImageReward is flat from CFG 3 at 1K and 2K and rises through 16 at 3K/4K. Truncation changes the level by ≤ 1.5 HPS and never the shape. The anchored w4 rows on the same prompts (above: 30.9 at 3K, 29.2 at 4K) are above the best plain weight at both sizes, so the figure `results/anchor_paired.png` stands with these n. Repetition counts and the CLIP/KID table follow with the CLIP/KID pass now running on reg1.
+- Gate 1, final: the HPS optimum is 6–8 at 1K (flat ±0.1 from 5 to 12), still rising at 12 at 2K, and rising through 16 at 3K and 4K, where CFG 4 sits 7.7 and 12.9 points below CFG 16. ImageReward is flat from CFG 3 at 1K and 2K and rises through 16 at 3K/4K. Truncation changes the level by ≤ 1.5 HPS and never the shape. The anchored w4 rows on the same prompts (above: 30.9 at 3K, 29.2 at 4K) are above the best plain weight at both sizes, so the figure `results/anchor_paired.png` stands with these n. Repetition counts and the CLIP/KID table follow with the CLIP/KID pass now running on reg1.
 
 **CLIP, patch-KID and repetition on the same rows (2026-10-30 12:00; `results/kill_or_go_eval_partial.csv`; KID against 400 Aesthetic-4K 2K references, 16 1024-px patches per image; repetition from the single-subject half with the OWL-ViT counter):**
 
