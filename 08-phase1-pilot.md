@@ -323,6 +323,16 @@ Paired against the single-level anchor on the same prompt and seed: pyramid HPS 
 - **At 3K the super-native weight is a wash** (+0.3 HPS on 5/6 but IR −0.08 on 0/6, KID equal). With the 3K pyramid also neutral (stage 2), the method at 3K is the single-level anchor alone, and both extra components are 4K effects: the band above the native Nyquist, and the band between the 1K and 2K Nyquists, only matter when they are wide enough to carry visible error. This is consistent with the derivation target: the needed super-native weight grows with the ratio r (≈ native at r = 3, ≈ 12–16 at r = 4), and a rule that gives that dependence is what makes the component hyperparameter-free. Candidates: match the band's guided SNR to the native top band's (the recorder measures both), or the plain CFG optimum's own r-dependence (4 → 12–16 from 1K to 4K in the kill-or-go grid, which is the same number: the super-native weight is "what plain CFG wanted at 4K, confined to the band where it helps").
 - **Decision:** REG = base anchor + pyramid + super-native weight at 4K, base anchor at 3K; the paper's method section presents the three components with the band dissection as the reason for each and the stage 3 ablation as evidence. The r-dependence of the super-native weight is the open theory item and the main writing risk; a 5K/6K row would test it (DyPE claims 4K×; our NTK sampler may not reach it; try one prompt first).
 
+### Kill-or-go grid, preference table at 9,244 of 11,800 rows (2026-10-30 11:00; HPSv2 / ImageReward; `results/kill_or_go_pref_partial.csv`; n = 200/100/100/50 per cell at 1K/2K/3K/4K for trunc 0.5/0.9 and 1.0 at 3K/4K, about half that for the trunc 0.7/1.0 cells at 1K/2K; the last ~2,500 rows, 1K–3K on reg3/reg5, land Saturday morning)
+| HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1K, trunc 0.9 | 30.7 | 31.4 | 31.7 | 31.9 | 32.0 | 32.0 | 31.9 | 31.9 | – |
+| 2K, trunc 0.9 | 26.6 | 28.8 | 29.8 | 30.4 | 30.8 | 31.3 | 31.5 | 31.6 | – |
+| 3K, trunc 1.0 | 13.0 | 19.7 | 23.4 | 25.1 | 26.5 | 27.9 | 28.9 | 29.5 | 30.0 |
+| 4K, trunc 1.0 | – | 10.6 | 14.9 | 17.8 | 21.4 | 24.1 | 25.7 | 26.2 | 27.1 |
+
+- Gate 1 in its final shape: the HPS optimum is 6–8 at 1K (flat ±0.1 from 5 to 12), still rising at 12 at 2K, and rising through 16 at 3K and 4K, where CFG 4 sits 6.6 and 12.2 points below CFG 16. ImageReward is flat from CFG 3 at 1K and 2K and rises through 16 at 3K/4K. Truncation changes the level by ≤ 1.5 HPS and never the shape. The anchored w4 rows on the same prompts (above: 30.9 at 3K, 29.2 at 4K) are above the best plain weight at both sizes, so the figure `results/anchor_paired.png` stands with these n. Repetition counts and the CLIP/KID table follow with the CLIP/KID pass now running on reg1.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
