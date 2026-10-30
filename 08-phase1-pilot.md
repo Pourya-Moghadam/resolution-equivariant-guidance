@@ -304,6 +304,25 @@ Paired against the single-level anchor on the same prompt and seed: pyramid HPS 
 - **Stage 3 (launched 23:15 on reg2, `jobs/reg_pyramid_pilot3.jsonl`, 30 rows, ~5 GPU-h, ETA ~04:30; w2/w8 paused at 25 rows, resumes after):** super_scale 16 and 24 on the pyramid at 4K (where it stops helping), single level + super_scale 12 at 4K (ablation: the two components separately), and single level / pyramid + super_scale 12 at 3K.
 - **Grid-scale paired run queued (`jobs/reg_pyramid_grid.jsonl`, 50 rows, ~11 GPU-h):** pyramid + super_scale 12 at w4 on the 50 4K grid prompts, same seeds as `reg_anchor_grid` and `kill_or_go`, launches on the first grid machine that frees up (Friday afternoon), ahead of the second w2/w8 half. Result: the paper's headline table gets a third column, plain CFG (every weight) / single-level anchor (UG) / REG, all paired.
 
+### Pyramid pilot, stage 3 result (2026-10-30 10:00; `jobs/reg_pyramid_pilot3.jsonl`; sheets `pyr3_{4k,3k}_{full,crop8}.jpg`)
+| w4, base-anchored | HPSv2 | paired Δ vs single level (wins) | IR | CLIP | patch-CLIP | patch-KID | speck % |
+|---|---|---|---|---|---|---|---|
+| 4K single level | 29.6 | – | 1.43 | 33.4 | 20.0 | 0.051 | 2.6 |
+| 4K single level + super 12 | 30.1 | +0.5 (4/6) | 1.47 | 32.8 | 22.1 | 0.030 | 1.8 |
+| 4K pyramid | 30.5 | +0.9 (5/6) | 1.51 | 33.7 | 21.5 | 0.031 | 1.9 |
+| 4K pyramid + super 8 | 31.0 | +1.4 (6/6) | 1.52 | 33.9 | 22.6 | 0.023 | 1.7 |
+| 4K pyramid + super 12 | 31.1 | +1.5 (6/6) | 1.43 | 33.8 | 22.6 | 0.021 | 1.6 |
+| 4K pyramid + super 16 | 31.2 | +1.6 (6/6) | 1.41 | 33.5 | 23.3 | **0.018** | 1.4 |
+| 4K pyramid + super 24 | 30.8 | +1.2 (5/6) | 1.41 | 32.9 | 22.9 | 0.022 | 1.2 |
+| 3K single level | 31.0 | – | 1.51 | 35.2 | 28.3 | 0.024 | 2.4 |
+| 3K single level + super 12 | 31.2 | +0.3 (5/6) | 1.43 | 35.0 | 27.9 | 0.023 | 2.1 |
+| 3K pyramid + super 12 | 31.1 | +0.1 (3/6) | 1.39 | 34.4 | 27.1 | 0.025 | 1.8 |
+
+- **Ablation at 4K: the two components are roughly additive and both are needed.** Super-native weight alone +0.5 HPS, pyramid alone +0.9, both +1.5. The crops say the same: the super-native weight alone removes the black specks on skin and the sky speckle but leaves the single-level anchor's coarser grain; the pyramid alone removes the grain but leaves specks on the lighthouse sky; both together are clean.
+- **Super-native weight: plateau 12–16, over-sharpening at 24.** HPS 31.1/31.2 at 12/16, 30.8 at 24; KID is lowest at 16 (0.018); at 24 the crop8 sheet shows etched contours on the stained glass, halos on the pear outlines and cracked skin texture, and CLIP drops to 32.9. So the band is not "guide as hard as you like": it is a denoiser up to a point and a sharpener past it. The grid-scale run uses 12 (launched before this result; 12 and 16 are within noise of each other on HPS).
+- **At 3K the super-native weight is a wash** (+0.3 HPS on 5/6 but IR −0.08 on 0/6, KID equal). With the 3K pyramid also neutral (stage 2), the method at 3K is the single-level anchor alone, and both extra components are 4K effects: the band above the native Nyquist, and the band between the 1K and 2K Nyquists, only matter when they are wide enough to carry visible error. This is consistent with the derivation target: the needed super-native weight grows with the ratio r (≈ native at r = 3, ≈ 12–16 at r = 4), and a rule that gives that dependence is what makes the component hyperparameter-free. Candidates: match the band's guided SNR to the native top band's (the recorder measures both), or the plain CFG optimum's own r-dependence (4 → 12–16 from 1K to 4K in the kill-or-go grid, which is the same number: the super-native weight is "what plain CFG wanted at 4K, confined to the band where it helps").
+- **Decision:** REG = base anchor + pyramid + super-native weight at 4K, base anchor at 3K; the paper's method section presents the three components with the band dissection as the reason for each and the stage 3 ablation as evidence. The r-dependence of the super-native weight is the open theory item and the main writing risk; a 5K/6K row would test it (DyPE claims 4K×; our NTK sampler may not reach it; try one prompt first).
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
