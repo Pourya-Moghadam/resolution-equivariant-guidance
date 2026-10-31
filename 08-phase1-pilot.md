@@ -458,6 +458,23 @@ Question 2: does the super-native weight keep growing with r? REG at 5120² (rat
 - **Every row says the same thing: plain CFG at the native weight fails at 4K whatever else is attached, and the REG base makes the same settings work.** SEG and TPG on plain CFG are speckle fields with the subject gone (HPS 16–18); on REG they are clean. Like PAG, SEG at its 1K scale costs a little on the REG base (−0.8 HPS, KID 0.041 vs 0.021) while TPG is neutral (−0.2, KID 0.022), ordering PAG < SEG < TPG by how much they hurt, which is the order of how much they perturb.
 - **REG is extrapolation-agnostic:** under dynamic YaRN it scores at least as well as under dynamic NTK (HPS 31.6 vs 31.1, KID 0.019 vs 0.021) with the crops equally clean, while plain CFG under YaRN keeps the missing-subject failure (lighthouse gone, pears multiplied). 07's NTK-over-YaRN choice was made on plain CFG's repetition; with REG the choice no longer matters, which is itself a result. The YaRN comparison goes to grid scale on reg2/reg3 next (`jobs/reg_generality_grid.jsonl`, 100 rows).
 
+### REG weight curve at 4K and REG at 3K, grid scale (2026-10-31 18:30; `jobs/reg_pyramid_grid_{w28,3k}.jsonl`, 200 rows on reg1/reg2/reg3/reg4/reg5, all ok; `results/reg_pyramid_grid_{pref,eval}.csv`, `results/reg_paired_3k_{hps,ir,clip}.csv`)
+REG here is still pyramid + super-native 12 (the rows were queued before the ablation). Paired over the same prompts and seeds.
+
+| 4K, n = 50 | w2 | w4 | w8 |
+|---|---|---|---|
+| single anchor, HPS | 26.6 | 29.2 | 30.8 |
+| REG, HPS | **29.2** | 30.4 | 31.0 |
+| single anchor, ImageReward | 1.12 | 1.37 | 1.46 |
+| REG, ImageReward | 1.22 | 1.31 | 1.42 |
+| single anchor, patch-KID | 0.086 | 0.044 | 0.027 |
+| REG, patch-KID | **0.026** | 0.023 | 0.021 |
+
+- **At the native optimum (w8) the pyramid + super-native weight no longer add preference:** REG w8 vs anchor w8 is +0.22 HPS (CI [−0.10, 0.59]), −0.04 ImageReward ([−0.07, −0.01]), CLIP equal, KID 0.021 vs 0.027. So the +1.1 HPS at w4 is mostly what a higher weight also buys, and what survives at w8 is the KID/speckle gain.
+- **What the pyramid changes is the shape of the curve, not its top.** REG at w2 beats the single anchor at w2 by 2.6 HPS (CI [1.1, 2.3] against anchor w8's reference frame; 84 % of prompts) and reaches the single anchor's w4; its KID at w2 (0.026) is the single anchor's at w8. The REG curve spans 1.9 HPS from w2 to w8 where the single anchor spans 4.3 and plain 4K spans 10 from w4 to w8. The pyramid therefore buys *weight robustness* — the native weight-sensitivity, which is what "resolution-equivariant" should mean — rather than a higher peak. That is the claim to write; "REG beats the anchor by 1.1 HPS" was a w4 artefact.
+- **At 3K (n = 100) REG as run is slightly worse than the single anchor:** HPS 30.6 vs 30.9 (−0.34, CI [−0.54, −0.13]), ImageReward 1.33 vs 1.42 (−0.08, [−0.12, −0.04]), CLIP equal (37.5 / 37.6), KID better (0.0145 vs 0.0166). The 4K ablation makes the super-native weight the likely cause (it is the component that costs ImageReward); the pilot's "wash at 3K" was within its n = 6 noise. Both anchors beat plain CFG at every weight at 3K (vs plain w16: +1.2 / +0.9 HPS).
+- **Queued for the new default (pyramid only, no super-native weight):** 4K w8 (reg1, running), 3K w4 (100 rows, reg4 + reg5 after tonight's pilots), 4K w2 (reg2 after its YaRN shard) — `jobs/reg_pyramid_grid_pyr_{w8,3k,w2}.jsonl`. With those the paper's weight-curve figure is plain / single anchor / pyramid at 3K and 4K, all from the same prompts.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
