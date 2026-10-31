@@ -388,6 +388,29 @@ REG = base anchor + pyramid level [2] + super-native weight 12, at w = 4, on the
 - **By eye (`grid4k_crop8.jpg`, 8 prompts):** plain w4 is a speckled wash with the subject missing on the single-subject prompts (dog, fox absent or a smudge); plain w16 recovers the subject under heavy white speckle; the single anchor has the composition and subject but keeps the speckle at 1/8 crop (child's cheek, fur, waterfall spray); REG removes it almost entirely (clean skin, fur with individual hairs, the waterfall as water), with a residual sprinkle on one fur crop and a slightly higher local contrast. Subject counts are unchanged (mean 1.04, one duplicate in 25 for both anchored variants).
 - **Launched on the result:** the scaled component ablation on the same 50 prompts — pyramid-only (`anchor_base_pyr`) and super-only (`anchor_base_s12`), `jobs/reg_pyramid_ablation.jsonl`, 100 rows, reg4 now and reg3 after the PAG pilot, output into `reg_pyramid_grid` so one scoring call covers all three; and the generality pilot `jobs/reg_generality_pilot.jsonl` (REG vs plain CFG with SEG, TPG, and under dynamic YaRN; 36 rows, 4K, six pilot prompts) queued on reg2/reg5 behind the w2/w8 shards.
 
+### PAG on the REG base, and REG at 5K (2026-10-30 23:30; `jobs/reg_pag_pilot.jsonl`, 15 rows on reg3, all ok; `results/reg_pag_pilot_{pref,eval,speckle}.csv`; sheets `reg_pag_pilot/sheets/pag4k_{full,crop8}.jpg`, `reg5k_{full,crop8,crop16}.jpg`)
+Question 1: does "guidance stays native once the base is native" hold for perturbation guidance? PAG at its 1K-calibrated setting (blocks 15–17, scale 2) on plain CFG 4 and on REG (pyramid + super 12) at 4K, six pilot prompts, seed 0. REG-alone numbers from the pyramid pilot (same prompts and seeds).
+
+| 4K, n = 6 | HPS | ImageReward | CLIP | patch-KID | speckle p>native |
+|---|---|---|---|---|---|
+| plain CFG 4 + PAG 2 | 15.3 | −0.92 | 22.7 | 0.153 | 0.034 |
+| REG w4 (no PAG) | 31.1 | 1.43 | 33.8 | 0.021 | 0.042 |
+| REG w4 + PAG 2 | 27.2 | 1.06 | 32.1 | 0.037 | 0.056 |
+
+- **PAG does not rescue plain CFG at 4K** (HPS 15.3 ≈ plain w4's 14.3 on the grid; the sheet is the same grey wash with the subject missing). The failure is in the base prediction, and no perturbation term fixes it — consistent with the diagnosis.
+- **PAG at its native scale over-perturbs the REG base: −3.9 HPS on 6/6 prompts** (cathedral 31.2 → 26.0, portrait 32.9 → 28.2), ImageReward −0.37, KID 0.021 → 0.037. By eye it is the 1K "over-perturbed" look from the calibration (08, 2026-10-27): stained glass flattened to a grid texture, street signs blanked, waxy skin; the super-native speckle is gone but with it the fine detail. So the second part of the claim fails as stated: the *CFG* weight stays native once the base is anchored, but a perturbation term whose Δ_pert is computed over 65K tokens is a much larger perturbation than the same term over 4K tokens — identity attention in three blocks removes far more at 4K. That is REG component (D), token-count calibration of perturbation guidance, which the pilot design had set aside. **Follow-up launched:** PAG scale {0.5, 1.0} on the REG base, same prompts (`jobs/reg_pag_scale_pilot.jsonl`, 12 rows, reg1 after its w2/w8 shard). If scale ≈ 2/r or 2/r² recovers the 1K effect, (D) is a one-line rule; if not, the anchored form (Δ_pert on the native-resolution pass) is the next thing to try. The SEG/TPG rows of the generality pilot test the same point.
+
+Question 2: does the super-native weight keep growing with r? REG at 5120² (ratio 5, pyramid level 2 → a 2560 px pass), 27 min and 21.5 GB per image.
+
+| 5K | HPS (4K same prompt) | ImageReward (4K) | speckle p>native (4K: 0.042) |
+|---|---|---|---|
+| super 12, portrait | 33.7 (32.9) | 1.79 (1.71) | 0.066 |
+| super 12, lighthouse | 30.7 (30.5) | 1.51 (1.48) | |
+| super 24, portrait | 33.2 (32.9) | 1.76 (1.71) | 0.065 |
+
+- **REG works at 5K at the native weight with no change:** HPS and ImageReward equal to or above the same prompt at 4K; the lighthouse and portrait are coherent, no repetition. (A one-shot 5K plain-CFG baseline is not needed: 4K plain w4 already fails.)
+- **The residual speckle grows with r at fixed super-native weight** (p>native 0.042 → 0.066, visible as white dots in the lighthouse sky at 1/8 crop), as the r-dependence candidate predicts; but super 24 did not remove it on the one prompt run (0.065, HPS −0.5), unlike the 4K over-sharpening it did not hurt either. n = 1–2 is not enough to fix the rule. **Follow-up launched:** the 5K sweep super {12, 16, 24} on all six prompts (`jobs/reg_5k_pilot.jsonl`, 15 new rows, reg2/reg5 after the generality pilot).
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
