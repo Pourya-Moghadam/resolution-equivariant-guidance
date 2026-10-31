@@ -1,0 +1,2 @@
+cfg,method,size,hps,hps_se,ir,ir_se,n
+4.0,anchor_base_pyr_s12,4096,30.366,0.3367,1.3069,0.0777,50

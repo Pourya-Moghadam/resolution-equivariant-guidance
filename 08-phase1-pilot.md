@@ -367,6 +367,27 @@ Paired against the single-level anchor on the same prompt and seed: pyramid HPS 
 - **Anchored w4 on the same prompts, CLIP/KID (2026-10-30 13:00; `results/reg_anchor_grid_eval.csv`, n = 100 at 3K, 50 at 4K):** CLIP 37.6 at 3K and 37.1 at 4K, above plain CFG at *every* weight (plain peaks 37.1 at 3K, 35.2 at 4K) and level with 1K/2K (37.4/37.2). Patch-KID 0.017 at 3K and 0.044 at 4K, equal to plain w12 at both sizes; plain w16 is lower still (0.015 / 0.037), which with the HPS result (anchored w4 above plain w16) means KID at high weight is rewarding the sharpened texture that the preference scorers and the crops count against it. Mean subject count 1.00 / 1.04, no missing subjects. So on all four metrics the anchored native weight is at or above the best plain weight at 3K and 4K, and at native level on CLIP and subject count.
 - **Repetition is not the failure mode; a missing subject is.** Duplicate-subject rates are 0–8 % at every size and weight (final rows: 2–8 % at 3K/4K with a weak rise at high weight, 1.08–1.12 mean count at 4K w12–16). What moves with weight at 3K/4K is the *mean count falling below one*: 0.40 at 3K w2, 0.44 at 4K w3, 0.64 at 4K w4, ≈ 1.0 from 3K w4 / 4K w10. At the native weight, extrapolated images lose the subject to texture (the collapse seen in the pilots), and raising CFG restores it; nothing duplicates. The paper's finding is therefore stated as under-guidance (loss of subject and layout) rather than the over-saturation/repetition story of the related work, which belongs to the no-RoPE-scaling setting.
 
+### REG on the 4K kill-or-go prompts: paired three-way table (2026-10-30 22:30; `jobs/reg_pyramid_grid.jsonl`, 50 rows on reg4, all ok; `results/reg_pyramid_grid_{pref,eval}.csv`, `results/reg_paired_{hps,ir,clip}.csv`, `scripts/reg_paired.py`; sheets `reg_pyramid_grid/sheets/grid4k_{full,crop8}.jpg`)
+REG = base anchor + pyramid level [2] + super-native weight 12, at w = 4, on the same 50 4K prompts and seeds as the grid and the single-level anchored run. Paired differences are REG minus the cell over the 50 prompts, bootstrap 95 % CI, win = fraction of prompts REG scores higher.
+
+| 4K, n = 50 | HPS | ImageReward | CLIP | patch-KID | dup / mean count |
+|---|---|---|---|---|---|
+| plain CFG w4 | 14.3 | −1.27 | 23.6 | 0.151 | 0 % / 0.64 |
+| plain CFG w16 (plain's best) | 27.2 | 0.59 | 35.2 | 0.037 | 8 % / 1.12 |
+| single-level anchor w4 | 29.2 | **1.37** | 37.1 | 0.044 | 4 % / 1.04 |
+| **REG w4** | **30.4** | 1.31 | **37.2** | **0.023** | 4 % / 1.04 |
+
+| REG minus … (paired) | HPS | ImageReward | CLIP |
+|---|---|---|---|
+| plain w16 | +3.2 [2.6, 3.9], win 94 % | +0.72 [0.52, 0.93], 92 % | +2.1 [1.0, 3.2], 66 % |
+| plain w8 | +6.2 [5.1, 7.4], 98 % | +1.04 [0.76, 1.32], 96 % | +2.5 [1.3, 3.9], 62 % |
+| single-level anchor w4 | **+1.1 [0.7, 1.6], 74 %** | **−0.06 [−0.12, −0.01], 32 %** | +0.1 [−0.4, 0.6], 52 % |
+
+- **The pilot gains hold at n = 50.** Over the single-level anchor, REG adds +1.1 HPS (CI clear of zero, 74 % of prompts) and halves the patch-KID (0.044 → 0.023), which is now *below* plain CFG at every weight (plain's floor is 0.037 at w16) and close to 3K plain w16 (0.015). CLIP is unchanged (37.2 vs 37.1, both above every plain weight). Over plain CFG at its best weight the margin grows to +3.2 HPS / +0.72 ImageReward / +2.1 CLIP, all CIs clear of zero.
+- **ImageReward is the one dissent:** −0.06 against the single anchor, significant but small (the anchor-vs-plain-w16 gap on the same metric is 0.78, so REG keeps 92 % of it). ImageReward sees a 224 px thumbnail; what the pyramid/super-native pass changes is the ≥ 2K-cycle band, which only KID (2048 px patches) and the crops see. I take HPS + KID as the decisive pair and keep REG as the method; the running ablation (below) will say whether the ImageReward dip comes from the pyramid level or the super-native weight.
+- **By eye (`grid4k_crop8.jpg`, 8 prompts):** plain w4 is a speckled wash with the subject missing on the single-subject prompts (dog, fox absent or a smudge); plain w16 recovers the subject under heavy white speckle; the single anchor has the composition and subject but keeps the speckle at 1/8 crop (child's cheek, fur, waterfall spray); REG removes it almost entirely (clean skin, fur with individual hairs, the waterfall as water), with a residual sprinkle on one fur crop and a slightly higher local contrast. Subject counts are unchanged (mean 1.04, one duplicate in 25 for both anchored variants).
+- **Launched on the result:** the scaled component ablation on the same 50 prompts — pyramid-only (`anchor_base_pyr`) and super-only (`anchor_base_s12`), `jobs/reg_pyramid_ablation.jsonl`, 100 rows, reg4 now and reg3 after the PAG pilot, output into `reg_pyramid_grid` so one scoring call covers all three; and the generality pilot `jobs/reg_generality_pilot.jsonl` (REG vs plain CFG with SEG, TPG, and under dynamic YaRN; 36 rows, 4K, six pilot prompts) queued on reg2/reg5 behind the w2/w8 shards.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
