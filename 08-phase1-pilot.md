@@ -411,6 +411,63 @@ Question 2: does the super-native weight keep growing with r? REG at 5120² (rat
 - **REG works at 5K at the native weight with no change:** HPS and ImageReward equal to or above the same prompt at 4K; the lighthouse and portrait are coherent, no repetition. (A one-shot 5K plain-CFG baseline is not needed: 4K plain w4 already fails.)
 - **The residual speckle grows with r at fixed super-native weight** (p>native 0.042 → 0.066, visible as white dots in the lighthouse sky at 1/8 crop), as the r-dependence candidate predicts; but super 24 did not remove it on the one prompt run (0.065, HPS −0.5), unlike the 4K over-sharpening it did not hurt either. n = 1–2 is not enough to fix the rule. **Follow-up launched:** the 5K sweep super {12, 16, 24} on all six prompts (`jobs/reg_5k_pilot.jsonl`, 15 new rows, reg2/reg5 after the generality pilot).
 
+### Anchored weight curve at grid scale, w2/w4/w8 (2026-10-31 10:00; `jobs/reg_anchor_grid_w28.jsonl`, 300 rows on reg1/reg2/reg5, all ok; `results/reg_anchor_grid_{pref,eval}.csv`, `results/anchor_paired{,_ir}.{csv,png}`)
+| HPS (n = 100 at 3K, 50 at 4K, 200/100 at 1K/2K) | w2 | w4 | w8 |
+|---|---|---|---|
+| 1K plain | 30.7 | 31.7 | 32.1 |
+| 2K plain | 26.6 | 29.8 | 31.3 |
+| 3K plain | 12.1 | 22.0 | 27.5 |
+| 3K anchored | 28.7 | 30.9 | 31.9 |
+| 4K plain | – | 14.3 | 24.1 |
+| 4K anchored | 26.6 | 29.2 | 30.8 |
+
+| 4K anchored | HPS | ImageReward | CLIP | patch-KID |
+|---|---|---|---|---|
+| w2 | 26.6 | 1.12 | 35.6 | 0.086 |
+| w4 | 29.2 | 1.37 | 37.1 | 0.044 |
+| w8 | 30.8 | 1.46 | 37.4 | 0.027 |
+
+- **The anchored curve has the native shape.** It rises from w2 to w8 by 3.2 HPS at 3K and 4.3 at 4K, the same rise as 2K plain (4.7) and a gentler one than the 3K/4K plain curves (15.4 / 9.8 from w4 to w8 alone). 4K anchored lies on the 2K plain curve to within 0.6 at every weight; 3K anchored sits between the 2K and 1K plain curves. Stage C's pilot claim (matched-weight equivalence) holds at n = 100/50.
+- **Consequence for the headline:** the anchored optimum is at the native optimum (6–8 at 1K), not at 4, so "the native weight works" means the native *range* works. Anchored w8 at 4K (HPS 30.8, ImageReward 1.46, KID 0.027) is as good as REG at w4 on HPS (+0.46 paired, CI [0.06, 0.85]) and better on ImageReward; REG at w2/w8 on the same prompts is running now (reg1/reg4/reg5) to settle whether the pyramid still adds at the native optimum.
+
+### Component ablation at grid scale (2026-10-31 10:00; `jobs/reg_pyramid_ablation.jsonl`, 100 rows on reg4/reg3, all ok; `results/reg_pyramid_grid_{pref,eval}.csv`, `results/reg_paired_{hps,ir,clip}.csv`)
+| 4K, w4, n = 50, paired | HPS | Δ vs single anchor | ImageReward | Δ vs single anchor | CLIP | patch-KID |
+|---|---|---|---|---|---|---|
+| single-level anchor | 29.2 | – | 1.37 | – | 37.1 | 0.044 |
+| + pyramid [2] | 30.4 | **+1.15 [0.74, 1.57]**, 78 % | 1.37 | +0.00 [−0.05, 0.05] | 37.3 | 0.027 |
+| + super-native 12 | 29.9 | +0.67 (0.46 below REG, CI [0.09, 0.85]) | 1.33 | −0.04 | 37.1 | 0.027 |
+| + both (REG as run) | 30.4 | +1.13 [0.66, 1.61], 74 % | 1.31 | **−0.06 [−0.12, −0.01]** | 37.2 | **0.023** |
+
+- **The pyramid carries the whole preference gain, at no ImageReward cost.** Pyramid-only equals REG on HPS (paired difference 0.03, CI [−0.17, 0.22]) and CLIP, keeps the single anchor's ImageReward exactly, and already brings patch-KID from 0.044 to 0.027.
+- **The super-native weight is the component that costs ImageReward** (−0.066 [−0.108, −0.028] against pyramid-only) and it adds nothing to HPS once the pyramid is there; what it buys is the last KID step, 0.027 → 0.023 (≈ 3 KID std), i.e. the residual speckle that the crops show. The pilot's "+0.5 / +0.9 / +1.5 additive" reading (n = 6) does not survive n = 50: at scale it is +0.7 / +1.15 / +1.13.
+- **Decision (05):** REG's default is the base anchor at every octave (the pyramid), at the native weight; the super-native weight becomes an optional speckle control reported in the ablation, and the open derivation for its r-dependence is no longer on the critical path. Whether the pyramid still adds at w8 (the native optimum) is what the running REG w2/w8 rows decide.
+
+### PAG on the native base, and 5K (2026-10-31 10:00; `jobs/reg_pag_pilot.jsonl`, 15 rows on reg3, all ok; `results/reg_pag_pilot_{pref,eval}.csv`; sheets `reg_generality_pilot/sheets/gen4k_{full,crop8}.jpg`, `reg5k_{full,crop8}.jpg`)
+| 4K, w4, six pilot prompts | HPS | ImageReward | CLIP | patch-KID |
+|---|---|---|---|---|
+| plain CFG 4 (stage A baseline) | 16.6 | −0.79 | – | – |
+| plain CFG 4 + PAG 2 | 15.3 | −0.92 | 22.7 | 0.153 |
+| REG w4 (pyramid + 12, stage 2) | 31.1 | 1.43 | – | 0.021 |
+| REG w4 + PAG 2 | 27.2 | 1.06 | 32.1 | 0.037 |
+
+- **On plain CFG, PAG at its 1K setting collapses at 4K** (brown/grey washes with no subject on 5/6 prompts, HPS 15.3 — below plain CFG 4 alone). **On the REG base it does not collapse** — every prompt keeps its composition — **but it still costs 3.9 HPS, 0.37 ImageReward and doubles KID** against REG alone, and the crops show PAG's smoothing where REG alone has texture. So "guidance stays native once the base is native" holds for the CFG weight but not for the perturbation term at its native scale: Δ_pert grows with token count the way the original REG component (D) predicted. A reduced-PAG pilot (scale 1 and 0.5 on the REG base, `jobs/reg_pag_pilot2.jsonl`) is queued on reg4; the 1K baseline is below.
+- **At 1K the same settings help** (`results/pert_calib_1k_pref.csv`, `results/guidance_zoo_1k_pref.csv`, same six prompts, CFG 4 alone = 32.5 HPS): PAG blocks 15–17 scale 2 = 32.8 (+0.4), SEG σ5 scale 1.5 = 33.4 (+0.9), TPG frac 0.5 scale 1.5 = 33.1 (+0.7); eight blocks or scale 3 hurt, as the calibration found by eye. So the perturbation term that is worth +0.4 to +0.9 at 1K costs −3.9 / −0.8 / −0.2 at 4K on the REG base. **The CFG weight transfers through the anchor; the perturbation scale does not** — it has to shrink with token count, which is REG component (D) and what the reduced-PAG pilot measures.
+- **5K works (ratio 5, 5120², pyramid level 2 → 2560 px pass):** three rows, all ok, 1650 s and 21.5 GB peak per image on the 32 GB card. Portrait and lighthouse are coherent with one subject; HPS 32.2 (super 12, n = 2) / 33.2 (super 24, n = 1), ImageReward 1.65 / 1.76 — above the 4K numbers, as the 224-px scorers reward the larger canvas. The lighthouse at super 12 still shows a faint sparkle in the sky and the portrait at super 24 is cleaner and sharper than at 12, so the super-native weight wanted is higher at r = 5 than at r = 4, consistent with the r-dependence rule; with the component now optional (above) this is a qualitative note, not a derivation target.
+
+### Generality pilot: SEG, TPG and YaRN (2026-10-31 10:00; `jobs/reg_generality_pilot.jsonl`, 36 rows on reg2/reg5, all ok; `results/reg_generality_pilot_{pref,eval}.csv`; sheets `gen4k_{full,crop8}.jpg`)
+| 4K, w4, six pilot prompts | HPS | ImageReward | CLIP | patch-KID |
+|---|---|---|---|---|
+| plain CFG 4 + SEG 1.5 | 16.6 | −0.57 | 25.5 | 0.158 |
+| REG + SEG 1.5 | 30.3 | 1.50 | 33.0 | 0.041 |
+| plain CFG 4 + TPG 1.5 | 18.5 | −0.18 | 25.6 | 0.128 |
+| REG + TPG 1.5 | 31.0 | 1.50 | 33.0 | 0.022 |
+| plain CFG 4, dynamic YaRN | 23.4 | 0.44 | 33.5 | 0.041 |
+| REG, dynamic YaRN | **31.6** | 1.39 | 34.2 | **0.019** |
+| REG, dynamic NTK (reference) | 31.1 | 1.43 | – | 0.021 |
+
+- **Every row says the same thing: plain CFG at the native weight fails at 4K whatever else is attached, and the REG base makes the same settings work.** SEG and TPG on plain CFG are speckle fields with the subject gone (HPS 16–18); on REG they are clean. Like PAG, SEG at its 1K scale costs a little on the REG base (−0.8 HPS, KID 0.041 vs 0.021) while TPG is neutral (−0.2, KID 0.022), ordering PAG < SEG < TPG by how much they hurt, which is the order of how much they perturb.
+- **REG is extrapolation-agnostic:** under dynamic YaRN it scores at least as well as under dynamic NTK (HPS 31.6 vs 31.1, KID 0.019 vs 0.021) with the crops equally clean, while plain CFG under YaRN keeps the missing-subject failure (lighthouse gone, pears multiplied). 07's NTK-over-YaRN choice was made on plain CFG's repetition; with REG the choice no longer matters, which is itself a result. The YaRN comparison goes to grid scale on reg2/reg3 next (`jobs/reg_generality_grid.jsonl`, 100 rows).
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
