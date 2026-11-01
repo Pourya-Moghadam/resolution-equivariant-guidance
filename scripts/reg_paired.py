@@ -61,9 +61,11 @@ def main() -> None:
     ap.add_argument("--ref", default="anchor_base_pyr_s12", help="method that the paired differences are taken against")
     ap.add_argument("--ref-cfg", type=float, default=4.0)
     ap.add_argument("--size", type=int, default=4096)
+    ap.add_argument("--dirs", nargs="*", default=["kill_or_go", "reg_anchor_grid", "reg_pyramid_grid"],
+                    help="output dirs under $REG_DATA/outputs to read (add e.g. reg_generality_grid)")
     a = ap.parse_args()
     cells = defaultdict(dict)  # (method, cfg) -> prompt -> value
-    for name in ("kill_or_go", "reg_anchor_grid", "reg_pyramid_grid"):
+    for name in a.dirs:
         for r in load(name, a.metric, a.size).values():
             cells[(r["method"], r["cfg"])][r["prompt"]] = r["v"]
     ref = cells.get((a.ref, a.ref_cfg), {})

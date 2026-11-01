@@ -496,6 +496,20 @@ REG here is still pyramid + super-native 12 (the rows were queued before the abl
 - **At 3K (n = 100) REG as run is slightly worse than the single anchor:** HPS 30.6 vs 30.9 (−0.34, CI [−0.54, −0.13]), ImageReward 1.33 vs 1.42 (−0.08, [−0.12, −0.04]), CLIP equal (37.5 / 37.6), KID better (0.0145 vs 0.0166). The 4K ablation makes the super-native weight the likely cause (it is the component that costs ImageReward); the pilot's "wash at 3K" was within its n = 6 noise. Both anchors beat plain CFG at every weight at 3K (vs plain w16: +1.2 / +0.9 HPS).
 - **Queued for the new default (pyramid only, no super-native weight):** 4K w8 (reg1, running), 3K w4 (100 rows, reg4 + reg5 after tonight's pilots), 4K w2 (reg2 after its YaRN shard) — `jobs/reg_pyramid_grid_pyr_{w8,3k,w2}.jsonl`. With those the paper's weight-curve figure is plain / single anchor / pyramid at 3K and 4K, all from the same prompts.
 
+### Generality at grid scale: REG under dynamic YaRN (2026-11-01 02:00; `jobs/reg_generality_grid.jsonl`, 100 rows on reg2/reg3, all ok; `results/reg_generality_grid_{pref,eval}.csv`, `results/reg_paired_yarn_{hps,ir,clip}.csv`; `scripts/reg_paired.py --dirs ... reg_generality_grid`)
+The 6-prompt pilot had REG under dynamic YaRN 0.5 HPS above REG under NTK. Same test on the 50 4K kill-or-go prompts: REG (pyramid + super 12, w4, as the grid was configured) and plain CFG w4, both under dynamic YaRN, paired against the NTK rows already in the table.
+
+| 4K, n = 50, w4 unless noted | HPS | ImageReward | CLIP | patch-KID | paired vs REG-NTK, HPS |
+|---|---|---|---|---|---|
+| plain CFG, NTK | 14.3 | −1.27 | 23.6 | 0.151 | −16.1 [−18.0, −14.3] |
+| plain CFG, YaRN | 19.8 | −0.64 | 33.2 | 0.048 | −10.6 [−11.8, −9.3] |
+| plain CFG w16, NTK | 27.2 | 0.59 | 35.2 | 0.037 | −3.2 [−3.9, −2.5] |
+| REG, NTK | 30.4 | 1.31 | 37.2 | 0.023 | — |
+| REG, YaRN | 30.6 | 1.33 | 37.1 | 0.019 | +0.2 [−0.1, +0.5], 54 % |
+
+- **REG is indifferent to the extrapolation method:** under YaRN it is +0.2 HPS, +0.02 ImageReward and −0.1 CLIP against itself under NTK, every CI through zero (ImageReward [−0.03, +0.06], CLIP [−0.4, +0.2]); the pilot's +0.5 did not survive n = 50. The one real difference is patch-KID, 0.019 vs 0.023, the best KID of any cell so far. So the paper's generality claim for the extrapolation axis is: *the anchored base makes the native weight work, and which positional extrapolation produces that base is a second-order choice* (YaRN gives marginally cleaner texture). Plain CFG does better under YaRN than under NTK (19.8 vs 14.3 HPS) and still fails: the failure is in the guidance, not the position encoding, which is the paper's first finding re-stated on the other extrapolation method.
+- Together with the SEG/TPG/PAG result (perturbation guidance does not transfer and is not part of REG), the generality section reduces to two rows per size: REG under NTK and under YaRN, both at the native weight. No further generality compute on Lumina; the second model (Qwen-Image) is the remaining generality axis.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
