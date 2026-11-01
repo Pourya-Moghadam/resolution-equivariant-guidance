@@ -510,6 +510,33 @@ The 6-prompt pilot had REG under dynamic YaRN 0.5 HPS above REG under NTK. Same 
 - **REG is indifferent to the extrapolation method:** under YaRN it is +0.2 HPS, +0.02 ImageReward and −0.1 CLIP against itself under NTK, every CI through zero (ImageReward [−0.03, +0.06], CLIP [−0.4, +0.2]); the pilot's +0.5 did not survive n = 50. The one real difference is patch-KID, 0.019 vs 0.023, the best KID of any cell so far. So the paper's generality claim for the extrapolation axis is: *the anchored base makes the native weight work, and which positional extrapolation produces that base is a second-order choice* (YaRN gives marginally cleaner texture). Plain CFG does better under YaRN than under NTK (19.8 vs 14.3 HPS) and still fails: the failure is in the guidance, not the position encoding, which is the paper's first finding re-stated on the other extrapolation method.
 - Together with the SEG/TPG/PAG result (perturbation guidance does not transfer and is not part of REG), the generality section reduces to two rows per size: REG under NTK and under YaRN, both at the native weight. No further generality compute on Lumina; the second model (Qwen-Image) is the remaining generality axis.
 
+### Pyramid-only weight curve at 3K and 4K, and 5K pyramid depth (2026-11-01 11:00; `jobs/reg_pyramid_grid_pyr_{3k,3k_w8,3k_w2,w8}.jsonl`, 350 rows on reg1/reg3/reg4/reg5, all ok; `jobs/reg_5k_depth_pilot.jsonl`, 12 rows on reg5, all ok; `results/reg_pyramid_grid_{pref,eval}.csv`, `results/reg_paired_{3k,4k}_w{2,4,8}_{hps,ir,clip}.csv`, `results/reg_pag_pilot_{pref,eval,speckle}.csv`; figure `results/reg_weight_curve{,_ir}.png`, `scripts/reg_weight_curve.py`)
+The new default (pyramid anchor, no super-native term) on the full weight curve, paired against the single anchor at the same weight on the same prompts. 4K w2 lands at 12:30 (reg2).
+
+| 3K, n = 100 | HPS | ImageReward | CLIP | patch-KID | paired HPS vs single anchor | paired ImageReward |
+|---|---|---|---|---|---|---|
+| single anchor w2 / w4 / w8 | 28.7 / 30.9 / 31.9 | 1.22 / 1.42 / 1.45 | 37.1 / 37.6 / 37.5 | 0.0175 / 0.0166 / 0.0139 | — | — |
+| pyramid w2 / w4 / w8 | 28.2 / 30.4 / 31.4 | 1.12 / 1.34 / 1.39 | 37.0 / 37.5 / 37.4 | 0.0175 / 0.0157 / 0.0136 | −0.44 [−0.66, −0.23] / −0.56 [−0.73, −0.39] / −0.53 [−0.66, −0.41] | −0.09 / −0.08 / −0.06, all CIs below 0 |
+| plain w16 | 29.7 | 1.20 | — | — | −1.0 / −1.2 / −2.2 | — |
+
+| 4K, n = 50 | HPS | ImageReward | CLIP | patch-KID | paired HPS vs single anchor | paired ImageReward |
+|---|---|---|---|---|---|---|
+| single anchor w2 / w4 / w8 | 26.6 / 29.2 / 30.8 | 1.12 / 1.37 / 1.46 | 35.6 / 37.1 / 37.4 | 0.086 / 0.044 / 0.027 | — | — |
+| pyramid w4 / w8 | 30.4 / 31.1 | 1.37 / 1.44 | 37.3 / 37.2 | 0.027 / 0.022 | +1.15 [0.74, 1.57] / +0.30 [−0.04, 0.68] | 0.00 / −0.02 n.s. |
+| pyramid + super 12, w2 / w4 / w8 | 29.2 / 30.4 / 31.05 | 1.22 / 1.31 / 1.42 | 36.8 / 37.2 / 37.2 | 0.026 / 0.023 / 0.021 | +2.6 / +1.1 / +0.2 | −0.10 n.s. / −0.06 / −0.04 |
+
+| 5K, n = 6, w4 | HPS | ImageReward | CLIP | patch-KID | speckle p>native | s / image, GB |
+|---|---|---|---|---|---|---|
+| pyramid [2] (2560 px pass) | 29.8 | 1.48 | 35.1 | 0.070 | 0.067 | 1650, 21.5 |
+| pyramid [2, 4] (2560 + 1280 px) | 29.8 | 1.40 | 34.5 | 0.061 | 0.080 | 1650, 21.5 |
+| pyramid [2] + super 12 / 16 / 24 | 30.7 / 30.6 / 30.6 | 1.49 / 1.47 / 1.46 | 34.8 / 34.4 / 34.2 | 0.034 / 0.031 / 0.032 | 0.066 / 0.067 / 0.074 | 1650, 21.5 |
+
+- **At 3K the pyramid costs, consistently:** −0.4 to −0.6 HPS and −0.06 to −0.09 ImageReward at every weight, every CI clear of zero (single anchor wins 62–81 % of prompts), CLIP and KID unchanged. It does not buy weight robustness there either (span w2→w8: pyramid 3.1, single anchor 3.2 HPS). At r = 3 the intermediate level sits at 1536 px, 1.5× native, not an octave: the extra pass splits the band the single anchor already handles and slightly blurs it.
+- **At 4K the pyramid is a gain at w4 (+1.15 HPS), a wash at w8 (+0.3, CI through zero), and the super-native term adds nothing at w8** (pyramid-only 31.1 vs pyramid + super 12 31.05; KID 0.022 vs 0.021). The curve span w2→w8 for pyramid + super is 1.9 HPS vs 4.3 for the single anchor; pyramid-only w2 lands at 12:30 and will say whether the robustness is the pyramid's or the super term's.
+- **At 5K the super-native term is what matters, and the deeper pyramid does not replace it:** pyramid-only KID 0.070 vs 0.034 with super 12, −0.9 HPS, and the [2, 4] pyramid is no better than [2] (KID 0.061, ImageReward lower, speckle higher). So the "super-native weight is out for good" decision of 01:00 is reversed for r ≥ 5: the term is a cost at r = 3 (−0.3 HPS), a KID-only gain at r = 4, and a clear gain at r = 5. **The components' value grows with the ratio**, which is the natural reading: the extrapolated band is 1 − 1/r² of the spectrum (89 % at r = 3, 96 % at r = 5), and the base model's own handling of it degrades with r.
+- **Candidate rule (one line, zero per-resolution tuning), to be confirmed by the runs now on the cluster:** anchor levels at every octave strictly inside (1, r) — none at r = 3, [2] at r = 4, [2, 4] at r = 5–7 — and super-native weight w_s = w · (r − 2): 4 at r = 3 (a no-op, equal to w), 8 at r = 4 (on the 8–16 plateau), 12 at r = 5 (on the 12–24 plateau). The rule reduces REG to the single anchor at r = 3, which the 3K data say is the right answer. Running: single anchor + super 8 at 3K, n = 100 (reg3/reg4; the rule says the super term should not be applied at r = 3, this checks that it hurts), 5K [2, 4] + super 12 (the rule's 5K default) and [2] + super 8 (below the rule) on the six prompts (reg5), a 6K probe with [2, 4] + super 12 on two prompts (reg1; memory and coherence at r = 6), and the rule's 4K default (pyramid [2] + super 8, w4) on the 50 grid prompts (reg2 + reg1 after the current runs, handoff7). If the 4K default matches pyramid + super 12 (expected: plateau) and the 3K super term hurts, the rule stands and the paper's method table is one row per size with no free parameter.
+- Figure `results/reg_weight_curve.png`: plain / single anchor / pyramid / pyramid + super at 3K and 4K against the plain 2K curve, with bootstrap CIs. The single anchor already restores the native shape at both sizes; the pyramid lifts the low-weight end at 4K only.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
