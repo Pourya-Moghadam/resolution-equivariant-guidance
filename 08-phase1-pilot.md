@@ -413,6 +413,27 @@ Question 2: does the super-native weight keep growing with r? REG at 5120² (rat
 - **At 1K the same settings help** (`results/pert_calib_1k_pref.csv`, `results/guidance_zoo_1k_pref.csv`, same six prompts, CFG 4 alone = 32.5 HPS): PAG blocks 15–17 scale 2 = 32.8 (+0.4), SEG σ5 scale 1.5 = 33.4 (+0.9), TPG frac 0.5 scale 1.5 = 33.1 (+0.7); eight blocks or scale 3 hurt, as the calibration found by eye. So the perturbation term that is worth +0.4 to +0.9 at 1K costs −3.9 / −0.8 / −0.2 at 4K on the REG base. **The CFG weight transfers through the anchor; the perturbation scale does not** — it has to shrink with token count, which is REG component (D) and what the reduced-PAG pilot measures.
 - **5K works (ratio 5, 5120², pyramid level 2 → 2560 px pass):** three rows, all ok, 1650 s and 21.5 GB peak per image on the 32 GB card. Portrait and lighthouse are coherent with one subject; HPS 32.2 (super 12, n = 2) / 33.2 (super 24, n = 1), ImageReward 1.65 / 1.76 — above the 4K numbers, as the 224-px scorers reward the larger canvas. The lighthouse at super 12 still shows a faint sparkle in the sky and the portrait at super 24 is cleaner and sharper than at 12, so the super-native weight wanted is higher at r = 5 than at r = 4, consistent with the r-dependence rule; with the component now optional (above) this is a qualitative note, not a derivation target.
 
+**Follow-ups landed (2026-11-01 01:00; `jobs/reg_pag_scale_pilot.jsonl` 12 rows on reg4, `jobs/reg_5k_pilot.jsonl` 15 rows on reg5, all ok; same CSVs, re-scored over all 42 rows).**
+
+| 4K, n = 6, REG = pyramid + super 12, w4 | HPS | ImageReward | CLIP | patch-KID | speckle p>native |
+|---|---|---|---|---|---|
+| REG + PAG 2 (blocks 15–17) | 27.2 | 1.06 | 32.1 | 0.037 | 0.056 |
+| REG + PAG 1 | 29.3 | 1.29 | 32.7 | 0.027 | 0.050 |
+| REG + PAG 0.5 | 30.2 | 1.41 | 33.1 | 0.025 | 0.048 |
+| REG, no PAG | 31.1 | 1.43 | 33.8 | 0.021 | 0.042 |
+
+- **Shrinking the PAG scale only approaches the no-PAG result; no scale beats it.** The loss is close to linear in the scale (−3.9 / −1.8 / −0.9 HPS at 2 / 1 / 0.5; ImageReward −0.37 / −0.14 / −0.02; KID 0.037 / 0.027 / 0.025 against 0.021), and the speckle statistic rises with the scale too, so PAG is not even removing the residual super-native speckle. Scale = 2/r (0.5 at r = 4) is therefore not a calibration rule that recovers the +0.4 HPS the term is worth at 1K; the simplest reading is that on an anchored base there is nothing left for a perturbation term to fix, and every bit of it costs detail. **Decision: perturbation guidance is not a component of REG.** Component (D) is reported as a negative result (the CFG weight transfers through the anchor, a perturbation term does not, and a token-count-scaled version only tends to zero), with the anchored form (Δ_pert computed on the native-resolution pass) noted as untested. No further PAG/SEG/TPG compute at grid scale; the SEG/TPG pilot rows already point the same way (−0.8 / −0.2 at their 1K scale).
+
+| 5K (r = 5), n = 6, pyramid + super S, w4 | HPS (4K REG: 31.1) | ImageReward (1.43) | CLIP (33.8) | patch-KID (0.021) | speckle p>native (0.042) | s / image |
+|---|---|---|---|---|---|---|
+| super 12 | 30.7 | 1.49 | 34.8 | 0.034 | 0.066 | 1650 |
+| super 16 | 30.6 | 1.47 | 34.4 | 0.031 | 0.067 | 1650 |
+| super 24 | 30.6 | 1.46 | 34.2 | 0.032 | 0.074 | 1650 |
+
+- **At 5K the super-native weight does nothing measurable** (HPS within 0.1, ImageReward within 0.03, KID 0.031–0.034 across 12–24) **and the speckle statistic does not fall with it** (0.066 → 0.074); with n = 6 the n = 1–2 hint above (super 24 cleaner on the portrait) does not survive. This closes the r-dependence question: there is no super-native weight to derive, because the component is a wash at 3K, a small KID gain at 4K and nothing at 5K. It is dropped from the method (as decided on the 4K ablation) and kept as an ablation row.
+- **REG at 5K at the native weight is 0.4 HPS below the same prompts at 4K** (30.7 vs 31.1; ImageReward and CLIP above the 4K values, KID 0.034 vs 0.021) with the sparkle still visible in flat skies at 1/8 crop. Since weight is not the lever, the open lever is pyramid depth: at r = 5 the pyramid [2] anchors at 2560 px only, so the band between 1024 and 2560 px is extrapolated by a factor 2.5 before any anchor sees it. **Follow-up launched:** 5K pyramid-only with levels [2] and levels [2, 4] (2560 + 1280 px passes), six prompts (`jobs/reg_5k_depth_pilot.jsonl`, 12 rows, reg5 after its 3K shard, handoff6). If [2, 4] removes the sparkle the rule is "anchor at every octave down to native", which is what the method already says for 4K.
+
+
 ### Anchored weight curve at grid scale, w2/w4/w8 (2026-10-31 10:00; `jobs/reg_anchor_grid_w28.jsonl`, 300 rows on reg1/reg2/reg5, all ok; `results/reg_anchor_grid_{pref,eval}.csv`, `results/anchor_paired{,_ir}.{csv,png}`)
 | HPS (n = 100 at 3K, 50 at 4K, 200/100 at 1K/2K) | w2 | w4 | w8 |
 |---|---|---|---|
