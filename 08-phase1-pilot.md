@@ -538,6 +538,27 @@ The new default (pyramid anchor, no super-native term) on the full weight curve,
 - **4K w2 landed (12:00, reg2, 50 rows ok):** pyramid-only 28.3 HPS / 1.17 ImageReward / 36.7 CLIP / KID 0.038, against the single anchor's 26.6 / 1.12 / 35.6 / 0.086 — paired +1.71 HPS [1.35, 2.09] (92 % of prompts), +1.1 CLIP [0.5, 1.8], ImageReward n.s. The super-native term adds a further +0.9 HPS and halves KID again (29.2, 0.026) at w2. Curve span w2→w8 at 4K: single anchor 4.3, pyramid 2.85, pyramid + super 1.9 HPS. So at r = 4 both components contribute to the weight robustness, most of it at the low-weight end, and the super term's share is exactly what the candidate rule assigns it (8 at r = 4). Figure refreshed.
 - Figure `results/reg_weight_curve.png`: plain / single anchor / pyramid / pyramid + super at 3K and 4K against the plain 2K curve, with bootstrap CIs. The single anchor already restores the native shape at both sizes; the pyramid lifts the low-weight end at 4K only.
 
+### Rule confirmation: 3K super term, 4K rule default, 5K octave pyramid, 6K probe (2026-11-01 19:45; `jobs/reg_anchor_grid_s8_3k.jsonl` 100 rows reg3/reg4, `jobs/reg_pyramid_grid_pyr_s8.jsonl` 50 rows reg2/reg1, `jobs/reg_5k_depth_pilot2.jsonl` 12 rows reg5, `jobs/reg_6k_probe.jsonl` 2 rows reg1, all ok; `results/reg_pyramid_grid_{pref,eval}.csv`, `results/reg_paired_3k_w4_*.csv`, `results/reg_paired_{hps,ir,clip}.csv`, `results/reg_pag_pilot_{pref,eval,speckle}.csv`)
+
+| cell | HPS | ImageReward | CLIP | patch-KID | paired HPS | paired ImageReward |
+|---|---|---|---|---|---|---|
+| 3K, n = 100: single anchor + super 8, w4 (vs single anchor w4: 30.9 / 1.42 / 37.6 / 0.0166) | 31.1 | 1.41 | 37.6 | 0.0161 | **+0.23 [0.15, 0.32]**, 69 % | +0.01 n.s. |
+| 4K, n = 50: pyramid + super 8, w4 (vs pyramid + super 12: 30.4 / 1.31 / 37.2 / 0.023) | 30.4 | 1.34 | 37.4 | 0.024 | −0.05 n.s. | **+0.03 [0.02, 0.05]** |
+| 5K, n = 6: pyramid [2] + super 8 (vs [2] + super 12: 30.7 / 1.49 / 34.8 / 0.034) | 30.5 | 1.48 | 35.1 | 0.051 | | |
+| 5K, n = 6: pyramid [2, 4] + super 12 | 30.1 | 1.41 | 33.8 | 0.041 | | |
+| 6K, n = 2 (lighthouse, portrait): pyramid [2, 4] + super 12 | 31.4 | 1.53 | 32.2 | 0.066 | 3135 s, 26.7 GB | |
+
+- **The super-native term does not hurt at 3K — it helps by +0.2 HPS on the single anchor** (n = 100, CI clear, 69 % of prompts), ImageReward, CLIP and KID unchanged. So the rule's "no-op at r = 3" was over-fitted to the pyramid + super row: at 3K the pyramid is −0.55 and the super term +0.2, and the two had been read together. **The super-native term is positive at every ratio** (+0.2 at r = 3, +0.7 at r = 4 on the single anchor, +0.9 at r = 5) with a plateau at 4K (8 ≈ 12 ≈ 16) and at 5K (12 ≈ 16 ≈ 24, 8 is 0.2 HPS lower and KID 0.051 vs 0.034). A constant 3w = 12 is on the plateau everywhere.
+- **The rule's 4K default (pyramid [2] + super 8) equals pyramid + super 12** on HPS and CLIP and is 0.03 ImageReward better; KID 0.024 vs 0.023. Plateau confirmed at n = 50.
+- **The deeper 5K pyramid hurts again:** [2, 4] + super 12 is −0.6 HPS, −0.08 ImageReward, −1.0 CLIP and KID 0.041 vs 0.034 against [2] + super 12. The added pass is at 1280 px, 1.25× native. Together with 3K (1536 px, 1.5× native, −0.55) and 4K (2048 px, 2× native, +1.15 at w4): **an intermediate anchor helps when it is at least an octave above native, and hurts when it is closer than that.**
+- **6K works** (ratio 6, 6144², 3135 s and 26.7 GB per image, two prompts coherent, HPS 31.4): the practical ceiling on a 32 GB card is between 6K and 7K. The 6K rows used [2, 4] (3072 + 1536 px), which the rule now excludes, so they are a feasibility note only.
+
+**Final REG rule (decided 2026-11-01 20:00; replaces the candidate of 11:00):**
+1. anchor the base prediction's sub-native band at the native resolution (the single anchor), native CFG weight w unchanged;
+2. add intermediate anchor passes at full/2, full/4, … as long as the pass is at least 2× native: none at r = 3, [2] (2048 px) at r = 4, [2] (2560) at r = 5, [2] (3072) at r = 6, [2, 4] at r = 8;
+3. super-native weight 3w (12 at w = 4) on the band above the native Nyquist.
+Zero per-resolution tuning; every number is derived from r or from w. On the grid prompts the rule's cells are: 3K = single anchor + super 12 (running on reg1, n = 100; the super-8 row above is the proxy, 31.1 HPS), 4K = pyramid + super 12 (30.4 / 1.31 / 37.2 / 0.023, w2/w4/w8 done), 5K = pyramid [2] + super 12 (n = 6: 30.7; **n = 50 running on reg2–reg5 tonight with a plain-CFG w16 baseline, `jobs/reg_5k_grid.jsonl`**). The plateau rows (super 8 / 16 / 24; pyramid-only; deeper pyramid) become the ablation table.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
