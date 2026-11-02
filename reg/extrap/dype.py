@@ -187,29 +187,121 @@ class DyPELuminaRope:
         return torch.cat(out, dim=-1)
 
 
-def apply_dype(transformer: nn.Module, method: str = "yarn", dype: bool = True, base_patches: int = 64, use_mscale: bool = True):
-    """Enable DyPE on a FLUX (``pos_embed``) or Lumina-2 (``rope_embedder``) transformer.
+class DyPEQwenRope(nn.Module):
+    """DyPE for diffusers' ``QwenEmbedRope`` (Qwen-Image): drop-in for ``transformer.pos_embed``.
+
+    Same ``forward(video_fhw, device, max_txt_seq_len) -> (vid_freqs, txt_freqs)`` as the stock module. The frame
+    axis and the text frequencies keep the stock tables; the height and width axes get YaRN/NTK frequencies when the
+    grid exceeds ``base_patches`` (per axis: scale = extent / base_patches), as complex exponentials with ``mscale``
+    as the magnitude (as for Lumina). Positions follow the stock layout: centred and signed when ``scale_rope`` is
+    set (``-(n - n//2) .. n//2 - 1``), else ``0 .. n-1``. Computed per call (no lru cache), so an anchor pass at a
+    smaller grid gets its own, less extrapolated frequencies, and kappa(t) can change every step.
+
+    Qwen's transformer receives ``timestep = sigma`` (1 = noise), so ``set_timestep`` takes it directly.
+    """
+
+    def __init__(self, rope: nn.Module, method: str = "yarn", dype: bool = True, base_patches: int = 83, use_mscale: bool = True):
+        super().__init__()
+        if method not in ("base", "ntk", "yarn"):
+            raise ValueError(f"method must be base|ntk|yarn, got {method!r}")
+        self.rope = rope
+        self.theta = float(rope.theta)
+        self.axes_dim = list(rope.axes_dim)
+        self.scale_rope = bool(getattr(rope, "scale_rope", False))
+        self.method = method
+        self.dype = dype and method != "base"
+        self.use_mscale = use_mscale
+        self.base_patches = base_patches
+        self.t = 1.0
+
+    def set_timestep(self, t: float) -> None:
+        self.t = float(t)
+
+    @property
+    def kappa(self) -> float:
+        return self.t**2 if self.dype else 1.0
+
+    def _axis(self, n: int, axis: int, device, cdtype) -> torch.Tensor:
+        """(n, dim/2) complex frequencies for one spatial axis of extent n."""
+        pos_freqs, neg_freqs = self.rope._get_device_freqs(device) if device is not None else (self.rope.pos_freqs, self.rope.neg_freqs)
+        dims = [d // 2 for d in self.axes_dim]
+        fp, fn = pos_freqs.split(dims, dim=1)[axis], neg_freqs.split(dims, dim=1)[axis]
+        scale = n / self.base_patches
+        if scale <= 1 or self.method == "base":
+            return torch.cat([fn[-(n - n // 2):], fp[: n // 2]], dim=0) if self.scale_rope else fp[:n]
+        fdtype = torch.float64 if device is None or device.type != "mps" else torch.float32
+        dim = self.axes_dim[axis]
+        if self.method == "yarn":
+            freqs, mscale = yarn_freqs(dim, self.theta, scale, self.kappa, self.base_patches, fdtype, device)
+            if not self.use_mscale:
+                mscale = 1.0
+        else:
+            freqs, mscale = ntk_freqs(dim, self.theta, scale, self.kappa, fdtype, device), 1.0
+        if self.scale_rope:
+            pos = torch.arange(-(n - n // 2), n // 2, dtype=fdtype, device=device)
+        else:
+            pos = torch.arange(n, dtype=fdtype, device=device)
+        ang = torch.outer(pos, freqs)
+        return torch.polar(torch.full_like(ang, mscale), ang).to(cdtype)
+
+    def _video_freqs(self, frame: int, height: int, width: int, idx: int, device) -> torch.Tensor:
+        pos_freqs, _ = self.rope._get_device_freqs(device) if device is not None else (self.rope.pos_freqs, None)
+        fp0 = pos_freqs.split([d // 2 for d in self.axes_dim], dim=1)[0]
+        f_frame = fp0[idx: idx + frame].view(frame, 1, 1, -1).expand(frame, height, width, -1)
+        f_h = self._axis(height, 1, device, pos_freqs.dtype).view(1, height, 1, -1).expand(frame, height, width, -1)
+        f_w = self._axis(width, 2, device, pos_freqs.dtype).view(1, 1, width, -1).expand(frame, height, width, -1)
+        return torch.cat([f_frame, f_h, f_w], dim=-1).reshape(frame * height * width, -1).contiguous()
+
+    def forward(self, video_fhw, device=None, max_txt_seq_len=None):
+        if max_txt_seq_len is None:
+            raise ValueError("`max_txt_seq_len` must be provided.")
+        if isinstance(video_fhw, list):
+            video_fhw = video_fhw[0]
+        if not isinstance(video_fhw, list):
+            video_fhw = [video_fhw]
+        vid, max_vid_index = [], 0
+        for idx, (frame, height, width) in enumerate(video_fhw):
+            vid.append(self._video_freqs(frame, height, width, idx, device))
+            max_vid_index = max(height // 2, width // 2, max_vid_index) if self.scale_rope else max(height, width, max_vid_index)
+        pos_freqs, _ = self.rope._get_device_freqs(device) if device is not None else (self.rope.pos_freqs, None)
+        txt = pos_freqs[max_vid_index: max_vid_index + int(max_txt_seq_len), ...]
+        return torch.cat(vid, dim=0), txt
+
+
+def apply_dype(transformer: nn.Module, method: str = "yarn", dype: bool = True, base_patches: int | None = None, use_mscale: bool = True):
+    """Enable DyPE on a FLUX (``pos_embed``), Lumina-2 (``rope_embedder``) or Qwen-Image (``QwenEmbedRope``) transformer.
+
+    ``base_patches`` (the native extent in patches) defaults per model: 64 (1024 px / 16) for FLUX and Lumina, 83
+    (1328 px / 16, Qwen-Image's training resolution) for Qwen.
 
     Wraps ``forward`` so the per-step timestep reaches the position embedding: FLUX passes
     ``timestep`` in (0, 1] with 1 = pure noise; Lumina passes ``1 - t/1000`` (1 = clean) and is
     inverted here. Idempotent: calling again just reconfigures. Returns the DyPE object.
     """
-    if hasattr(transformer, "pos_embed") and type(getattr(transformer, "pos_embed")).__name__ in ("FluxPosEmbed", "DyPEFluxPosEmbed"):
+    pe_name = type(getattr(transformer, "pos_embed", None)).__name__
+    if pe_name in ("QwenEmbedRope", "DyPEQwenRope"):  # Qwen-Image
+        if not hasattr(transformer, "_dype_orig"):
+            transformer._dype_orig = ("qwen", transformer.pos_embed, transformer.forward)
+        stock = transformer._dype_orig[1]
+        pe = DyPEQwenRope(stock, method=method, dype=dype, base_patches=base_patches or 83, use_mscale=use_mscale)
+        transformer.pos_embed = pe
+        to_noise_level = lambda ts: float(ts.reshape(-1)[0])  # noqa: E731  (sigma, 1 = noise)
+    elif pe_name in ("FluxPosEmbed", "DyPEFluxPosEmbed"):
         if not hasattr(transformer, "_dype_orig"):
             transformer._dype_orig = ("flux", transformer.pos_embed, transformer.forward)
         stock = transformer._dype_orig[1]
-        pe = DyPEFluxPosEmbed(stock.theta, stock.axes_dim, method=method, dype=dype, base_patches=base_patches, use_mscale=use_mscale)
+        pe = DyPEFluxPosEmbed(stock.theta, stock.axes_dim, method=method, dype=dype, base_patches=base_patches or 64, use_mscale=use_mscale)
         transformer.pos_embed = pe
         to_noise_level = lambda ts: float(ts.reshape(-1)[0])  # noqa: E731
     elif hasattr(transformer, "rope_embedder"):  # Lumina-Image 2.0
         if not hasattr(transformer, "_dype_orig"):
             transformer._dype_orig = ("lumina", transformer.rope_embedder._get_freqs_cis, transformer.forward)
-        pe = DyPELuminaRope(transformer.rope_embedder, method=method, dype=dype, base_patches=base_patches, use_mscale=use_mscale)
+        pe = DyPELuminaRope(transformer.rope_embedder, method=method, dype=dype, base_patches=base_patches or 64, use_mscale=use_mscale)
         pe._stock_get = transformer._dype_orig[1]
         transformer.rope_embedder._get_freqs_cis = pe
         to_noise_level = lambda ts: 1.0 - float(ts.reshape(-1)[0])  # noqa: E731
-    else:  # e.g. Qwen-Image's QwenEmbedRope (centred pos/neg indices): not ported yet
-        raise TypeError(f"{type(transformer).__name__}: DyPE is implemented for FLUX (FluxPosEmbed) and Lumina2 (rope_embedder) only")
+    else:
+        raise TypeError(f"{type(transformer).__name__}: DyPE is implemented for FLUX, Lumina2 and Qwen-Image transformers only")
 
     orig_forward = transformer._dype_orig[2]
 
@@ -228,7 +320,7 @@ def remove_dype(transformer: nn.Module) -> None:
     if not hasattr(transformer, "_dype_orig"):
         return
     kind, stock, orig_forward = transformer._dype_orig
-    if kind == "flux":
+    if kind in ("flux", "qwen"):
         transformer.pos_embed = stock
     else:
         transformer.rope_embedder._get_freqs_cis = stock

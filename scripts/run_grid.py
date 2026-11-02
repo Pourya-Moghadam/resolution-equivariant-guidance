@@ -76,7 +76,7 @@ def generate_kwargs(row: dict) -> dict:
     for k in extra:
         if k in row:
             kw[k] = row[k]
-    if row["model"] == "lumina":  # guidance zoo: CFG interval, FDG, PAG/SEG/TPG from the row (reg/guidance)
+    if row["model"] in ("lumina", "qwen"):  # guidance zoo: CFG interval, FDG, anchors, PAG/SEG/TPG from the row (reg/guidance)
         from reg.guidance import build_guidance
 
         kw["guidance"] = build_guidance(row)
