@@ -20,6 +20,7 @@ from reg.models.qwen import Qwen
 ap = argparse.ArgumentParser()
 ap.add_argument("--out", default=None)
 ap.add_argument("--steps", type=int, default=8)
+ap.add_argument("--only-cfg", action="store_true", help="just the 1K bit-identity check")
 a = ap.parse_args()
 PROMPT = "A lighthouse on a rocky shore at dusk, long exposure, dramatic sky"
 m = Qwen()
@@ -47,6 +48,9 @@ ours, info = m.generate([PROMPT], 1024, 1024, steps=a.steps, guidance_scale=4.0,
 t2 = time.perf_counter()
 d = (ref - ours).abs().max().item()
 print(f"[cfg 1K] pipeline {t1 - t0:.0f}s, ours {t2 - t1:.0f}s; max |diff| {d:.3e}; equal: {torch.equal(ref, ours)}; peak {info['peak_vram_gb']:.1f} GB")
+
+if a.only_cfg:
+    raise SystemExit(0)
 
 # 2. anchor at 2K
 row = {"guidance": 4.0, "height": 2048, "anchor": {"scale": 4.0, "ratio": 2, "base": True, "super_scale": 12.0}}

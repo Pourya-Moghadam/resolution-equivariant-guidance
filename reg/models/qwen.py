@@ -232,7 +232,7 @@ class Qwen:
             for i, t in enumerate(timesteps):
                 step = Step(i, steps, float(t) / 1000)
                 x = unpack(latents, hl, wl)
-                ts = (t / 1000).expand(batch).to(latents.dtype)
+                ts = t.expand(batch).to(latents.dtype) / 1000  # cast then divide, as the pipeline does (bf16 rounding)
                 passes = guidance.passes(step)
                 preds = {"cond": run(pos, x, ts)}
                 if "uncond" in passes:
