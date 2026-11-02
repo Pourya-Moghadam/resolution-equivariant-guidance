@@ -25,6 +25,7 @@ for size in (3072, 4096):
         if levels:
             anchor["levels"] = levels
         rows.append({"id": f"qreg4_{size}_{name}", **common, "anchor": anchor, "tags": {**tags, "method": "reg"}})
+rows.sort(key=lambda r: (r["height"], r["tags"]["method"], r["tags"]["prompt_name"]))  # so a 2-way shard gets both methods
 out = ROOT / "jobs" / "qwen_pilot.jsonl"
 out.write_text("".join(json.dumps(r) + "\n" for r in rows))
 print(len(rows), "rows ->", out)
