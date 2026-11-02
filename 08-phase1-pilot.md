@@ -564,6 +564,19 @@ Zero per-resolution tuning; every number is derived from r or from w. On the gri
 - **Timing and memory, from the job records (`results/timing.csv`; seconds per image at w4, RTX 5000 Ada, 30 steps):** plain CFG 288 s at 3K, 697 s at 4K; the single anchor costs +2 % (295 / 696 s), the pyramid +19 % at 3K and +14 % at 4K (343 / 794 s); the super-native term is free. Peak memory is the plain pass's: 14.1 GB at 3K, 17.4 GB at 4K, 21.5 GB at 5K (1623 s), 26.7 GB at 6K (3142 s). So the rule's cost is +2 % at 3K (no pyramid) and +14 % at 4K–6K, with no extra memory. Native 1K is 16 s, 2K 97 s.
 - **reg5 is shared:** another user's suspended training process (pid 2186845, state T, 11 s of CPU time in 37 days) has held 12 GB on its card since 2026-09-25. The 5K shard there OOMed on all 25 rows (re-run on reg2–reg4), and the 3K shard launched beside it never started (`run_grid.py`'s 20 GB free-memory guard timed out after 6 h). The admin has been asked to remove the process; until then reg5 takes nothing, and handoff10 launches the 5K pyramid-only ablation there once the card is free.
 
+### REG at 5K, grid scale (2026-11-02 11:00; `jobs/reg_5k_grid.jsonl`, 100 rows on reg2/reg3/reg4 (+ the 25 re-run after reg5's OOM), all ok; `results/reg_5k_grid_{pref,eval,speckle}.csv`, `results/reg_paired_5k_{hps,ir,clip}.csv`)
+The rule's 5K cell (native anchor at 1024, intermediate anchor at 2560 px, super-native 12, w4) against the grid's best plain weight (w16), on the 50 4K kill-or-go prompts (25 aesthetic-4K + 25 single-subject), seed as in the grid.
+
+| 5K (5120²), n = 50 | HPS | ImageReward | CLIP | patch-KID | OWL-ViT duplicate frac. | speckle p>native | s / image |
+|---|---|---|---|---|---|---|---|
+| plain CFG w16, NTK | 22.3 | −0.22 | 32.2 | 0.098 | 0.08 | 0.047 | 1480 |
+| REG rule, w4, NTK | **30.0** | **1.37** | **37.2** | **0.038** | **0.00** | 0.061 | 1620 |
+| paired REG − plain | +7.7 [6.3, 9.3], 100 % | +1.58 [1.26, 1.92], 98 % | +5.0 [3.0, 7.3], 78 % | | | | |
+| 4K REG rule (same prompts) | 30.4 | 1.31 | 37.2 | 0.023 | 0.00 | 0.042 | 794 |
+
+- **REG at 5K at the native weight is within 0.4 HPS of REG at 4K on the same prompts**, ImageReward and CLIP equal, with no duplicated subjects (OWL-ViT), where plain CFG at its best grid weight has fallen to 22.3 HPS, negative ImageReward, KID 0.098 and 8 % duplicate subjects. Every paired CI is far from zero; REG wins 50/50 prompts on HPS. The method claim therefore holds one step past the grid: r = 3, 4, 5 at w = 4, no change of any setting.
+- The residual at 5K is texture, not layout: KID 0.038 vs 0.023 at 4K and the speckle statistic 0.061 vs 0.042, consistent with the six-prompt pilot. The pyramid-only ablation at 5K (n = 50) is queued on reg5 behind the shared card; the plain w4/w8 rows (the 5K plain curve) run on reg3/reg2 tonight. 6K is a feasibility note (26.7 GB, 52 min / image).
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
