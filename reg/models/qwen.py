@@ -193,8 +193,11 @@ class Qwen:
         latent with ``img_shapes`` of that grid, which makes ``QwenEmbedRope`` (or DyPE) build its own RoPE.
         """
         pipe, sched, tr = self.pipe, self.pipe.scheduler, self.pipe.transformer
-        pos = dict(encoder_hidden_states=embeds["prompt_embeds"], encoder_hidden_states_mask=embeds["prompt_embeds_mask"])
-        neg = dict(encoder_hidden_states=embeds.get("negative_prompt_embeds"), encoder_hidden_states_mask=embeds.get("negative_prompt_embeds_mask"))
+        def cond(e, mask):  # the pipeline passes no text mask for an unpadded batch; an all-ones mask selects a different
+            return dict(encoder_hidden_states=e, encoder_hidden_states_mask=None if mask is None or bool(mask.all()) else mask)  # SDPA kernel (not bit-identical)
+
+        pos = cond(embeds["prompt_embeds"], embeds["prompt_embeds_mask"])
+        neg = cond(embeds.get("negative_prompt_embeds"), embeds.get("negative_prompt_embeds_mask"))
         batch = pos["encoder_hidden_states"].shape[0]
         ch = tr.config.in_channels // 4
         latents = pipe.prepare_latents(batch, ch, height, width, pos["encoder_hidden_states"].dtype, self.device, generators, None)  # (B, S, 64)
