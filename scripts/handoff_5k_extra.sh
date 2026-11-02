@@ -8,11 +8,12 @@ say() { echo "$(date '+%a %H:%M') $*" | tee -a "$LOG"; }
 busy() { ssh -o BatchMode=yes "$1" 'bash -lc "tmux has-session -t job 2>/dev/null"'; }
 pull() { mkdir -p $D/$2; rsync -a --exclude 'log_*' $1:$D/$2/ $D/$2/; say "$1 $2 pulled (handoff10): $(ls $D/$2/*.json | wc -l) rows"; }
 i=1
-for h in reg2 reg4; do
+for h in reg2; do
   ( until ! busy $h; do sleep 600; done; pull $h reg_5k_grid
     say "$(ssh $h "bash -lc '~/reg/scripts/launch_grid.sh jobs/reg_5k_plain_w48.jsonl reg_5k_grid $i 3'" 2>&1)" ) &
   i=$((i+1))
 done
+( until ! busy reg4; do sleep 600; done; pull reg4 reg_5k_grid; say "reg4 idle: held for the Qwen port test (plain shard 2/3 launched by hand afterwards)" ) &
 ( until ! busy reg5 && ! ssh -o BatchMode=yes reg5 'ps -p 2186845 >/dev/null 2>&1'; do sleep 900; done
   say "reg5 free: stale process gone, $(ssh -o BatchMode=yes reg5 'nvidia-smi --query-gpu=memory.used --format=csv,noheader') used"
   say "$(ssh reg5 "bash -lc '~/reg/scripts/launch_grid.sh jobs/reg_5k_pyr_only.jsonl reg_5k_grid 0 1'" 2>&1)" ) &
