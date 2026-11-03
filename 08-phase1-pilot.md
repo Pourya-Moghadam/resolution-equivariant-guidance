@@ -588,6 +588,18 @@ The rule's 5K cell (native anchor at 1024, intermediate anchor at 2560 px, super
 - By eye the plain rows fail harder than Lumina does at 3K: under-exposed and flat, the stained glass turned to speckle, the cathedral reduced to three windows in the dark, the still life lost in shadow. REG gives the whole scene at full contrast with clean glass, pears and copper.
 - Caveat on the baseline: Qwen's dynamic shift is linear in token count with no cap (`calculate_shift`, 256 → 0.5, 8192 → 0.9), so the stock mu is 2.35 at 3K and 3.79 at 4K; only 5 of 50 steps fall below σ = 0.5 at 3K and 2 at 4K, against 15 at the native 1328 px. The stock pipeline does the same, so "plain CFG" is stock Qwen at 3K, but a fair baseline should get a sensible schedule. Appended to the pilot (rows 24–47): plain CFG and REG at mu 0.83 (native) and 1.31 (2K), six prompts each, so the method comparison can be made at the best plain schedule. handoff13 relaunches reg4 on them after its first shard; reg1's shard reads the extended file.
 
+### Qwen pilot complete (2026-11-03 11:00; `results/qwen_pilot_{pref,eval}.csv`, 48 rows, six prompts per cell)
+
+| size | shift mu | plain CFG 4: HPS / IR / patch-CLIP / KID | REG rule: HPS / IR / patch-CLIP / KID |
+|---|---|---|---|
+| 3K | 0.83 (native) | 21.8 / 0.51 / 24.6 / 0.053 | 28.4 / 1.41 / 29.7 / 0.026 |
+| 3K | 1.31 (2K) | 21.1 / 0.62 / 25.3 / 0.041 | 29.0 / 1.52 / 30.2 / 0.026 |
+| 3K | 2.35 (stock) | 22.3 / 0.67 / 24.4 / 0.053 | 28.7 / 1.49 / 29.8 / 0.024 |
+| 4K | 3.79 (stock) | 21.2 / 0.64 / 19.7 / 0.070 | 29.6 / 1.49 / 24.1 / 0.024 |
+
+- The schedule caveat is closed: plain CFG 4 is at HPS 21–22 under all three shifts and REG at 28–29 under all three, so the stock schedule is used from here. REG above plain by +6.6 to +8.4 HPS, +0.8 to +0.9 ImageReward, +5 patch-CLIP, patch-KID halved at 3K and a third at 4K. REG at 4K (29.6) is level with REG at 3K, the same flatness in r as on Lumina.
+- Qwen plain at 3K/4K fails harder than Lumina's (Lumina plain w4: 28 at 3K); the stock pipeline's uncapped shift does not explain it (the native shift gives the same). The pilot's six prompts are not the grid prompts, so the number that goes in the paper comes from `jobs/qwen_grid_3k.jsonl` (n = 50, REG w4 vs plain w4, launched by handoff14 after the weight pilot). A plain-weight check (`jobs/qwen_pilot_w.jsonl`, CFG 8 and 16 at 3K, reg1/reg4 now) decides whether a stronger plain baseline is appended to the grid, as w16 was at 5K on Lumina.
+
 ### Kill-or-go grid, early preference preview (2026-10-28 12:00; first 19 prompts per cell at 1K/2K/3K, 12–13 at 4K; HPSv2 / ImageReward, pre-scored on reg1 while the grid runs)
 | HPS by CFG | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | 16 |
 |---|---|---|---|---|---|---|---|---|---|
