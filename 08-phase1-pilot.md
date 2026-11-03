@@ -592,7 +592,7 @@ The rule's 5K cell (native anchor at 1024, intermediate anchor at 2560 px, super
 | pyramid anchor | 28.2 | 30.4 | 31.4 |
 | **rule: single anchor + super 12** | **29.7 [29.0, 30.3]** | **31.1 [30.5, 31.6]** | **31.8 [31.3, 32.3]** |
 
-- The rule's 3K curve is the single anchor's with the low-weight end lifted: +1.0 HPS at w2, +0.2 at w4, −0.1 at w8 (ImageReward 1.26 / 1.39 / 1.43, CLIP and patch-CLIP within 0.1 of the single anchor at every weight, duplicates 2 %). Curve span w2→w8 is 2.1 HPS for the rule, 3.2 for the single anchor, 15 for plain CFG. Same reading as the pyramid at 4K: the super-native term buys weight robustness rather than a higher peak, and the rule is above the pyramid-only row at every 3K weight (+1.4 / +0.7 / +0.4), which is why the 3K rule has no intermediate level.
+- The rule's 3K curve is the single anchor's with the low-weight end lifted: +1.0 HPS at w2 (paired CI [0.8, 1.2], rule above on 83 % of prompts), +0.2 at w4, −0.1 at w8 (ImageReward 1.26 / 1.39 / 1.43, CLIP and patch-CLIP within 0.1 of the single anchor at every weight, duplicates 2 %). Curve span w2→w8 is 2.1 HPS for the rule, 3.2 for the single anchor, 15 for plain CFG. Same reading as the pyramid at 4K: the super-native term buys weight robustness rather than a higher peak, and the rule is above the pyramid-only row at every 3K weight (+1.4 / +0.7 / +0.4), which is why the 3K rule has no intermediate level.
 - The figure now carries the rule as a dotted blue series at 3K; at 4K the rule is the pyramid + super 12 row already plotted.
 
 ### Qwen pilot, first 3K rows (2026-11-02 13:30; `results/qwen_pilot_3k.png`)
