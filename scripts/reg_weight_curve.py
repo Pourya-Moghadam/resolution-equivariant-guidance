@@ -25,6 +25,7 @@ rng = np.random.default_rng(0)
 SERIES = [  # key, label, colour (fixed order; one hue per method), linestyle, marker
     ("cfg", "plain CFG", "#5b6b7a", "-", "o"),
     ("anchor_base", "single anchor (native band)", "#1b7fd1", "-", "s"),
+    ("anchor_base_s12", "single anchor + super-native 12 (rule at 3K)", "#1b7fd1", ":", "^"),
     ("anchor_base_pyr", "pyramid anchor (REG)", "#d1431b", "-", "D"),
     ("anchor_base_pyr_s12", "pyramid + super-native 12", "#d1431b", ":", "^"),
 ]

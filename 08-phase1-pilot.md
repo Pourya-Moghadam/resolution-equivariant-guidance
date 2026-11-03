@@ -583,6 +583,18 @@ The rule's 5K cell (native anchor at 1024, intermediate anchor at 2560 px, super
 - **Bit identity with the stock pipeline (1K, CFG 4, 8 steps, fp8 weights): max |diff| 0 after two fixes** found with the probe script — (i) cast the timestep to bf16 before dividing by 1000 (the pipeline's order), (ii) pass no text attention mask when the mask is all ones: the pipeline passes `None` for an unpadded prompt and an all-ones mask selects a different SDPA kernel (0.06 max diff on the first call, 0.5 on the latents after 8 steps). Both pipeline and loop are run-to-run deterministic. REG anchor at 2K (ratio 2, super 12): 62 s / 4 steps, 20.8 GB; with NTK the same.
 - **Qwen pilot launched** (`jobs/qwen_pilot.jsonl`, 24 rows: six pilot prompts at 3K and 4K, plain CFG 4 vs the REG rule, NTK, 50 steps; reg4 now, reg1 tonight). Qwen costs 52 min per 4K image, so the Qwen grid will be n = 50 at one or two sizes, decided on the pilot.
 
+### 3K rule weight curve (2026-11-03 11:30; `jobs/reg_anchor_grid_s12_3k_w28.jsonl`, n = 100; `results/reg_weight_curve.png`, `results/reg_weight_curve.csv`)
+
+| 3K, HPS [95 % CI] | w2 | w4 | w8 |
+|---|---|---|---|
+| plain CFG | 12.1 | 22.0 | 27.5 (w16: 29.7) |
+| single anchor | 28.7 [28.0, 29.4] | 30.9 [30.3, 31.5] | 31.9 [31.4, 32.4] |
+| pyramid anchor | 28.2 | 30.4 | 31.4 |
+| **rule: single anchor + super 12** | **29.7 [29.0, 30.3]** | **31.1 [30.5, 31.6]** | **31.8 [31.3, 32.3]** |
+
+- The rule's 3K curve is the single anchor's with the low-weight end lifted: +1.0 HPS at w2, +0.2 at w4, −0.1 at w8 (ImageReward 1.26 / 1.39 / 1.43, CLIP and patch-CLIP within 0.1 of the single anchor at every weight, duplicates 2 %). Curve span w2→w8 is 2.1 HPS for the rule, 3.2 for the single anchor, 15 for plain CFG. Same reading as the pyramid at 4K: the super-native term buys weight robustness rather than a higher peak, and the rule is above the pyramid-only row at every 3K weight (+1.4 / +0.7 / +0.4), which is why the 3K rule has no intermediate level.
+- The figure now carries the rule as a dotted blue series at 3K; at 4K the rule is the pyramid + super 12 row already plotted.
+
 ### Qwen pilot, first 3K rows (2026-11-02 13:30; `results/qwen_pilot_3k.png`)
 - Three prompts at 3K from reg4 (cathedral, mountain, still life), plain CFG 4 vs the REG rule (single native anchor at 1024, super-native 12), NTK, 50 steps. REG above plain on every pair: HPS 25.0 / 27.4 / 32.9 vs 18.1 / 18.3 / 26.4 (mean 28.4 vs 20.9), ImageReward 1.40 vs 0.89, CLIP 36.8 vs 35.4, patch-CLIP 30.8 vs 24.5. Time 1385 s vs 1261 s per image (+10 %), peak 22.5 GB for both.
 - By eye the plain rows fail harder than Lumina does at 3K: under-exposed and flat, the stained glass turned to speckle, the cathedral reduced to three windows in the dark, the still life lost in shadow. REG gives the whole scene at full contrast with clean glass, pears and copper.
