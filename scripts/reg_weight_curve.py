@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """Weight-curve figure: HPSv2 against CFG weight for plain CFG, the single-level anchor and the pyramid anchor, at 3K
-(n = 100 prompts) and 4K (n = 50), all on the same kill-or-go prompts and seeds.
+(n = 100 prompts), 4K and 5K (n = 50), all on the same kill-or-go prompts and seeds.
 
   python scripts/reg_weight_curve.py [--metric hps|ir] [--fig results/reg_weight_curve.png] [--csv results/reg_weight_curve.csv]
 
 Reads per-image preference records (<out>/pref/<id>.json) of kill_or_go (plain, trunc 1.0), reg_anchor_grid
-(tags.method anchor_base) and reg_pyramid_grid (anchor_base_pyr; anchor_base_pyr_s12 as a dashed optional row).
+(tags.method anchor_base), reg_pyramid_grid and reg_5k_grid (anchor_base_pyr; anchor_base_pyr_s12 dotted = the rule at 4K/5K).
 Points are cell means with bootstrap 95 % CIs over prompts. The 2K plain curve is drawn as the native reference.
 """
 from __future__ import annotations
@@ -33,7 +33,7 @@ SERIES = [  # key, label, colour (fixed order; one hue per method), linestyle, m
 
 def load(metric):
     cells = defaultdict(dict)  # (size, method, cfg) -> prompt -> value
-    for name in ("kill_or_go", "reg_anchor_grid", "reg_pyramid_grid"):
+    for name in ("kill_or_go", "reg_anchor_grid", "reg_pyramid_grid", "reg_5k_grid"):
         for f in glob.glob(str(R / name / "*.json")):
             r = json.loads(Path(f).read_text())
             if r.get("status") != "ok":
@@ -78,8 +78,8 @@ def main() -> None:
     import matplotlib.pyplot as plt
 
     label = {"hps": "HPSv2.1 ×100", "ir": "ImageReward"}[a.metric]
-    fig, axes = plt.subplots(1, 2, figsize=(9.6, 3.9), sharey=True, facecolor="white")
-    for ax, size in zip(axes, (3072, 4096)):
+    fig, axes = plt.subplots(1, 3, figsize=(13.2, 3.9), sharey=True, facecolor="white")
+    for ax, size in zip(axes, (3072, 4096, 5120)):
         ref = [r for r in rows if r["size"] == 2048 and r["method"] == "cfg"]
         if ref:
             ref.sort(key=lambda r: r["cfg"])
@@ -92,7 +92,7 @@ def main() -> None:
             y = [r["mean"] for r in pts]
             ax.plot(x, y, color=col, lw=2, ls=ls, marker=mk, ms=6, mec="white", mew=1, label=name, zorder=3)
             ax.fill_between(x, [r["lo"] for r in pts], [r["hi"] for r in pts], color=col, alpha=0.12, lw=0)
-        n = next((r["n"] for r in rows if r["size"] == size and r["method"] == "anchor_base"), 0)
+        n = max((r["n"] for r in rows if r["size"] == size and r["method"] != "cfg"), default=0)
         ax.set_title(f"{size // 1024}K ({size}², n = {n} prompts)", fontsize=10.5, loc="left")
         ax.set_xscale("log", base=2)
         ax.set_xticks([2, 4, 8, 16])

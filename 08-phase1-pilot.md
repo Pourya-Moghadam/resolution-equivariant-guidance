@@ -595,6 +595,20 @@ The rule's 5K cell (native anchor at 1024, intermediate anchor at 2560 px, super
 - The rule's 3K curve is the single anchor's with the low-weight end lifted: +1.0 HPS at w2 (paired CI [0.8, 1.2], rule above on 83 % of prompts), +0.2 at w4, −0.1 at w8 (ImageReward 1.26 / 1.39 / 1.43, CLIP and patch-CLIP within 0.1 of the single anchor at every weight, duplicates 2 %). Curve span w2→w8 is 2.1 HPS for the rule, 3.2 for the single anchor, 15 for plain CFG. Same reading as the pyramid at 4K: the super-native term buys weight robustness rather than a higher peak, and the rule is above the pyramid-only row at every 3K weight (+1.4 / +0.7 / +0.4), which is why the 3K rule has no intermediate level.
 - The figure now carries the rule as a dotted blue series at 3K; at 4K the rule is the pyramid + super 12 row already plotted.
 
+### 5K plain weight curve and pyramid-only ablation (2026-11-04 01:00; `jobs/reg_5k_plain_w48.jsonl`, `jobs/reg_5k_pyr_only.jsonl`, n = 50; `results/reg_5k_grid_{pref,eval,speckle}.csv`, `results/reg_weight_curve.png` 5K panel)
+
+| 5K, n = 50 | HPS [95 % CI] | IR | CLIP | patch-CLIP | patch-KID | dup / no-subject | speck % |
+|---|---|---|---|---|---|---|---|
+| plain w4 | 8.6 [7.6, 9.7] | −2.17 | 12.8 | 8.5 | 0.250 | 0 % / 60 % | 0.57 |
+| plain w8 | 15.2 [13.4, 17.0] | −1.24 | 24.2 | 12.1 | 0.163 | 8 % / 36 % | 0.56 |
+| plain w16 | 22.3 [20.8, 23.7] | −0.22 | 32.2 | 15.4 | 0.098 | 8 % / 12 % | 1.08 |
+| pyramid anchor, w4 (no super) | 29.6 [28.9, 30.4] | 1.39 | 37.2 | 19.4 | 0.052 | 4 % / 0 % | 1.36 |
+| **REG rule, w4 (pyramid + super 12)** | **30.0 [29.3, 30.7]** | 1.37 | 37.2 | 21.0 | **0.038** | 0 % / 0 % | 1.29 |
+
+- Plain CFG at 5K is a collapse at the native weight (no subject found in 60 % of single-subject images, patch-KID 0.25) and still 7.3 HPS below the rule at w16 (paired, CI [5.9, 8.9], rule above on 96 %); the plain curve is 8 HPS below REG at its best weight, the widest gap of the three sizes (figure, 5K panel).
+- The super-native term at 5K, paired against the pyramid-only anchor on the same prompts: +0.4 HPS [0.2, 0.6] (rule above on 72 %), ImageReward +0.02 n.s., patch-CLIP +1.6, patch-KID 0.052 → 0.038, duplicates 4 % → 0 %, speck fraction unchanged (1.3 % both). Smaller on HPS than the six-prompt pilot (+0.9) but the KID/patch-CLIP gain holds at n = 50, so the rule's super-native weight stays for r ≥ 4 (at 3K it is the +1.0 at w2 recorded above). The texture artifacts the speckle fraction counts are the same for both, so the KID gain is in the mid-band texture, not in the white specks.
+- The 3K/4K/5K headline table is now complete with both ablation rows at every size; the weight-curve figure has a 5K panel.
+
 ### Qwen pilot, first 3K rows (2026-11-02 13:30; `results/qwen_pilot_3k.png`)
 - Three prompts at 3K from reg4 (cathedral, mountain, still life), plain CFG 4 vs the REG rule (single native anchor at 1024, super-native 12), NTK, 50 steps. REG above plain on every pair: HPS 25.0 / 27.4 / 32.9 vs 18.1 / 18.3 / 26.4 (mean 28.4 vs 20.9), ImageReward 1.40 vs 0.89, CLIP 36.8 vs 35.4, patch-CLIP 30.8 vs 24.5. Time 1385 s vs 1261 s per image (+10 %), peak 22.5 GB for both.
 - By eye the plain rows fail harder than Lumina does at 3K: under-exposed and flat, the stained glass turned to speckle, the cathedral reduced to three windows in the dark, the still life lost in shadow. REG gives the whole scene at full contrast with clean glass, pears and copper.
