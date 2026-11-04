@@ -609,6 +609,17 @@ The rule's 5K cell (native anchor at 1024, intermediate anchor at 2560 px, super
 - The super-native term at 5K, paired against the pyramid-only anchor on the same prompts: +0.4 HPS [0.2, 0.6] (rule above on 72 %), ImageReward +0.02 n.s., patch-CLIP +1.6, patch-KID 0.052 → 0.038, duplicates 4 % → 0 %, speck fraction unchanged (1.3 % both). Smaller on HPS than the six-prompt pilot (+0.9) but the KID/patch-CLIP gain holds at n = 50, so the rule's super-native weight stays for r ≥ 4 (at 3K it is the +1.0 at w2 recorded above). The texture artifacts the speckle fraction counts are the same for both, so the KID gain is in the mid-band texture, not in the white specks.
 - The 3K/4K/5K headline table is now complete with both ablation rows at every size; the weight-curve figure has a 5K panel.
 
+### Qwen 3K grid, REG vs plain CFG 4 (2026-11-04 11:00; `jobs/qwen_grid_3k.jsonl`, n = 50, same prompts and seeds as the Lumina 4K/5K grids; `results/qwen_grid_{pref,eval}.csv`)
+
+| Qwen-Image 3K, n = 50 | HPS [95 % CI] | IR | CLIP | patch-CLIP | patch-KID | dup |
+|---|---|---|---|---|---|---|
+| plain CFG 4 (native weight) | 24.7 [23.1, 26.3] | 0.68 | 35.5 | 24.7 | 0.044 | 16 % |
+| **REG rule, w4** (native anchor + super 12) | **29.2 [28.0, 30.3]** | **1.27** | 36.6 | 27.3 | **0.014** | 4 % |
+
+- Paired over the 50 prompts: HPS +4.5 [3.5, 5.6], REG above on 90 %; ImageReward +0.59 [0.34, 0.85], above on 74 %. Patch-KID is a third of plain's and duplicates fall from 16 % to 4 %. The REG number (29.2) is 1 HPS below REG on Lumina at the same size (30.4 rule / 31.1 single + super 12 at 3K on the 100-prompt set), while Qwen plain at the native weight is 2.7 above Lumina plain (24.7 vs 22.0): Qwen degrades less at 3K and gains less from the anchor, the gap being 4.5 instead of 9.
+- Plain w16 on the same prompts is the honest baseline (the six-prompt pilot put it within 0.7 HPS of REG). Its 50 rows failed on reg2/reg3 overnight: the text encoder loaded at 30.9 GB, the 7B Qwen2.5-VL in fp32, where reg1/reg4 load it in bf16 at 16 GB. Under diagnosis (environment difference between the hosts; the 3K/4K grid prompts are cached on reg1/reg4, which hides the problem there).
+- 4K grid (`jobs/qwen_grid_4k.jsonl`, the rule with the intermediate anchor at 2048 px, 100 rows at ~55 min) launched on reg1/reg4 as shards 0/4 and 1/4; shards 2/4 and 3/4 follow on reg2/reg3 once the w16 baseline is through.
+
 ### Qwen pilot, first 3K rows (2026-11-02 13:30; `results/qwen_pilot_3k.png`)
 - Three prompts at 3K from reg4 (cathedral, mountain, still life), plain CFG 4 vs the REG rule (single native anchor at 1024, super-native 12), NTK, 50 steps. REG above plain on every pair: HPS 25.0 / 27.4 / 32.9 vs 18.1 / 18.3 / 26.4 (mean 28.4 vs 20.9), ImageReward 1.40 vs 0.89, CLIP 36.8 vs 35.4, patch-CLIP 30.8 vs 24.5. Time 1385 s vs 1261 s per image (+10 %), peak 22.5 GB for both.
 - By eye the plain rows fail harder than Lumina does at 3K: under-exposed and flat, the stained glass turned to speckle, the cathedral reduced to three windows in the dark, the still life lost in shadow. REG gives the whole scene at full contrast with clean glass, pears and copper.
