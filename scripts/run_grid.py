@@ -127,9 +127,9 @@ def main() -> None:
             print(f"[{host}] loading {model_name} ({quant or 'bf16'}): {free:.1f} GB free, need ~{needed} GB", flush=True)
         model = load_model(model_name, quant)
         if model_name != "lumina":  # two-phase models: fill the cache with encoders resident, then free them
-            for r in group:
-                model.encode([r["prompt"]], (r["negative"] or None) if needs_negative(r) else None)
-            model.free_text_encoders()
+            for r in group:  # the negative goes through as the row has it ("" included): the wrapper maps it to the text its
+                model.encode([r["prompt"]], r["negative"] if needs_negative(r) else None)  # sampler encodes (Qwen: " "), so
+            model.free_text_encoders()  # generate() never misses the cache and reloads the encoder beside the transformer
         pipe = model.pipe
         for r in group:
             if r["extrap"] == "none":
