@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Detached handoff (tmux "handoff22" on reg1): plain CFG 4 at the capped shift (jobs/qwen_4k_mu_w4.jsonl, 50 rows, output
-# qwen_4k_mu_w4) runs as shard 0/2 on reg2 (launched Sat 22:00, tmux session "job2": reg2 came back when the colleague's
-# queued run never started) and shard 1/2 on reg4 once reg4's qwen_4k_mu shard (session "job") has ended; "job2" keeps
-# handoff21's idle check of session "job" true. Pulls both shards when their job2 sessions end, scores on reg1's GPU.
+# qwen_4k_mu_w4) runs on reg4 alone (session "job2", all 50 rows) once reg4's qwen_4k_mu shard (session "job") has ended;
+# "job2" keeps handoff21's idle check of session "job" true. (A reg2 shard started Sat 21:50 was stopped 10 min later: the
+# card's borrower had in fact been running on it all Saturday.) Pulls reg4 when job2 ends, scores on reg1's GPU.
 D=/data1/moghadamp/reg_data/outputs
 O=$D/qwen_4k_mu_w4
 LOG=$D/handoff_log.txt
@@ -14,14 +14,10 @@ pull() {
   say "$1 qwen_4k_mu_w4 pulled: ok: $(grep -l '"status": "ok"' $O/*.json 2>/dev/null | wc -l), error: $(grep -l '"status": "error"' $O/*.json 2>/dev/null | wc -l)"
 }
 until ended reg4 job; do sleep 600; done
-until out=$(ssh -o BatchMode=yes -o ConnectTimeout=20 reg4 "bash -lc 'REG_JOB_SESSION=job2 ~/reg/scripts/launch_grid.sh jobs/qwen_4k_mu_w4.jsonl qwen_4k_mu_w4 1 2'" 2>&1) && echo "$out" | grep -q started; do say "reg4 launch failed ($out), retry in 5 min"; sleep 300; done
+until out=$(ssh -o BatchMode=yes -o ConnectTimeout=20 reg4 "bash -lc 'REG_JOB_SESSION=job2 ~/reg/scripts/launch_grid.sh jobs/qwen_4k_mu_w4.jsonl qwen_4k_mu_w4 0 1'" 2>&1) && echo "$out" | grep -q started; do say "reg4 launch failed ($out), retry in 5 min"; sleep 300; done
 say "$out"
-r2=0; r4=0
-while [ $r2 = 0 ] || [ $r4 = 0 ]; do
-  sleep 600
-  if [ $r2 = 0 ] && ended reg2 job2; then pull reg2; r2=1; fi
-  if [ $r4 = 0 ] && ended reg4 job2; then pull reg4; r4=1; fi
-done
+until sleep 600 && ended reg4 job2; do :; done
+pull reg4
 cd /data1/moghadamp/reg-research
 export REG_DATA=/data1/moghadamp/reg_data
 S=$O/score_logs; mkdir -p $S
