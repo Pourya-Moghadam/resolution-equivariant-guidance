@@ -22,7 +22,7 @@ OUT=$REG_DATA/outputs/$NAME
 mkdir -p "$OUT"
 
 SESSION=${REG_JOB_SESSION:-job}
-if tmux has-session -t "$SESSION" 2>/dev/null; then
+if tmux has-session -t "=$SESSION" 2>/dev/null; then
   echo "$(hostname -s): a '$SESSION' session is already running" >&2
   exit 1
 fi
