@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Detached handoff (tmux "handoff24" on reg1): reg3 runs jobs/qwen_4k_mu_nolvl.jsonl (38 rows, output qwen_4k_abl) first
-# (its DrawBench shard 1/3 was stopped for it Mon 10:00); when that ends: pull, score qwen_4k_abl on reg1's GPU, and put
-# reg3 back on jobs/drawbench_4k.jsonl shard 1/3. Session names matched exactly.
+# (its DrawBench shard was stopped for it Mon 10:00); when that ends: pull, score qwen_4k_abl on reg1's GPU, and put
+# reg3 on jobs/drawbench_4k_reg_b.jsonl (40 REG rows; reg5 took over the plain-w16 shard Mon 14:40). Session names
+# matched exactly.
 D=/data1/moghadamp/reg_data/outputs
 O=$D/qwen_4k_abl
 LOG=$D/handoff_log.txt
@@ -11,7 +12,7 @@ ended() { [ "$(state "$1" "$2")" = IDLE ] && sleep 60 && [ "$(state "$1" "$2")" 
 until sleep 600 && ended reg3 job; do :; done
 until rsync -a --include='*.json' --include='*.png' --exclude='*' reg3:$O/ $O/; do say "reg3 rsync failed, retry in 5 min"; sleep 300; done
 say "reg3 qwen_4k_abl pulled: mu235nolvl ok: $(grep -l '"status": "ok"' $O/qreg_4096_w4_mu235nolvl_*.json | wc -l), error: $(grep -l '"status": "error"' $O/qreg_4096_w4_mu235nolvl_*.json | wc -l)"
-until out=$(ssh -o BatchMode=yes -o ConnectTimeout=20 reg3 "bash -lc '~/reg/scripts/launch_grid.sh jobs/drawbench_4k.jsonl drawbench_4k 1 3'" 2>&1) && echo "$out" | grep -q started; do say "reg3 launch failed ($out), retry in 5 min"; sleep 300; done
+until out=$(ssh -o BatchMode=yes -o ConnectTimeout=20 reg3 "bash -lc '~/reg/scripts/launch_grid.sh jobs/drawbench_4k_reg_b.jsonl drawbench_4k 0 1'" 2>&1) && echo "$out" | grep -q started; do say "reg3 launch failed ($out), retry in 5 min"; sleep 300; done
 say "$out"
 cd /data1/moghadamp/reg-research
 export REG_DATA=/data1/moghadamp/reg_data

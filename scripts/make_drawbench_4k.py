@@ -28,3 +28,11 @@ for i, (prompt, cat) in enumerate(prompts):
 out = ROOT / "jobs" / "drawbench_4k.jsonl"
 out.write_text("".join(json.dumps(r) + "\n" for r in rows))
 print(len(rows), "rows ->", out, "|", len(prompts), "prompts,", len({c for _, c in prompts}), "categories")
+# The REG rows (every third line, shard 2/3 of the full file) split over two hosts that free up a day apart: part a
+# (prompts with index % 5 != 4, 160 rows) and part b (index % 5 == 4, 40 rows). Same ids and output dir as the full file.
+reg = [r for r in rows if r["tags"]["method"] == "reg"]
+for name, part in (("a", [r for r in reg if r["seed"] % 5 != 4]), ("b", [r for r in reg if r["seed"] % 5 == 4])):
+    f = ROOT / "jobs" / f"drawbench_4k_reg_{name}.jsonl"
+    f.write_text("".join(json.dumps(r) + "\n" for r in part))
+    print(len(part), "rows ->", f)
+
