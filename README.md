@@ -1,6 +1,6 @@
-# REG research: Resolution-Equivariant Guidance for Diffusion Transformers
+# Resolution-Equivariant Guidance for Diffusion Transformers
 
-Research notes from the planning stage (2026-10-24). The goal is a top-tier paper (ICML/NeurIPS/ICLR/CVPR) in diffusion models, building on the research track of [name removed] (University of Toronto).
+Repository: github.com/pmoghadam-lang/resolution-equivariant-guidance (lab) and github.com/Pourya-Moghadam/resolution-equivariant-guidance (personal mirror; every push goes to both). Research notes from the planning stage (2026-10-24). The goal is a top-tier paper (ICML/NeurIPS/ICLR/CVPR) in diffusion models, building on the research track of [name removed] (University of Toronto).
 
 ## Files
 
