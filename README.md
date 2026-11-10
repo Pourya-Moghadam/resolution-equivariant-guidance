@@ -1,6 +1,6 @@
 # Resolution-Equivariant Guidance for Diffusion Transformers
 
-Repository: github.com/pmoghadam-lang/resolution-equivariant-guidance (lab) and github.com/Pourya-Moghadam/resolution-equivariant-guidance (personal mirror; every push goes to both). Research notes from the planning stage (2026-10-24). The goal is a top-tier paper (ICML/NeurIPS/ICLR/CVPR) in diffusion models, building on the research track of [name removed] (University of Toronto).
+Repository: github.com/pmoghadam-lang/resolution-equivariant-guidance (lab) and github.com/Pourya-Moghadam/resolution-equivariant-guidance (public mirror, rewritten from the lab history by `scripts/publish_public.sh` after each push: two private notes and a private replacement list are filtered out). Research notes from the planning stage (2026-10-24). The goal is a top-tier paper (ICML/NeurIPS/ICLR/CVPR) in diffusion models.
 
 ## Files
 
@@ -22,7 +22,7 @@ Papers on resolution extrapolation (DyPE, SEGA, UltraImage) fix the model's RoPE
 ## Status / next steps
 **Current phase:** Phase 1 (kill-or-go grid running, ETA Oct 30) with Phase 2/3 components pulled forward on the free GPU. See [PLAN.md](PLAN.md).
 
-Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the user + Claude Code sessions; contact the [name removed]/[name removed] group after Gate 1 passes.
+Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the user + Claude Code sessions; contact the SEGA/TPG authors after Gate 1 passes.
 
 - [x] 2026-10-26: all 5 servers reachable from reg1, identical venvs (`SERVER_SETUP.md`); RTX 5000 Ada 32 GB confirmed on all 5
 - [x] 2026-10-26: Lumina-Image 2.0 running at native res with text-embedding cache + tiled VAE (`reg/models/`, `scripts/sample.py`); measured 17.7 s / 93 s / 282 s / 11.6 min per image at 1K/2K/3K/4K (`results/benchmark_native.csv`); vanilla ≥2K degrades, 4K collapses (see 06)
@@ -46,5 +46,5 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 - [ ] Paste `scripts/server_audit.sh` output into 06 (optional now; key facts already recorded)
 - [ ] Read the FreCaS (SD3 setting) and RectifiedHR full texts once more before writing related work
 - [ ] Kill-or-go analysis when the grid finishes: `run_eval.py --group-by size cfg trunc`, bootstrap CIs, gate decision (PLAN Gate 1); FDG/PAG/SEG/TPG grid as a second job
-- [ ] Re-check arXiv every ~2 weeks for scooping (watch [name removed]/[name removed]/[name removed] and Sadat et al.)
+- [ ] Re-check arXiv every ~2 weeks for scooping (watch the SEGA/TPG and FDG groups)
 - [ ] Target: ICML 2027 (late January 2027); fallback NeurIPS 2027 (May 2027)

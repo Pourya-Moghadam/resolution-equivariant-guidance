@@ -5,7 +5,7 @@ Approved 2026-10-24. Source of truth for phases, gates and deliverables.
 ## Context
 We identified a gap (see `04-novelty-check.md`): resolution-extrapolation papers (DyPE, SEGA, UltraImage) keep guidance at native-resolution settings, and guidance papers never test beyond native resolution. Our method, REG (`05-method-and-contributions.md`), makes guidance resolution-equivariant with no new hyperparameters. This plan turns that into a submission.
 
-**Decisions already made:** target ICML 2027 (late Jan 2027; confirm exact date on icml.cc, fallback NeurIPS 2027); 5 Linux servers, each one RTX 5000 32 GB; engineering by the user + Claude Code sessions; approach the [name removed]/[name removed] group only after the kill-or-go gate passes.
+**Decisions already made:** target ICML 2027 (late Jan 2027; confirm exact date on icml.cc, fallback NeurIPS 2027); 5 Linux servers, each one RTX 5000 32 GB; engineering by the user + Claude Code sessions; approach the SEGA/TPG authors only after the kill-or-go gate passes.
 
 **Timeline:** 13 weeks, 2026-10-27 → ~2027-01-25. Two hard gates (end of Phase 1 and end of Phase 3) decide whether we continue toward ICML or re-target NeurIPS.
 
@@ -15,7 +15,7 @@ We identified a gap (see `04-novelty-check.md`): resolution-extrapolation papers
 
 ## Repo layout (to be created in Phase 0)
 ```
-reg-research/
+resolution-equivariant-guidance/
   README.md, 01–06-*.md          # research notes
   PLAN.md                        # this plan
   reg/                           # python package
@@ -67,7 +67,7 @@ Goal: evidence that optimal guidance shifts with resolution in the direction REG
 - **GO** if optima move monotonically with r in the predicted direction for ≥2 of 3 quality metrics, and the shift is larger than seed noise (bootstrap CI).
   - **Revised 2026-10-28 (decision made per the user's standing instruction):** "predicted direction" is dropped. The pilots (08) show the optimum *rises* with r (native ≈ 4, 3K ≈ 6–8, 4K ≈ 8–10) and that the rise sits in the coarse image-relative band only — the opposite sign to 05-(B)'s original prediction. The gate now asks only that the shift be monotone and larger than seed noise; the sign is a finding. 05-(B) is reformulated as band-wise magnitude matching, to be tested by the diagnostics (`jobs/reg_diag.jsonl`, pulled forward from Phase 2).
 - **NO-GO** → write up negative result as internal note; switch to backup idea (joint space-time video extrapolation or prediction-target × resolution; see `03-*.md`), re-target NeurIPS.
-- **On GO:** user emails [name removed] / [name removed] with the kill-or-go plot and a 1-page summary proposing collaboration (SEGA/TPG code access, co-authorship). Draft the email in `paper/outreach.md`.
+- **On GO:** user emails the SEGA/TPG authors with the kill-or-go plot and a 1-page summary proposing collaboration (SEGA/TPG code access, co-authorship). Draft the email in `paper/outreach.md`.
 
 ---
 
@@ -79,7 +79,7 @@ Goal: show *why* guidance breaks, and that REG recovers the grid optimum with ze
 3. **Implement B** (`reg/reg/schedule.py`): per-band time remap; low band uses SD3-style shift with α = r, high band identity. Guidance intervals defined on native axis.
 4. **Implement D** (`reg/reg/calib.py`): SEG σ_tok = r·σ₀; PAG/TPG window = native receptive field; entropy-gap matching option.
 5. **Validation run** (~150 GPU-h): Lumina + DyPE at 2K/4K with REG(A+B) for CFG/FDG and REG(D) for PAG/SEG/TPG, native-res defaults only. Compare to (i) native defaults unmodified, (ii) grid-search optimum from Phase 1. Success = REG within CI of the grid optimum.
-6. **Port SEGA and UltraImage** to Lumina (`reg/extrap/sega.py`, `ultraimage.py`) in parallel (Claude Code session on a non-GPU task slot). If the [name removed] group shares SEGA code, use theirs.
+6. **Port SEGA and UltraImage** to Lumina (`reg/extrap/sega.py`, `ultraimage.py`) in parallel (Claude Code session on a non-GPU task slot). If the SEGA authors share their code, use theirs.
 
 **Deliverable:** diagnostics figures + validation table; update `05-*.md` with any formula changes.
 
@@ -134,7 +134,7 @@ Goal: the paper's main tables.
 | Benchmarks 2× slower than estimated | Phase 0 timing feeds re-budget; drop Qwen 4K first, then 4K matrix breadth |
 | DyPE port to Lumina fails/looks bad | Fall back to FLUX.1-dev (distilled CFG) + Chroma (real CFG) as main models |
 | REG-(B) only approximates grid optimum | Lead with diagnostics + (C); frame (B) as explanatory |
-| Scooped before January | Biweekly checks; arXiv preprint right after submission; collaboration with [name removed] group converts competitor into co-author |
+| Scooped before January | Biweekly checks; arXiv preprint right after submission; collaboration with the SEGA/TPG group converts competitor into co-author |
 | ICML slips | Everything carries to NeurIPS 2027 (May) with video extension added |
 
 ## Verification (how we know each phase worked)

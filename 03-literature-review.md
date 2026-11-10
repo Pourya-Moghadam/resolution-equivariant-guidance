@@ -22,7 +22,7 @@ Snapshot as of 2026-10-24.
 
 **Perturbation guidance**
 - PAG (identity attention map), SEG: [2408.00760](https://arxiv.org/abs/2408.00760) (Gaussian-blurred attention)
-- Token Perturbation Guidance ([name removed] et al., NeurIPS 2025): [2506.10036](https://arxiv.org/abs/2506.10036)
+- Token Perturbation Guidance (NeurIPS 2025): [2506.10036](https://arxiv.org/abs/2506.10036)
 - S²-Guidance (ICLR 2026): [2508.12880](https://arxiv.org/abs/2508.12880)
 - Where and How to Perturb: [2506.10978](https://arxiv.org/abs/2506.10978)
 - MUG (Merging and Unmerging Guidance), ICLR 2027 submission
@@ -35,9 +35,9 @@ Snapshot as of 2026-10-24.
 **RoPE / attention fixes (DiTs)**
 - DyPE (ICML 2026): [2510.20766](https://arxiv.org/abs/2510.20766). Rescales RoPE over the denoising steps; FLUX up to 16 MP.
 - UltraImage: [2512.04504](https://arxiv.org/abs/2512.04504). Blames repetition on a dominant RoPE frequency; also adjusts attention concentration.
-- SEGA ([name removed] et al., NeurIPS 2026): [2605.22668](https://arxiv.org/abs/2605.22668). Reweights RoPE bands per step based on spectral energy. Evaluated on FLUX at 4096² and Qwen-Image. **Uses the default guidance scales.**
+- SEGA (NeurIPS 2026): [2605.22668](https://arxiv.org/abs/2605.22668). Reweights RoPE bands per step based on spectral energy. Evaluated on FLUX at 4096² and Qwen-Image. **Uses the default guidance scales.**
 - TIDE: [2603.08928](https://arxiv.org/abs/2603.08928). Attention temperature control.
-- AReA ([name removed], 2610.17227): adaptive receptive-field attention.
+- AReA (2610.17227): adaptive receptive-field attention.
 - Cardinality-Calibrated Attention (ICLR 2027 submission): attention logit rescaling by token count.
 - SigMa (ICML 2026): scale-adaptive schedule.
 

@@ -9,7 +9,7 @@ Done 2026-10-24. Question: has anyone already studied or adapted **guidance (CFG
 3. Derives a rule that sets guidance scale, interval or frequency cutoffs from resolution;
 4. Combines guidance fixes with DyPE/SEGA/UltraImage.
 
-SEGA ([name removed]) explicitly uses the default guidance scales at 4K, which is a clean gap to point to.
+SEGA explicitly uses the default guidance scales at 4K, which is a clean gap to point to.
 
 Prior work only shows the **symptom**: hand-tuned CFG changes at high resolution (RectifiedHR, FreCaS), or CFG switched off (URAE, Switti). That's our motivation.
 
@@ -85,7 +85,7 @@ Limitations: abstracts were screened, not every full text. Papers from the last 
 - UNet-convolution specific.
 
 ## Monitoring list (scoop risk)
-- [name removed] / [name removed] / [name removed] (TPG + SEGA → our idea combines both)
+- the TPG/SEGA authors (our idea combines both)
 - Sadat et al. (APG, FDG)
 - DyPE, UltraImage, TIDE authors
 - ICLR 2027 public submissions; new arXiv papers citing DyPE, SEGA, FDG or TPG

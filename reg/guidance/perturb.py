@@ -9,7 +9,7 @@ blocks (``layers``, indices into ``transformer.layers``; Lumina has 32):
 - SEG (Hong 2024): attention logits blurred with a 2D Gaussian over the image token grid,
   implemented on the queries (blur(Q)·Kᵀ, Prop. 3.1 of the paper); sigma in latent patches
   (∞ = mean query). Scale 3.0 and sigma ≥ 10 in the paper.
-- TPG ([name removed] et al. 2025): image tokens permuted before the block and un-permuted after, a
+- TPG (arXiv 2506.10036): image tokens permuted before the block and un-permuted after, a
   fresh permutation per layer and step; scale 3.0 in the paper.
 
 Lumina's blocks see a joint sequence [text tokens, image tokens]; the perturbations act on the

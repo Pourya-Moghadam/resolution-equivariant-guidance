@@ -75,5 +75,5 @@ Set the perturbation so the branch is degraded by the same amount as at native r
 
 ## Risks
 - (B) may only match the tuned optimum roughly. Still publishable as "explains and approximates"; (C) is the fallback that makes the gains large.
-- Scooping ([name removed]'s group is best placed). Re-check arXiv every 2 weeks; consider contacting the [name removed] lab to collaborate.
+- Scooping (the SEGA/TPG group is best placed). Re-check arXiv every 2 weeks; consider contacting that lab to collaborate.
 - Read the FreCaS SD3 setting and the RectifiedHR appendix again in full before writing related work.
