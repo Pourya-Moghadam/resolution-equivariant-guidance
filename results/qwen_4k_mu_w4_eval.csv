@@ -1,0 +1,2 @@
+cfg,method,size,clip,clip_patch,clip_patch_se,clip_se,n,n_patches,patch_fid,patch_kid,patch_kid_std,rep_dup_frac,rep_mean,rep_zero_frac
+4.0,cfg_mu235,4096,35.1517,20.5192,0.6016,0.5933,50,800,153.313,0.06759,0.00238,0.08,1.08,0.0

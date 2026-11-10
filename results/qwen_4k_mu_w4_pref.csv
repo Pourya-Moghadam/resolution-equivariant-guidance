@@ -1,0 +1,2 @@
+cfg,method,size,hps,hps_se,ir,ir_se,n
+4.0,cfg_mu235,4096,24.7345,0.9606,0.5272,0.1698,50
