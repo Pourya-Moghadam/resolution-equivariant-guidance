@@ -64,6 +64,25 @@ def load_image(path: str, max_side: int) -> Image.Image:
     return img
 
 
+def native_crops(path: str, side: int, k: int) -> list[Image.Image]:
+    """k square crops of `side` px at native resolution: the four quadrant centres (k = 4), plus the centre (k = 5).
+    An image no larger than `side` is returned whole. Fixed positions, so paired comparisons see the same regions."""
+    img = Image.open(path).convert("RGB")
+    W, H = img.size
+    if max(W, H) <= side:
+        return [img]
+    side = min(side, W, H)
+    centres = [(W // 4, H // 4), (3 * W // 4, H // 4), (W // 4, 3 * H // 4), (3 * W // 4, 3 * H // 4)]
+    if k >= 5:
+        centres.append((W // 2, H // 2))
+    out = []
+    for cx, cy in centres[:k]:
+        x0 = min(max(cx - side // 2, 0), W - side)
+        y0 = min(max(cy - side // 2, 0), H - side)
+        out.append(img.crop((x0, y0, x0 + side, y0 + side)))
+    return out
+
+
 class HPSScorer:
     """HPSv2 via the ``hpsv2`` package's vendored open_clip. The package's ``hpsv2.score`` reloads
     the 4 GB checkpoint on every call and first downloads the LAION ViT-H weights it immediately
@@ -122,7 +141,10 @@ def main() -> None:
     ap.add_argument("--out", required=True, help="job output dir with <id>.json/<id>.png from run_grid.py")
     ap.add_argument("--group-by", nargs="*", default=["size", "cfg"], help="row/tag keys that define a setting")
     ap.add_argument("--csv", default=None, help="write the per-setting table here")
-    ap.add_argument("--metrics", nargs="*", default=["hps", "ir"], choices=["hps", "ir"])
+    ap.add_argument("--metrics", nargs="*", default=["hps", "ir"], choices=["hps", "ir", "hps_crop", "ir_crop"],
+                    help="hps_crop / ir_crop: the same scorers on --crops native-resolution crops of --max-side px (mean per image); "
+                         "sees detail the downscaled scores are blind to, e.g. upscaled 1K images against true 4K ones")
+    ap.add_argument("--crops", type=int, default=4, help="crops per image for the *_crop metrics: 4 = the quadrant centres, 5 = plus the centre")
     ap.add_argument("--hps-version", default="v2.1", choices=sorted(HPS_FILES))
     ap.add_argument("--max-side", type=int, default=1024, help="downscale larger images to this longer side before scoring")
     ap.add_argument("--device", default="cuda")
@@ -148,21 +170,29 @@ def main() -> None:
         f = pdir / f"{r['id']}.json"
         recs[r["id"]] = json.loads(f.read_text()) if f.exists() else {"id": r["id"]}
     scorers = {}
+    loaded = {}
     for m in args.metrics:
         if any(m not in rec for rec in recs.values()):
-            t0 = time.time()
-            scorers[m] = HPSScorer(args.device, args.hps_version) if m == "hps" else IRScorer(args.device)
-            print(f"loaded {m} in {time.time() - t0:.1f}s", flush=True)
+            base = m.split("_")[0]
+            if base not in loaded:
+                t0 = time.time()
+                loaded[base] = HPSScorer(args.device, args.hps_version) if base == "hps" else IRScorer(args.device)
+                print(f"loaded {base} in {time.time() - t0:.1f}s", flush=True)
+            scorers[m] = loaded[base]
 
     timings: dict[str, list[float]] = defaultdict(list)
     for i, r in enumerate(rows):
         rec = recs[r["id"]]
         need = [m for m in scorers if m not in rec]
         if need:
-            img = load_image(r["image"], args.max_side)
+            img = load_image(r["image"], args.max_side) if any(not m.endswith("_crop") for m in need) else None
+            crops = native_crops(r["image"], args.max_side, args.crops) if any(m.endswith("_crop") for m in need) else None
             for m in need:
                 t0 = time.time()
-                v = scorers[m].score(img, r["prompt"])
+                if m.endswith("_crop"):
+                    v = statistics.mean(scorers[m].score(c, r["prompt"]) for c in crops)
+                else:
+                    v = scorers[m].score(img, r["prompt"])
                 timings[m].append(time.time() - t0)
                 if v != v:
                     raise RuntimeError(f"{m} returned NaN for {r['id']}")

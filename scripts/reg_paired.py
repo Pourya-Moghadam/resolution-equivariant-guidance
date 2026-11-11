@@ -26,7 +26,7 @@ R = Path(os.environ.get("REG_DATA", "/data1/moghadamp/reg_data")) / "outputs"
 rng = np.random.default_rng(0)
 
 
-def load(name, metric, size):
+def load(name, metric, size, any_trunc=False):
     sub, key = ("eval", "clip") if metric == "clip" else ("pref", metric)
     out = {}
     for f in glob.glob(str(R / name / "*.json")):
@@ -40,7 +40,7 @@ def load(name, metric, size):
         if key not in s or s[key] is None:
             continue
         t = r["tags"]
-        if float(t.get("trunc", r.get("cfg_trunc_ratio", 1.0))) != 1.0:
+        if not any_trunc and float(t.get("trunc", r.get("cfg_trunc_ratio", 1.0))) != 1.0:
             continue
         out[r["id"]] = dict(method=t.get("method", "cfg"), cfg=float(t["cfg"]), prompt=(t["prompt_id"], int(r["seed"])), v=float(s[key]))
     return out
@@ -56,17 +56,18 @@ def boot_ci(x, n=10000):
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--metric", default="hps", choices=["hps", "ir", "clip"])
+    ap.add_argument("--metric", default="hps", choices=["hps", "ir", "clip", "hps_crop", "ir_crop"])
     ap.add_argument("--csv", default=None)
     ap.add_argument("--ref", default="anchor_base_pyr_s12", help="method that the paired differences are taken against")
     ap.add_argument("--ref-cfg", type=float, default=4.0)
     ap.add_argument("--size", type=int, default=4096)
+    ap.add_argument("--any-trunc", action="store_true", help="keep cells whose guidance interval is not 1.0 (e.g. the 1K-then-upscale rows, trunc 0.9)")
     ap.add_argument("--dirs", nargs="*", default=["kill_or_go", "reg_anchor_grid", "reg_pyramid_grid"],
                     help="output dirs under $REG_DATA/outputs to read (add e.g. reg_generality_grid)")
     a = ap.parse_args()
     cells = defaultdict(dict)  # (method, cfg) -> prompt -> value
     for name in a.dirs:
-        for r in load(name, a.metric, a.size).values():
+        for r in load(name, a.metric, a.size, a.any_trunc).values():
             cells[(r["method"], r["cfg"])][r["prompt"]] = r["v"]
     ref = cells.get((a.ref, a.ref_cfg), {})
     order = sorted(cells, key=lambda k: (k[0] != a.ref, k[0].startswith("anchor"), k[0], k[1]))
