@@ -27,13 +27,12 @@ HPSv2.1 (a learned predictor of human preference, ×100, higher is better) on th
 
 | Model | Output size | Prompts | Plain CFG, weight 4 | Plain CFG, best weight (16) | **REG, weight 4** | REG minus best plain, paired [95 % CI] |
 |---|---|---|---|---|---|---|
-| Lumina-Image 2.0 | 3K | 100 | 22.0 | 29.7 | **31.1** | +1.4 † |
+| Lumina-Image 2.0 | 3K | 100 | 22.0 | 29.7 | **31.1** | +1.4 [1.0, 1.8] |
 | Lumina-Image 2.0 | 4K | 50 | 14.3 | 27.2 | **30.4** | +3.2 [2.5, 3.9] |
 | Lumina-Image 2.0 | 5K | 50 | 8.6 | 22.3 | **30.0** | +7.7 [6.3, 9.2] |
 | Qwen-Image | 3K | 50 | 24.7 | 26.7 | **29.2** | +2.5 [1.6, 3.5] |
 | Qwen-Image | 4K ‡ | 50 | 24.7 | 28.3 | **29.0** | +0.7 [−0.0, 1.4], not significant |
 
-† Difference of means over the same 100 prompts; the paired interval was computed for the anchor-only variant (+1.2 [0.8, 1.7]).
 ‡ With Qwen's timestep shift capped at its 3K value for every method. Under the stock schedule the margin is +1.7 [0.8, 2.5]; part of that was REG tolerating a poor schedule better than the baseline, so the fair comparison is the one in the table. On this cell REG also leads on ImageReward (+0.25 [0.09, 0.41]) and has no duplicated subjects against 4 % for the baseline.
 
 What the table supports:

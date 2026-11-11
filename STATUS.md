@@ -50,3 +50,8 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 - [ ] Kill-or-go analysis when the grid finishes: `run_eval.py --group-by size cfg trunc`, bootstrap CIs, gate decision (PLAN Gate 1); FDG/PAG/SEG/TPG grid as a second job
 - [ ] Re-check arXiv every ~2 weeks for scooping (watch the SEGA/TPG and FDG groups)
 - [ ] Target: ICML 2027 (late January 2027); fallback NeurIPS 2027 (May 2027)
+
+### Paper started (2026-11-10 23:50; `paper/`)
+- `paper/main.tex` with sections; abstract and the method section drafted (anchor noise level, octave pyramid, super-native band, the rule, what REG does not do); experiments section as a skeleton with the three generated tables; other sections stubs.
+- `paper/make_tables.py` builds `paper/tables/{main,ablation,cost}.tex` from `results/*.csv`; two paired tables were missing and are now committed: `results/reg_paired_3k_rule_hps.csv` (3K rule vs the plain sweep: **vs w16 +1.4 HPS [1.0, 1.8], REG above on 76 %**; vs w4 +9.0 [7.9, 10.2]) and `results/reg_paired_5k_w4_hps.csv` (5K: vs w16 +7.7 [6.3, 9.3], vs w4 +21.5 [20.2, 22.7], 100 % both). The README's 3K row carries the paired interval now.
+- No LaTeX engine on reg1 (the tectonic download was not permitted in this session); compile elsewhere or allow it.
