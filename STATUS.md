@@ -56,3 +56,19 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 - `paper/make_tables.py` builds `paper/tables/{main,ablation,cost}.tex` from `results/*.csv`; two paired tables were missing and are now committed: `results/reg_paired_3k_rule_hps.csv` (3K rule vs the plain sweep: **vs w16 +1.4 HPS [1.0, 1.8], REG above on 76 %**; vs w4 +9.0 [7.9, 10.2]) and `results/reg_paired_5k_w4_hps.csv` (5K: vs w16 +7.7 [6.3, 9.3], vs w4 +21.5 [20.2, 22.7], 100 % both). The README's 3K row carries the paired interval now.
 - LaTeX on reg1: a user-local TeX Live built from the Ubuntu packages (`apt-get download` + `dpkg -x` into `/data1/moghadamp/tools/tex`, relocated `texmf.cnf`, formats and font maps regenerated); `bash paper/build.sh` writes `paper/main.pdf` (not tracked).
 - 2026-11-11 00:05: `paper/` is kept out of the public mirror until submission (private drop list).
+
+### DrawBench at 4K on Lumina, scored (2026-11-11 07:28; `results/drawbench_4k_{pref,eval,speckle}.csv`, `_cat` per category, `results/drawbench_4k_paired_{hps,ir,clip}.csv`; 600 rows, 0 errors)
+
+| DrawBench, 4K, n = 200 | HPS [95 % CI] | IR | CLIP | patch-CLIP | speckle p>native |
+|---|---|---|---|---|---|
+| plain CFG 4 | 9.6 [9.0, 10.2] | −2.14 | 11.5 | 9.3 | 0.109 |
+| plain CFG 16 (best swept) | 20.5 [19.6, 21.5] | −0.53 | 27.5 | 17.3 | 0.089 |
+| **REG rule w4** | **27.1 [26.4, 27.8]** | **0.86** | **35.1** | **21.6** | **0.051** |
+
+- Paired REG − plain w16: **HPS +6.6 [5.8, 7.4] (REG above on 94 %), ImageReward +1.39 [1.20, 1.59] (88 %), CLIP +7.6 [6.6, 8.8] (86 %)**; vs plain w4: +17.5 / +2.99 / +23.6, 100 % each. On these short, odd prompts (counting, text, positional, misspellings) plain CFG at 4K is far worse than on the aesthetic captions (w16: 20.5 vs 27.2 HPS), while REG loses less (27.1 vs 30.4), so the prompt-adherence margin is twice the aesthetic one.
+- REG is ahead in all 11 categories on HPS, IR and CLIP (per-category CSVs). The weakest categories for every method are Misspellings and Rare Words (REG 19.3 / 15.5 HPS; plain w16 10.6 / 13.4), where the prompt itself is the problem; the largest gaps are Counting (+5.7 over w16), Reddit (+8.1), Text (+6.7) and Positional (+5.8).
+- Runner notes: the four shards ended Wed 00:30 (reg1), 05:25 (reg3), 05:40 (reg5), 07:00 (reg4); handoff25 pulled and scored by 07:28. handoff26 (upscale baseline) stalled on a venv check without the torchvision shim; its steps were run by hand at 11:00.
+
+### 6K grid and Qwen DrawBench 3K launched (2026-11-11 11:10; `jobs/reg_6k_grid.jsonl` 100 rows, `jobs/qwen_drawbench_3k.jsonl` 400 rows)
+- 6K (6144², r = 6): REG rule (native anchor, pass at 3072 px, super 12, w4) vs plain w16 on the 50 grid prompts; ~52 min / 26.7 GB per REG image; shards 0–3 of 4 on reg3/reg4/reg5/reg1 (reg1 after the upscale scoring). Extends the r = 3, 4, 5 table one step.
+- Qwen DrawBench 3K: the 200 prompts, plain w16 vs the REG rule (single anchor + super 12), stock 3K schedule; ~23 min per image; same shards after each host's 6K shard (handoff27). Pull and score by record count: handoff28 (6K, with KID refs), handoff29 (Qwen DrawBench, per category).
