@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 440" width="800" height="440" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" role="img" aria-label="HPSv2 against output resolution: plain CFG at the native weight falls from 32 at 1K to 9 at 5K; REG stays at 30 to 31.">
+<rect x="0.5" y="0.5" width="799" height="439" rx="8" fill="#1a1a19" stroke="rgba(255,255,255,0.10)"/>
+<text x="24" y="36" font-size="16" font-weight="600" fill="#f0efec">Standard guidance collapses beyond the training resolution; REG holds</text>
+<text x="24" y="57" font-size="12" fill="#c3c2b7">HPSv2 preference score (higher is better) · Lumina-Image 2.0, trained at 1K · native guidance weight 4</text>
+<line x1="24.0" y1="84" x2="46.0" y2="84" stroke="#3987e5" stroke-width="2" stroke-linecap="round"/>
+<circle cx="35.0" cy="84" r="4.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<text x="54.0" y="88" font-size="12" fill="#c3c2b7">REG at the native weight</text>
+<line x1="218.8" y1="84" x2="240.8" y2="84" stroke="#d95926" stroke-width="2" stroke-linecap="round"/>
+<circle cx="229.8" cy="84" r="4.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<text x="248.8" y="88" font-size="12" fill="#c3c2b7">Plain CFG at the native weight</text>
+<line x1="447.8" y1="84" x2="469.8" y2="84" stroke="#199e70" stroke-width="2" stroke-linecap="round"/>
+<circle cx="458.8" cy="84" r="4.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<text x="477.8" y="88" font-size="12" fill="#c3c2b7">Plain CFG, weight re-tuned per size</text>
+<line x1="52" y1="378.0" x2="736" y2="378.0" stroke="#383835" stroke-width="1"/>
+<text x="42" y="382.0" font-size="12" text-anchor="end" fill="#898781">0</text>
+<line x1="52" y1="302.0" x2="736" y2="302.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="42" y="306.0" font-size="12" text-anchor="end" fill="#898781">10</text>
+<line x1="52" y1="226.0" x2="736" y2="226.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="42" y="230.0" font-size="12" text-anchor="end" fill="#898781">20</text>
+<line x1="52" y1="150.0" x2="736" y2="150.0" stroke="#2c2c2a" stroke-width="1"/>
+<text x="42" y="154.0" font-size="12" text-anchor="end" fill="#898781">30</text>
+<text x="120.4" y="400" font-size="12" text-anchor="middle" fill="#898781">1K</text>
+<text x="257.2" y="400" font-size="12" text-anchor="middle" fill="#898781">2K</text>
+<text x="394.0" y="400" font-size="12" text-anchor="middle" fill="#898781">3K</text>
+<text x="530.8" y="400" font-size="12" text-anchor="middle" fill="#898781">4K</text>
+<text x="667.6" y="400" font-size="12" text-anchor="middle" fill="#898781">5K</text>
+<text x="394.0" y="424" font-size="12" text-anchor="middle" fill="#c3c2b7">Output resolution (1K = 1024 × 1024 px, the training resolution)</text>
+<path d="M120.4,133.8 L257.2,137.7 L394.0,152.3 L530.8,171.5 L667.6,208.4" fill="none" stroke="#199e70" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="120.4" cy="133.8" r="4.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="257.2" cy="137.7" r="4.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="394.0" cy="152.3" r="4.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="530.8" cy="171.5" r="4.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="667.6" cy="208.4" r="4.5" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<text x="679.6" y="212.4" font-size="13" font-weight="600" fill="#f0efec" stroke="#1a1a19" stroke-width="4" paint-order="stroke">22.3</text>
+<path d="M120.4,136.6 L257.2,151.4 L394.0,210.6 L530.8,269.6 L667.6,312.8" fill="none" stroke="#d95926" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="120.4" cy="136.6" r="4.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="257.2" cy="151.4" r="4.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="394.0" cy="210.6" r="4.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="530.8" cy="269.6" r="4.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="667.6" cy="312.8" r="4.5" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<text x="679.6" y="316.8" font-size="13" font-weight="600" fill="#f0efec" stroke="#1a1a19" stroke-width="4" paint-order="stroke">8.6</text>
+<path d="M394.0,141.9 L530.8,147.2 L667.6,149.7" fill="none" stroke="#3987e5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="394.0" cy="141.9" r="4.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="530.8" cy="147.2" r="4.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="667.6" cy="149.7" r="4.5" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<text x="679.6" y="153.7" font-size="13" font-weight="600" fill="#f0efec" stroke="#1a1a19" stroke-width="4" paint-order="stroke">30.0</text>
+</svg>

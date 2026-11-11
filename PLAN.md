@@ -16,7 +16,8 @@ We identified a gap (see `04-novelty-check.md`): resolution-extrapolation papers
 ## Repo layout (to be created in Phase 0)
 ```
 resolution-equivariant-guidance/
-  README.md, 01–06-*.md          # research notes
+  README.md                      # public overview (changes only for headline results, the method or the project status)
+  STATUS.md, 01–08-*.md          # status log (an entry after every run) and research notes
   PLAN.md                        # this plan
   reg/                           # python package
     models/   lumina.py flux.py qwen.py        # loaders, text-embedding cache, tiled VAE

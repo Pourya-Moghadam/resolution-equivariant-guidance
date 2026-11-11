@@ -109,7 +109,7 @@ Changing `REG_NUM_SERVERS` reshuffles which server owns which row. Finish a job 
 - Workers never need interactive sessions; they only receive code and run job files.
 
 ## Daily routine (all on reg1)
-1. Read `README.md` status; check the `fanout.sh` progress line.
+1. Read the status log `STATUS.md` (README.md is the public overview, changed only when a headline result, the method or the project status changes); check the `fanout.sh` progress line.
 2. Code changes → test on 5 prompts → commit → `bash scripts/push_code.sh` → `git push`.
 3. New job file → Step 7.
 4. Evening: `sync_results.sh`, run eval on finished batches, commit CSVs, update `06-*.md` GPU-hours.
