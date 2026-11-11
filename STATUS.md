@@ -72,3 +72,17 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 ### 6K grid and Qwen DrawBench 3K launched (2026-11-11 11:10; `jobs/reg_6k_grid.jsonl` 100 rows, `jobs/qwen_drawbench_3k.jsonl` 400 rows)
 - 6K (6144², r = 6): REG rule (native anchor, pass at 3072 px, super 12, w4) vs plain w16 on the 50 grid prompts; ~52 min / 26.7 GB per REG image; shards 0–3 of 4 on reg3/reg4/reg5/reg1 (reg1 after the upscale scoring). Extends the r = 3, 4, 5 table one step.
 - Qwen DrawBench 3K: the 200 prompts, plain w16 vs the REG rule (single anchor + super 12), stock 3K schedule; ~23 min per image; same shards after each host's 6K shard (handoff27). Pull and score by record count: handoff28 (6K, with KID refs), handoff29 (Qwen DrawBench, per category).
+
+### Generate-then-upscale baseline at 4K, scored (2026-11-11 11:05 / crops 12:30; `results/upscale_4k_{pref,eval,speckle,pref_crop}.csv`, `results/upscale_4k_paired_{hps,ir,clip}.csv`)
+
+| 4K, n = 50 | HPS (downscaled) | IR | CLIP | patch-CLIP | patch-KID | detail (Laplacian std) | s / image |
+|---|---|---|---|---|---|---|---|
+| 1K plain w4 + Lanczos 4× | 32.3 | 1.49 | 37.0 | 24.2 | 0.036 | 4.2 | 17 |
+| 1K plain w4 + Real-ESRGAN 4× | 31.8 | 1.47 | 37.2 | 24.5 | 0.026 | 16.5 | 21 |
+| 4K plain w16 | 27.2 | 0.59 | 35.2 | 21.1 | 0.037 | 38.3 | 697 |
+| 4K REG w4 | 30.4 | 1.31 | 37.2 | 23.6 | 0.023 | 41.1 | 796 |
+
+- **On the downscaled scorers the upscaled 1K images beat REG**: paired REG − Lanczos = −1.9 HPS [−2.4, −1.4] (REG above on 18 %), −0.18 IR; REG − Real-ESRGAN = −1.5 HPS, −0.17 IR; CLIP level. HPS/IR see a 1024-px downscale, i.e. the 1K image itself (1K plain w4 scores 31.7 in the grid), so this is a statement about the scorers, not about 4K quality.
+- **At native resolution the order reverses**: Laplacian detail 4.2 / 16.5 vs 41.1 (REG) and 38.3 (plain w16); patch-KID 0.036 / 0.026 vs 0.023; crops (`paper/figures/upscale_crops.jpg`) show blur / invented texture vs generated texture. patch-CLIP slightly favours the upscales (24.2–24.5 vs 23.6).
+- **Crop-level HPS/IR do not discriminate** (new `--metrics hps_crop ir_crop` in `run_pref.py`: four 1024-px quadrant crops at 1:1): ~15 HPS and −1.5 to −1.7 IR for every method, because the scorers are prompt-conditioned and a crop does not depict the prompt. Recorded in the paper as a metric that cannot carry the comparison. The decisive instrument is a human study at native resolution (not run).
+- Cost: the upscale pipeline is 40× cheaper. Written into the paper (Section Baselines, Table baselines, limitations) and the README.

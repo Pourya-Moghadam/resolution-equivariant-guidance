@@ -1,0 +1,3 @@
+cfg,method,size,hps_crop,hps_crop_se,ir_crop,ir_crop_se,n
+4.0,up_lanczos,4096,14.9707,0.3785,-1.5014,0.0611,50
+4.0,up_realesrgan,4096,14.5962,0.3549,-1.7086,0.0551,50

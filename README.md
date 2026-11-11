@@ -127,7 +127,7 @@ The chart at the top is rebuilt from the committed CSVs by `python scripts/readm
 - Work in progress: there is no paper yet, and the method may still change.
 - Evaluated on two models so far. FLUX.1-dev, whose guidance is distilled into the model, has a loader and a DyPE reproduction but no REG results.
 - Quality is measured with learned preference and alignment scorers and by inspection; there is no human study.
-- Comparisons so far are against plain CFG at swept weights; a generate-at-1K-then-upscale baseline is being scored, and published high-resolution methods are not yet compared.
+- Comparisons so far are against plain CFG at swept weights and against generating at 1K and upscaling 4×. The upscale baseline *scores higher* than REG on HPSv2 and ImageReward (+1.9 and +0.18, paired), because those scorers look at a 1024-px downscale, where an upscaled 1K image is the 1K image; at native resolution it has a tenth (Lanczos) to 40 % (Real-ESRGAN) of REG's detail and a worse texture statistic (patch-KID 0.036 / 0.026 vs 0.023). What REG buys is generated detail at the native guidance weight; a human study at native resolution has not been run. Published high-resolution methods are not yet compared.
 - Prompt adherence has one measurement: DrawBench at 4K on Lumina-Image 2.0 (200 prompts), where REG at weight 4 is +6.6 HPSv2 [5.8, 7.4], +1.39 ImageReward and +7.6 CLIP over plain CFG at weight 16, paired, and ahead in all 11 categories; a 3K run on Qwen-Image is in progress.
 
 ## Author

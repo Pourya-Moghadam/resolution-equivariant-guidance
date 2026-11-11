@@ -1,0 +1,2 @@
+cfg,method,size,hps_crop,hps_crop_se,ir_crop,ir_crop_se,n
+4.0,anchor_base_pyr_s12,4096,14.6192,0.3553,-1.7364,0.0511,50
