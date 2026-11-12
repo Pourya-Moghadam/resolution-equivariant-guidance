@@ -86,3 +86,18 @@ Decisions (2026-10-24): target ICML 2027; servers run Linux; work done by the us
 - **At native resolution the order reverses**: Laplacian detail 4.2 / 16.5 vs 41.1 (REG) and 38.3 (plain w16); patch-KID 0.036 / 0.026 vs 0.023; crops (`paper/figures/upscale_crops.jpg`) show blur / invented texture vs generated texture. patch-CLIP slightly favours the upscales (24.2–24.5 vs 23.6).
 - **Crop-level HPS/IR do not discriminate** (new `--metrics hps_crop ir_crop` in `run_pref.py`: four 1024-px quadrant crops at 1:1): ~15 HPS and −1.5 to −1.7 IR for every method, because the scorers are prompt-conditioned and a crop does not depict the prompt. Recorded in the paper as a metric that cannot carry the comparison. The decisive instrument is a human study at native resolution (not run).
 - Cost: the upscale pipeline is 40× cheaper. Written into the paper (Section Baselines, Table baselines, limitations) and the README.
+
+### 6K grid on Lumina, scored (2026-11-12 09:09; `results/reg_6k_grid_{pref,eval,speckle}.csv`, `reg_paired_6k_{hps,ir,clip}.csv`)
+
+50 kill-or-go prompts at 6144 × 6144 (r = 6), REG rule as written (native anchor + one pass at 2× native + 3w super-native) at w = 4 against plain CFG at the re-tuned weight 16; plain w = 4 was not run at 6K (it is already collapsed at 5K and a 6K row costs 47 to 52 minutes). Four cards, Wed 11:00 to Thu 09:00; 26.7 GB peak, 0 errors (reg5 ran at the memory ceiling with allocator warnings and 3 % slower).
+
+| 6K, n = 50 | HPS | IR | CLIP | patch-KID | dup. | subject missing | s / image |
+|---|---|---|---|---|---|---|---|
+| plain w16 | 14.7 | −1.43 | 23.9 | 0.180 | 0 % | 36 % | 2810 |
+| REG w4 | 29.8 | 1.28 | 37.1 | 0.062 | 4 % | 0 % | 3142 |
+
+- Paired REG − plain w16: **+15.1 HPS [13.3, 16.9]** (REG above on 100 %), +2.7 IR [2.4, 3.0] (100 %), +13.1 CLIP [10.3, 16.1] (90 %). The margin over the re-tuned weight now grows monotonically with r: +1.4 (3K), +3.2 (4K), +7.7 (5K), +15.1 (6K).
+- REG's HPS at 6K is within 0.2 of its 5K cell (30.0) and 1.3 below 4K; the layout holds. The texture residual keeps growing with r: patch-KID 0.023 (4K) → 0.038 (5K) → 0.062 (6K); Laplacian detail 37.7 vs 25.4 for plain.
+- At 6K the re-tuned plain weight has itself collapsed (a third of single-subject prompts have no subject), so from r = 6 there is no plain-CFG weight that works.
+- Written into the paper (main table row with a ‡ note, abstract, intro, experiments) and the README table. The README chart stays at 1K to 5K because its "native weight" line has no 6K plain-w4 point.
+- reg5 is with Nazanin from Thu 11:45 (her training holds 13.6 GB); `env.sh` now has `REG_SKIP=reg2 reg5`. handoff29 restarted so its pull loop uses the new host list. Qwen DrawBench 3K: 34 of 400 rows by Thu 12:00 on reg1/reg3/reg4, about 24 min per row, so about Saturday afternoon.

@@ -6,8 +6,9 @@
 
 export REG_NUM_SERVERS=${REG_NUM_SERVERS:-5}
 # REG_SKIP: hosts that fanout.sh, push_code.sh, sync_results.sh and wait_jobs.sh must not contact. reg2 is lent to a
-# colleague (2026-11-06) and stays here until the user says it can be used again; set REG_SKIP= to clear.
-export REG_SKIP=${REG_SKIP-reg2}
+# colleague (2026-11-06) and reg5 to another (2026-11-12, after our 6K shard); both stay here until the user says they can be
+# used again; set REG_SKIP= to clear.
+export REG_SKIP=${REG_SKIP-reg2 reg5}
 _keep() { local h out=; for h in "$@"; do case " $REG_SKIP " in *" $h "*) ;; *) out="$out $h" ;; esac; done; echo $out; }
 export REG_HOSTS=$(_keep $(seq -s ' ' -f 'reg%g' 1 "$REG_NUM_SERVERS"))
 export REG_WORKERS=$(_keep $(seq -s ' ' -f 'reg%g' 2 "$REG_NUM_SERVERS"))

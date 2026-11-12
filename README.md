@@ -19,7 +19,7 @@ Research in progress (started October 2026), aimed at an ICML 2027 submission. E
 - **Finding.** That setting stops working as resolution grows. In an 11,800-image sweep from 1K to 4K, image quality at the standard guidance weight falls steadily, and at 5K the subject is missing from 60 % of single-subject images. Raising the weight fourfold recovers only part of the loss.
 - **Diagnosis.** The error sits in the coarse, layout-level part of the model's prediction, and it is the same in the prompted and unprompted branches. Guidance amplifies the difference between those branches, so it cannot remove an error they share.
 - **Method.** REG takes that coarse part from a cheap extra pass at the training resolution, where the model is reliable, and keeps the fine detail from the full-resolution pass. No training, and nothing tuned per resolution.
-- **Result.** With the unchanged training-resolution weight, REG holds 30 to 31 HPSv2 from 3K to 5K on Lumina-Image 2.0, above the best re-tuned baseline at every size, for 2 to 14 % more compute and no extra memory.
+- **Result.** With the unchanged training-resolution weight, REG holds 30 to 31 HPSv2 from 3K to 6K on Lumina-Image 2.0, above the best re-tuned baseline at every size, for 2 to 14 % more compute and no extra memory.
 
 ## Results
 
@@ -30,18 +30,21 @@ HPSv2.1 (a learned predictor of human preference, ×100, higher is better) on th
 | Lumina-Image 2.0 | 3K | 100 | 22.0 | 29.7 | **31.1** | +1.4 [1.0, 1.8] |
 | Lumina-Image 2.0 | 4K | 50 | 14.3 | 27.2 | **30.4** | +3.2 [2.5, 3.9] |
 | Lumina-Image 2.0 | 5K | 50 | 8.6 | 22.3 | **30.0** | +7.7 [6.3, 9.2] |
+| Lumina-Image 2.0 | 6K | 50 | not run † | 14.7 | **29.8** | +15.1 [13.3, 16.9] |
 | Qwen-Image | 3K | 50 | 24.7 | 26.7 | **29.2** | +2.5 [1.6, 3.5] |
 | Qwen-Image | 4K ‡ | 50 | 24.7 | 28.3 | **29.0** | +0.7 [−0.0, 1.4], not significant |
+
+† At 6K (6144 × 6144, 52 minutes per image) only the re-tuned plain weight was run; it has itself collapsed there, with the subject missing from 36 % of single-subject images, while REG at weight 4 is within 0.2 of its 5K score. ImageReward +2.7 [2.4, 3.0] and CLIP score +13.1 [10.3, 16.1] agree.
 
 ‡ With Qwen's timestep shift capped at its 3K value for every method. Under the stock schedule the margin is +1.7 [0.8, 2.5]; part of that was REG tolerating a poor schedule better than the baseline, so the fair comparison is the one in the table. On this cell REG also leads on ImageReward (+0.25 [0.09, 0.41]) and has no duplicated subjects against 4 % for the baseline.
 
 What the table supports:
 
 - At the training-resolution weight REG is far ahead of plain CFG on both models (+4.2 to +21 HPSv2).
-- Against a baseline whose weight was re-tuned for each resolution, REG is ahead on four of five cells and level on the fifth, without any tuning.
+- Against a baseline whose weight was re-tuned for each resolution, REG is ahead on five of six cells and level on the sixth, without any tuning. The margin grows with the extrapolation ratio, from +1.4 at 3K to +15.1 at 6K.
 - The other metrics agree: ImageReward, CLIP score, patch-KID and an object-detector count of missing or duplicated subjects. Full tables are in [08-phase1-pilot.md](08-phase1-pilot.md) and the CSVs in [results/](results/).
 - On Lumina at 4K, REG scores the same under two positional-encoding extrapolation schemes (dynamic NTK and YaRN).
-- Cost on Lumina-Image 2.0: +2 % time per image at 3K and +14 % at 4K, with the same peak memory. A 6K (6144 × 6144) image fits on one 32 GB GPU.
+- Cost on Lumina-Image 2.0: +2 % time per image at 3K and +14 % at 4K, with the same peak memory. A 6K (6144 × 6144) image fits on one 32 GB GPU at 26.7 GB.
 
 ## How REG works
 
