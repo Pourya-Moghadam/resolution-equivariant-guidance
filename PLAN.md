@@ -107,12 +107,14 @@ Goal: the paper's main tables.
 4. **8K qualitative:** 10–20 images, Lumina + SEGA ± REG, for the teaser figure.
 5. **Theory** (user + Claude Code, no GPU): Gaussian/linear-diffusion model of per-band SNR under r× resolution → closed-form band-wise time shift and, if tractable, w(r). Show FreCaS/RectifiedHR/URAE settings as special cases. Write `paper/theory.tex` appendix.
 6. **Reruns buffer** (~750 GPU-h reserved).
+7. **Human study** (decided 2026-11-12: after every experiment has run and the image sets are complete, not before). Build an automated pipeline plus a rating interface: pair selection from the final grids (same prompt and seed; REG vs plain CFG at the re-tuned weight, REG vs the Real-ESRGAN upscale baseline, at 4K and 6K, ~100-200 pairs per comparison), a web page that shows a pair side by side at full resolution with zoom and asks "which do you prefer overall" and "which has better fine detail", randomised left/right and order, 10-20 raters, and a script that turns the responses into win rates with bootstrap CIs for the paper. Check with the research ethics office whether a staff preference survey needs approval before raters are recruited. The scorers are blind above 1K (the upscale baseline beats REG on them), so this is the measurement that settles the 4K/6K quality claim.
 
 ---
 
 ## Phase 5 — Writing and submission (Weeks 11–13: Jan 5 – Jan ~25)
 1. Jan 5: full draft skeleton in `paper/` (ICML 2027 template); figures auto-generated from `results/*.csv` by `scripts/make_figures.py`.
 2. Jan 12: complete draft; internal review (collaborators if onboarded).
+   Human-study results (Phase 4, item 7) written into the experiments section once the raters are done.
 3. Jan 15–20: final reruns, limitations section, reproducibility checklist, code cleanup for anonymous release.
 4. Jan 20: freeze results. Jan ~22–25: abstract + paper submission (check exact ICML dates).
 5. Post-submission: arXiv preprint immediately after (to time-stamp against scooping).
