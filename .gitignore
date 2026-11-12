@@ -63,3 +63,4 @@ paper/*.toc
 paper/*.fls
 paper/*.fdb_latexmk
 paper/main.pdf
+paper/arxiv_submission.tar.gz
