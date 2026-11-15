@@ -18,6 +18,7 @@ until [ "$(count)" -ge "$N" ]; do
   for h in $REG_WORKERS; do rsync -a -e 'ssh -o BatchMode=yes -o ConnectTimeout=20' --include='*.json' --exclude='*' "$h:$O/" "$O/" 2>/dev/null; done
 done
 for h in $REG_WORKERS; do
+  ssh -o BatchMode=yes -o ConnectTimeout=20 "$h" "test -d $O" 2>/dev/null || { say "$h has no $NAME directory, skipped"; continue; }
   until rsync -a -e 'ssh -o BatchMode=yes -o ConnectTimeout=20' --include='*.json' --include='*.png' --exclude='*' "$h:$O/" "$O/"; do say "$h $NAME rsync failed, retry in 5 min"; sleep 300; done
 done
 say "$NAME pulled: records $(count), ok $(grep -l '"status": "ok"' "$O"/*.json | wc -l), error $(grep -l '"status": "error"' "$O"/*.json | wc -l), images $(find "$O" -maxdepth 1 -name '*.png' | wc -l)"
