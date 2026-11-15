@@ -121,3 +121,16 @@ The 200 DrawBench prompts on Qwen-Image at 3072 × 3072 (dynamic shift at its 3K
 
 - Paired REG − plain w16: **+5.4 HPS [4.9, 6.0]** (REG above on 95 %), +0.88 IR [0.75, 1.01] (88 %), +2.5 CLIP [1.7, 3.2] (65 %). Ahead in all 11 categories on HPS and IR; largest HPS margins on rare words (+7.1), conflicting (+6.8), counting (+6.6), positional (+5.8), text (+6.2); smallest on DALL-E (+4.7) and Reddit (+4.5).
 - Same picture as Lumina DrawBench 4K (+6.6): short instruction-like prompts cost plain CFG more than long captions, on both models. Written into the paper (DrawBench table now has Qwen 3K columns, text, abstract) and the README.
+
+### 4K main cells at n = 100, scored (2026-11-15 18:13; `results/reg_4k_ext_*.csv`, merged set `results/lumina_4k_n100_{pref,eval,speckle}.csv`, `reg_paired_4k_n100_{hps,ir,clip}.csv`)
+
+The extension grid (150 rows, 0 errors; reg5 three shards, reg3 one) scored, then merged with the original 50-prompt cells by `scripts/merge_4k_n100.py` (records copied with a method tag, images symlinked, `outputs/lumina_4k_n100`) and scored as one set.
+
+| Lumina 4K, n = 100 | HPS | IR | CLIP | patch-KID | dup. | missing |
+|---|---|---|---|---|---|---|
+| plain w4 | 13.9 | −1.28 | 23.0 | 0.150 | 0 % | 36 % |
+| plain w16 | 26.6 | 0.56 | 35.0 | 0.038 | 8 % | 0 % |
+| REG w4 | 30.1 | 1.32 | 37.4 | 0.023 | 4 % | 0 % |
+
+- Paired REG − plain w16: **+3.4 HPS [2.8, 4.1]** (REG above on 92 %), +0.76 IR [0.60, 0.93] (91 %), +2.4 CLIP [1.6, 3.2] (72 %); REG − plain w4: +16.1 HPS. The n = 50 values were +3.2 [2.5, 3.9]: the new 50 prompts behave like the old ones (REG 29.8 vs w16 26.1 on them alone), the interval tightened as expected.
+- Paper main table 4K row, abstract, intro, experiments text and limitations ("100 prompts at 3K and 4K, 50 at 5K and 6K") and the README table updated. The ablations stay on the original 50.
