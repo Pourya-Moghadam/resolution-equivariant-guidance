@@ -1,0 +1,3 @@
+cfg,method,size,clip,clip_patch,clip_patch_se,clip_se,n
+16.0,cfg,3072,33.6516,23.8118,0.3351,0.5671,200
+4.0,reg,3072,36.1115,26.5066,0.3064,0.4989,200

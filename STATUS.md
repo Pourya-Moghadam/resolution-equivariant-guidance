@@ -109,3 +109,15 @@ Completed for submission: author block and code link; real bibliography (28 entr
 ### reg5 back; 4K main cells extended to n = 100 (2026-11-13 12:56; `jobs/reg_4k_ext.jsonl`, output `reg_4k_ext`)
 
 Nazanin finished on reg5 (user, Fri 13:00); `REG_SKIP` is back to `reg2`. New grid `scripts/make_reg_4k_ext.py`: the three main 4K cells (plain w4, plain w16, REG rule w4) on the 50 prompts of the 3K cell that the 4K cell did not have (25 Aesthetic-4K + 25 single-subject), 150 rows, tagged `method` cfg / anchor_base_pyr_s12 like the 5K/6K grids. Shards: reg5 runs 0, 1, 2 back to back (handoff31, `scripts/handoff_4k_ext.sh`), reg3 takes shard 3 after its Qwen DrawBench shard; pull and scoring by handoff32 (`handoff_pull_score.sh reg_4k_ext 150 refs`). Expected done Sat evening. Purpose: the paper's 4K row and the ablation reference at n = 100 instead of 50 (limitations names n = 50 as a weakness); paired statistics then combine `kill_or_go` + `reg_pyramid_grid` + `reg_4k_ext` on 100 prompts. Qwen DrawBench 3K: 237 of 400 rows at Fri 12:50, about Sat midday.
+
+### Qwen DrawBench at 3K, scored (2026-11-14 11:11; `results/qwen_drawbench_3k_{pref,eval,speckle}.csv`, `_cat`, `qwen_drawbench_3k_paired_{hps,ir,clip}.csv`; 400 rows, 0 errors)
+
+The 200 DrawBench prompts on Qwen-Image at 3072 × 3072 (dynamic shift at its 3K value), plain CFG at w = 16 against the REG rule as written at w = 4 (native anchor + 3w super-native, no intermediate pass), 21.5 min per row on reg1/reg3/reg4.
+
+| Qwen 3K, n = 200 | HPS | IR | CLIP | Laplacian detail |
+|---|---|---|---|---|
+| plain w16 | 24.3 | 0.28 | 33.7 | 16.5 |
+| REG w4 | 29.8 | 1.16 | 36.1 | 22.3 |
+
+- Paired REG − plain w16: **+5.4 HPS [4.9, 6.0]** (REG above on 95 %), +0.88 IR [0.75, 1.01] (88 %), +2.5 CLIP [1.7, 3.2] (65 %). Ahead in all 11 categories on HPS and IR; largest HPS margins on rare words (+7.1), conflicting (+6.8), counting (+6.6), positional (+5.8), text (+6.2); smallest on DALL-E (+4.7) and Reddit (+4.5).
+- Same picture as Lumina DrawBench 4K (+6.6): short instruction-like prompts cost plain CFG more than long captions, on both models. Written into the paper (DrawBench table now has Qwen 3K columns, text, abstract) and the README.
