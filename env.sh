@@ -24,7 +24,10 @@ unset _h
 [ -n "${REG_SERVER_ID:-}" ] && export REG_SERVER_ID
 
 # Data root: weights, datasets, text-embedding caches, outputs (never in git).
-# Every server's large disk is /data1; the same path is used everywhere.
+# Every server's large disk is /data1 (12 TB HDD). A host with the 2 TB NVMe scratch (/ssd2, reg1 since 2026-11-16)
+# uses the copy there once scripts/ssd_switch.sh has marked it active; /data1 then holds the archive copy
+# (scripts/archive_to_hdd.sh). The handoff log stays at its /data1 path (symlinked from the SSD copy).
+if [ -z "${REG_DATA:-}" ] && [ -f /ssd2/moghadamp/reg_data/.active ]; then REG_DATA=/ssd2/moghadamp/reg_data; fi
 export REG_DATA=${REG_DATA:-/data1/moghadamp/reg_data}
 export HF_HOME=$REG_DATA/weights/hf
 export HF_XET_HIGH_PERFORMANCE=1    # fast downloads; replaces the deprecated HF_HUB_ENABLE_HF_TRANSFER in huggingface_hub 2.x
