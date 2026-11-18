@@ -1,0 +1,13 @@
+category,cfg,method,hps,hps_se,ir,ir_se,n
+color_attr,4.0,anchor_base_pyr_s12,30.2148,0.2915,1.4344,0.0749,100
+color_attr,16.0,cfg,21.6713,0.5833,-0.6761,0.1446,100
+colors,4.0,anchor_base_pyr_s12,28.914,0.2471,0.9471,0.0869,94
+colors,16.0,cfg,20.2366,0.5686,-1.1861,0.1393,94
+counting,4.0,anchor_base_pyr_s12,28.1177,0.4079,0.6502,0.0722,80
+counting,16.0,cfg,19.2176,0.7183,-0.8689,0.1386,80
+position,4.0,anchor_base_pyr_s12,28.3533,0.3869,0.8864,0.107,100
+position,16.0,cfg,19.7397,0.5756,-1.1164,0.1354,100
+single_object,4.0,anchor_base_pyr_s12,26.7117,0.3373,0.4472,0.0681,80
+single_object,16.0,cfg,17.9965,0.6608,-1.2061,0.1267,80
+two_object,4.0,anchor_base_pyr_s12,27.6986,0.3866,1.0822,0.0876,99
+two_object,16.0,cfg,18.6268,0.5901,-1.0639,0.1363,99

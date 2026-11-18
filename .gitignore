@@ -33,7 +33,9 @@ audit*.txt
 __pycache__/
 *.pyc
 *.egg-info/
+.venv
 .venv/
+.venv.hdd/
 venv/
 .ipynb_checkpoints/
 

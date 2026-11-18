@@ -1,0 +1,17 @@
+method,cfg,tag,n,accuracy
+anchor_base_pyr_s12,4.0,single_object,80,0.9625
+anchor_base_pyr_s12,4.0,two_object,99,0.8485
+anchor_base_pyr_s12,4.0,counting,80,0.55
+anchor_base_pyr_s12,4.0,colors,94,0.8404
+anchor_base_pyr_s12,4.0,position,100,0.31
+anchor_base_pyr_s12,4.0,color_attr,100,0.56
+anchor_base_pyr_s12,4.0,overall,553,0.6786
+anchor_base_pyr_s12,4.0,images,553,0.6709
+cfg,16.0,single_object,80,0.4875
+cfg,16.0,two_object,99,0.202
+cfg,16.0,counting,80,0.1875
+cfg,16.0,colors,94,0.3298
+cfg,16.0,position,100,0.09
+cfg,16.0,color_attr,100,0.16
+cfg,16.0,overall,553,0.2428
+cfg,16.0,images,553,0.2351
