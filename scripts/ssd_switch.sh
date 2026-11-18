@@ -4,7 +4,8 @@
 #  1. refuses while a generation job runs on the host or (reg1) the copy is not up to date;
 #  2. final delta rsync HDD -> SSD;
 #  3. the three scoring venvs and the project .venv become symlinks to their SSD copies (their shebangs hard-code the
-#     /data1 paths, so every script keeps working unchanged); the HDD originals are kept as *.hdd until verified;
+#     /data1 paths, so every script keeps working unchanged); the HDD originals are kept as /data1/moghadamp/*.hdd
+#     (outside the repo tree, so git never sees them) until verified;
 #  4. the SSD copy's handoff log becomes a symlink to the /data1 log (one log for old and new handoff scripts);
 #  5. marks the SSD copy active (env.sh then resolves REG_DATA to it) and starts the 6-hourly archive loop.
 set -u
@@ -24,7 +25,7 @@ for v in reg_pref_venv reg_geneval_venv reg_upscale_venv; do
 done
 cd /data1/moghadamp/reg-research
 if [ ! -L .venv ]; then
-  rsync -a --delete .venv/ "$V/main_venv/" && mv .venv .venv.hdd && ln -s "$V/main_venv" .venv || { say "ssd_switch: .venv FAILED"; exit 1; }
+  rsync -a --delete .venv/ "$V/main_venv/" && mv .venv /data1/moghadamp/main_venv.hdd && ln -s "$V/main_venv" .venv || { say "ssd_switch: .venv FAILED"; exit 1; }
   .venv/bin/python -c "import torch, diffusers; print('main venv ok', torch.__version__, diffusers.__version__)" || { say "ssd_switch: .venv import FAILED"; exit 1; }
 fi
 rm -f "$S/outputs/handoff_log.txt"; ln -s "$LOG" "$S/outputs/handoff_log.txt"
