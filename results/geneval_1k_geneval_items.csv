@@ -1,0 +1,554 @@
+method,cfg,index,tag,correct,reason
+cfg,4.0,0,single_object,1,
+cfg,4.0,1,single_object,1,
+cfg,4.0,2,single_object,1,
+cfg,4.0,3,single_object,1,
+cfg,4.0,4,single_object,1,
+cfg,4.0,5,single_object,1,
+cfg,4.0,6,single_object,1,
+cfg,4.0,7,single_object,1,
+cfg,4.0,8,single_object,1,
+cfg,4.0,9,single_object,1,
+cfg,4.0,10,single_object,1,
+cfg,4.0,11,single_object,1,
+cfg,4.0,12,single_object,1,
+cfg,4.0,13,single_object,1,
+cfg,4.0,14,single_object,1,
+cfg,4.0,15,single_object,1,
+cfg,4.0,16,single_object,1,
+cfg,4.0,17,single_object,1,
+cfg,4.0,18,single_object,1,
+cfg,4.0,19,single_object,1,
+cfg,4.0,20,single_object,1,
+cfg,4.0,21,single_object,1,
+cfg,4.0,22,single_object,1,
+cfg,4.0,23,single_object,1,
+cfg,4.0,24,single_object,1,
+cfg,4.0,25,single_object,1,
+cfg,4.0,26,single_object,1,
+cfg,4.0,27,single_object,1,
+cfg,4.0,28,single_object,1,
+cfg,4.0,29,single_object,1,
+cfg,4.0,30,single_object,1,
+cfg,4.0,31,single_object,1,
+cfg,4.0,32,single_object,1,
+cfg,4.0,33,single_object,1,
+cfg,4.0,34,single_object,1,
+cfg,4.0,35,single_object,1,
+cfg,4.0,36,single_object,1,
+cfg,4.0,37,single_object,1,
+cfg,4.0,38,single_object,1,
+cfg,4.0,39,single_object,1,
+cfg,4.0,40,single_object,1,
+cfg,4.0,41,single_object,1,
+cfg,4.0,42,single_object,1,
+cfg,4.0,43,single_object,1,
+cfg,4.0,44,single_object,1,
+cfg,4.0,45,single_object,1,
+cfg,4.0,46,single_object,1,
+cfg,4.0,47,single_object,1,
+cfg,4.0,48,single_object,1,
+cfg,4.0,49,single_object,1,
+cfg,4.0,50,single_object,1,
+cfg,4.0,51,single_object,1,
+cfg,4.0,52,single_object,1,
+cfg,4.0,53,single_object,1,
+cfg,4.0,54,single_object,1,
+cfg,4.0,55,single_object,1,
+cfg,4.0,56,single_object,1,
+cfg,4.0,57,single_object,1,
+cfg,4.0,58,single_object,1,
+cfg,4.0,59,single_object,1,
+cfg,4.0,60,single_object,1,
+cfg,4.0,61,single_object,1,
+cfg,4.0,62,single_object,1,
+cfg,4.0,63,single_object,1,
+cfg,4.0,64,single_object,1,
+cfg,4.0,65,single_object,1,
+cfg,4.0,66,single_object,1,
+cfg,4.0,67,single_object,1,
+cfg,4.0,68,single_object,1,
+cfg,4.0,69,single_object,1,
+cfg,4.0,70,single_object,1,
+cfg,4.0,71,single_object,1,
+cfg,4.0,72,single_object,1,
+cfg,4.0,73,single_object,1,
+cfg,4.0,74,single_object,1,
+cfg,4.0,75,single_object,1,
+cfg,4.0,76,single_object,1,
+cfg,4.0,77,single_object,1,
+cfg,4.0,78,single_object,1,
+cfg,4.0,79,single_object,1,
+cfg,4.0,80,two_object,1,
+cfg,4.0,81,two_object,1,
+cfg,4.0,82,two_object,1,
+cfg,4.0,83,two_object,1,
+cfg,4.0,84,two_object,1,
+cfg,4.0,85,two_object,1,
+cfg,4.0,86,two_object,1,
+cfg,4.0,87,two_object,1,
+cfg,4.0,88,two_object,1,
+cfg,4.0,89,two_object,1,
+cfg,4.0,90,two_object,1,
+cfg,4.0,91,two_object,1,
+cfg,4.0,92,two_object,1,
+cfg,4.0,93,two_object,1,
+cfg,4.0,94,two_object,1,
+cfg,4.0,95,two_object,1,
+cfg,4.0,96,two_object,1,
+cfg,4.0,97,two_object,0,"expected frisbee>=1, found 0"
+cfg,4.0,98,two_object,1,
+cfg,4.0,99,two_object,0,"expected computer mouse>=1, found 0"
+cfg,4.0,100,two_object,1,
+cfg,4.0,101,two_object,1,
+cfg,4.0,102,two_object,1,
+cfg,4.0,103,two_object,1,
+cfg,4.0,104,two_object,1,
+cfg,4.0,105,two_object,1,
+cfg,4.0,106,two_object,0,"expected baseball bat>=1, found 0"
+cfg,4.0,107,two_object,1,
+cfg,4.0,108,two_object,1,
+cfg,4.0,109,two_object,1,
+cfg,4.0,110,two_object,1,
+cfg,4.0,111,two_object,1,
+cfg,4.0,112,two_object,1,
+cfg,4.0,113,two_object,1,
+cfg,4.0,114,two_object,1,
+cfg,4.0,115,two_object,1,
+cfg,4.0,116,two_object,1,
+cfg,4.0,117,two_object,1,
+cfg,4.0,118,two_object,1,
+cfg,4.0,119,two_object,1,
+cfg,4.0,120,two_object,0,"expected parking meter>=1, found 0"
+cfg,4.0,121,two_object,0,"expected bicycle>=1, found 0"
+cfg,4.0,122,two_object,1,
+cfg,4.0,123,two_object,1,
+cfg,4.0,124,two_object,1,
+cfg,4.0,125,two_object,1,
+cfg,4.0,126,two_object,1,
+cfg,4.0,127,two_object,1,
+cfg,4.0,128,two_object,1,
+cfg,4.0,129,two_object,0,"expected chair>=1, found 0"
+cfg,4.0,130,two_object,1,
+cfg,4.0,131,two_object,1,
+cfg,4.0,132,two_object,1,
+cfg,4.0,133,two_object,1,
+cfg,4.0,134,two_object,1,
+cfg,4.0,135,two_object,1,
+cfg,4.0,136,two_object,1,
+cfg,4.0,137,two_object,1,
+cfg,4.0,138,two_object,1,
+cfg,4.0,139,two_object,1,
+cfg,4.0,140,two_object,1,
+cfg,4.0,141,two_object,1,
+cfg,4.0,142,two_object,1,
+cfg,4.0,143,two_object,1,
+cfg,4.0,144,two_object,1,
+cfg,4.0,145,two_object,1,
+cfg,4.0,146,two_object,1,
+cfg,4.0,147,two_object,1,
+cfg,4.0,148,two_object,1,
+cfg,4.0,149,two_object,0,"expected person>=1, found 0"
+cfg,4.0,150,two_object,1,
+cfg,4.0,151,two_object,1,
+cfg,4.0,152,two_object,0,"expected knife>=1, found 0"
+cfg,4.0,153,two_object,1,
+cfg,4.0,154,two_object,1,
+cfg,4.0,155,two_object,1,
+cfg,4.0,156,two_object,1,
+cfg,4.0,157,two_object,1,
+cfg,4.0,158,two_object,1,
+cfg,4.0,159,two_object,1,
+cfg,4.0,160,two_object,1,
+cfg,4.0,161,two_object,1,
+cfg,4.0,162,two_object,0,"expected person>=1, found 0"
+cfg,4.0,163,two_object,1,
+cfg,4.0,164,two_object,1,
+cfg,4.0,165,two_object,1,
+cfg,4.0,166,two_object,1,
+cfg,4.0,167,two_object,1,
+cfg,4.0,168,two_object,1,
+cfg,4.0,169,two_object,1,
+cfg,4.0,170,two_object,1,
+cfg,4.0,171,two_object,1,
+cfg,4.0,172,two_object,0,"expected bench>=1, found 0"
+cfg,4.0,173,two_object,1,
+cfg,4.0,174,two_object,1,
+cfg,4.0,175,two_object,1,
+cfg,4.0,176,two_object,1,
+cfg,4.0,177,two_object,1,
+cfg,4.0,178,two_object,1,
+cfg,4.0,179,counting,1,
+cfg,4.0,180,counting,0,"expected backpack>=2, found 0"
+cfg,4.0,181,counting,0,"expected handbag>=4, found 2"
+cfg,4.0,182,counting,1,
+cfg,4.0,183,counting,0,"expected sports ball<4, found 4"
+cfg,4.0,184,counting,1,
+cfg,4.0,185,counting,1,
+cfg,4.0,186,counting,0,"expected sink>=4, found 1"
+cfg,4.0,187,counting,1,
+cfg,4.0,188,counting,1,
+cfg,4.0,189,counting,1,
+cfg,4.0,190,counting,1,
+cfg,4.0,191,counting,1,
+cfg,4.0,192,counting,1,
+cfg,4.0,193,counting,0,"expected computer keyboard>=4, found 1"
+cfg,4.0,194,counting,0,"expected sink>=3, found 1"
+cfg,4.0,195,counting,1,
+cfg,4.0,196,counting,1,
+cfg,4.0,197,counting,0,"expected bicycle>=2, found 1"
+cfg,4.0,198,counting,1,
+cfg,4.0,199,counting,0,"expected orange<4, found 4"
+cfg,4.0,200,counting,1,
+cfg,4.0,201,counting,0,"expected handbag>=3, found 2"
+cfg,4.0,202,counting,1,
+cfg,4.0,203,counting,1,
+cfg,4.0,204,counting,0,"expected dog<5, found 5"
+cfg,4.0,205,counting,1,
+cfg,4.0,206,counting,1,
+cfg,4.0,207,counting,1,
+cfg,4.0,208,counting,1,
+cfg,4.0,209,counting,0,"expected kite>=3, found 2"
+cfg,4.0,210,counting,1,
+cfg,4.0,211,counting,1,
+cfg,4.0,212,counting,0,"expected baseball glove>=4, found 2"
+cfg,4.0,213,counting,0,"expected computer keyboard>=3, found 1"
+cfg,4.0,214,counting,1,
+cfg,4.0,215,counting,1,
+cfg,4.0,216,counting,1,
+cfg,4.0,217,counting,0,"expected book<4, found 4"
+cfg,4.0,218,counting,0,"expected giraffe>=4, found 3"
+cfg,4.0,219,counting,1,
+cfg,4.0,220,counting,1,
+cfg,4.0,221,counting,1,
+cfg,4.0,222,counting,1,
+cfg,4.0,223,counting,1,
+cfg,4.0,224,counting,0,"expected pizza>=2, found 1"
+cfg,4.0,225,counting,1,
+cfg,4.0,226,counting,1,
+cfg,4.0,227,counting,1,
+cfg,4.0,228,counting,1,
+cfg,4.0,229,counting,1,
+cfg,4.0,230,counting,1,
+cfg,4.0,231,counting,1,
+cfg,4.0,232,counting,1,
+cfg,4.0,233,counting,1,
+cfg,4.0,234,counting,1,
+cfg,4.0,235,counting,0,"expected traffic light>=4, found 3"
+cfg,4.0,236,counting,1,
+cfg,4.0,237,counting,1,
+cfg,4.0,238,counting,0,"expected banana>=2, found 1"
+cfg,4.0,239,counting,1,
+cfg,4.0,240,counting,0,"expected pizza>=3, found 1"
+cfg,4.0,241,counting,0,"expected knife<5, found 6"
+cfg,4.0,242,counting,1,
+cfg,4.0,243,counting,1,
+cfg,4.0,244,counting,1,
+cfg,4.0,245,counting,0,"expected skateboard>=4, found 3"
+cfg,4.0,246,counting,1,
+cfg,4.0,247,counting,1,
+cfg,4.0,248,counting,0,"expected boat>=4, found 2"
+cfg,4.0,249,counting,1,
+cfg,4.0,250,counting,0,"expected hair drier>=2, found 0"
+cfg,4.0,251,counting,0,"expected laptop>=3, found 2"
+cfg,4.0,252,counting,1,
+cfg,4.0,253,counting,1,
+cfg,4.0,254,counting,0,"expected bench>=4, found 2"
+cfg,4.0,255,counting,0,"expected bench>=3, found 1"
+cfg,4.0,256,counting,1,
+cfg,4.0,257,counting,0,"expected book<5, found 8"
+cfg,4.0,258,counting,0,"expected bus>=4, found 3"
+cfg,4.0,259,colors,1,
+cfg,4.0,260,colors,1,
+cfg,4.0,261,colors,1,
+cfg,4.0,262,colors,1,
+cfg,4.0,263,colors,1,
+cfg,4.0,264,colors,1,
+cfg,4.0,265,colors,1,
+cfg,4.0,266,colors,1,
+cfg,4.0,267,colors,1,
+cfg,4.0,268,colors,1,
+cfg,4.0,269,colors,1,
+cfg,4.0,270,colors,0,"expected white sandwich>=1, found 0 white; and 1 yellow"
+cfg,4.0,271,colors,1,
+cfg,4.0,272,colors,1,
+cfg,4.0,273,colors,1,
+cfg,4.0,274,colors,1,
+cfg,4.0,275,colors,1,
+cfg,4.0,276,colors,1,
+cfg,4.0,277,colors,1,
+cfg,4.0,278,colors,1,
+cfg,4.0,279,colors,1,
+cfg,4.0,280,colors,1,
+cfg,4.0,281,colors,1,
+cfg,4.0,282,colors,1,
+cfg,4.0,283,colors,1,
+cfg,4.0,284,colors,1,
+cfg,4.0,285,colors,1,
+cfg,4.0,286,colors,1,
+cfg,4.0,287,colors,1,
+cfg,4.0,288,colors,1,
+cfg,4.0,289,colors,0,"expected red dog>=1, found 0 red; and 1 orange"
+cfg,4.0,290,colors,1,
+cfg,4.0,291,colors,1,
+cfg,4.0,292,colors,1,
+cfg,4.0,293,colors,1,
+cfg,4.0,294,colors,1,
+cfg,4.0,295,colors,1,
+cfg,4.0,296,colors,1,
+cfg,4.0,297,colors,1,
+cfg,4.0,298,colors,0,"expected carrot>=1, found 0"
+cfg,4.0,299,colors,1,
+cfg,4.0,300,colors,1,
+cfg,4.0,301,colors,0,"expected backpack>=1, found 0"
+cfg,4.0,302,colors,1,
+cfg,4.0,303,colors,1,
+cfg,4.0,304,colors,1,
+cfg,4.0,305,colors,1,
+cfg,4.0,306,colors,1,
+cfg,4.0,307,colors,1,
+cfg,4.0,308,colors,1,
+cfg,4.0,309,colors,1,
+cfg,4.0,310,colors,1,
+cfg,4.0,311,colors,1,
+cfg,4.0,312,colors,1,
+cfg,4.0,313,colors,1,
+cfg,4.0,314,colors,1,
+cfg,4.0,315,colors,1,
+cfg,4.0,316,colors,0,"expected yellow orange>=1, found 0 yellow; and 1 orange"
+cfg,4.0,317,colors,0,"expected toaster>=1, found 0"
+cfg,4.0,318,colors,1,
+cfg,4.0,319,colors,0,"expected brown orange>=1, found 0 brown; and 1 orange"
+cfg,4.0,320,colors,1,
+cfg,4.0,321,colors,0,"expected white sheep>=1, found 0 white; and 1 green"
+cfg,4.0,322,colors,1,
+cfg,4.0,323,colors,1,
+cfg,4.0,324,colors,1,
+cfg,4.0,325,colors,0,"expected carrot>=1, found 0"
+cfg,4.0,326,colors,1,
+cfg,4.0,327,colors,1,
+cfg,4.0,328,colors,1,
+cfg,4.0,329,colors,1,
+cfg,4.0,330,colors,1,
+cfg,4.0,331,colors,1,
+cfg,4.0,332,colors,1,
+cfg,4.0,333,colors,1,
+cfg,4.0,334,colors,1,
+cfg,4.0,335,colors,0,"expected white orange>=1, found 0 white; and 1 orange"
+cfg,4.0,336,colors,1,
+cfg,4.0,337,colors,0,"expected carrot>=1, found 0"
+cfg,4.0,338,colors,1,
+cfg,4.0,339,colors,1,
+cfg,4.0,340,colors,1,
+cfg,4.0,341,colors,0,"expected backpack>=1, found 0"
+cfg,4.0,342,colors,1,
+cfg,4.0,343,colors,1,
+cfg,4.0,344,colors,1,
+cfg,4.0,345,colors,1,
+cfg,4.0,346,colors,1,
+cfg,4.0,347,colors,1,
+cfg,4.0,348,colors,1,
+cfg,4.0,349,colors,1,
+cfg,4.0,350,colors,0,"expected yellow broccoli>=1, found 0 yellow; and 1 green"
+cfg,4.0,351,colors,1,
+cfg,4.0,352,colors,1,
+cfg,4.0,353,position,1,
+cfg,4.0,354,position,0,"expected kite>=1, found 0 | no target for wine glass to be above"
+cfg,4.0,355,position,0,"expected couch>=1, found 0"
+cfg,4.0,356,position,0,"expected laptop left of target, found  target"
+cfg,4.0,357,position,0,"expected hair drier>=1, found 0 | no target for fork to be above"
+cfg,4.0,358,position,0,"expected baseball bat>=1, found 0 | no target for tie to be right of"
+cfg,4.0,359,position,0,"expected fork>=1, found 0 | no target for stop sign to be above"
+cfg,4.0,360,position,0,"expected bird below target, found above target"
+cfg,4.0,361,position,0,"expected apple above target, found  target"
+cfg,4.0,362,position,1,
+cfg,4.0,363,position,1,
+cfg,4.0,364,position,1,
+cfg,4.0,365,position,1,
+cfg,4.0,366,position,1,
+cfg,4.0,367,position,0,"expected skateboard above target, found below target"
+cfg,4.0,368,position,0,"expected baseball glove>=1, found 0"
+cfg,4.0,369,position,1,
+cfg,4.0,370,position,0,"expected hot dog left of target, found right of target"
+cfg,4.0,371,position,0,"expected bus below target, found  target"
+cfg,4.0,372,position,0,"expected backpack right of target, found left of target"
+cfg,4.0,373,position,0,"expected baseball bat>=1, found 0 | no target for cake to be below"
+cfg,4.0,374,position,0,"expected tie>=1, found 0 | no target for dog to be right of"
+cfg,4.0,375,position,1,
+cfg,4.0,376,position,0,"expected bear above target, found  target"
+cfg,4.0,377,position,1,
+cfg,4.0,378,position,0,"expected sports ball left of target, found below target"
+cfg,4.0,379,position,0,"expected train right of target, found above target"
+cfg,4.0,380,position,0,"expected hair drier>=1, found 0"
+cfg,4.0,381,position,0,"expected spoon>=1, found 0 | no target for tennis racket to be right of"
+cfg,4.0,382,position,1,
+cfg,4.0,383,position,0,"expected computer mouse left of target, found  target"
+cfg,4.0,384,position,0,"expected carrot left of target, found right of target"
+cfg,4.0,385,position,1,
+cfg,4.0,386,position,0,"expected toaster>=1, found 0"
+cfg,4.0,387,position,1,
+cfg,4.0,388,position,1,
+cfg,4.0,389,position,1,
+cfg,4.0,390,position,0,"expected parking meter>=1, found 0 | no target for stop sign to be above"
+cfg,4.0,391,position,0,"expected hot dog>=1, found 0"
+cfg,4.0,392,position,1,
+cfg,4.0,393,position,0,"expected hair drier>=1, found 0"
+cfg,4.0,394,position,0,"expected cow left of target, found below and right of target"
+cfg,4.0,395,position,0,"expected suitcase above target, found  target"
+cfg,4.0,396,position,0,"expected book above target, found below target"
+cfg,4.0,397,position,0,"expected toothbrush below target, found above target"
+cfg,4.0,398,position,0,"expected kite>=1, found 0 | no target for toilet to be left of"
+cfg,4.0,399,position,0,"expected tie above target, found  target"
+cfg,4.0,400,position,0,"expected bird left of target, found  target"
+cfg,4.0,401,position,0,"expected bed right of target, found  target"
+cfg,4.0,402,position,0,"expected elephant below target, found above target"
+cfg,4.0,403,position,0,"expected frisbee>=1, found 0"
+cfg,4.0,404,position,1,
+cfg,4.0,405,position,0,"expected zebra left of target, found  target"
+cfg,4.0,406,position,0,"expected bench left of target, found right of target"
+cfg,4.0,407,position,0,"expected donut right of target, found  target"
+cfg,4.0,408,position,1,
+cfg,4.0,409,position,0,"expected snowboard>=1, found 0 | expected computer keyboard>=1, found 0"
+cfg,4.0,410,position,0,"expected tv below target, found  target"
+cfg,4.0,411,position,0,"expected elephant below target, found left of target"
+cfg,4.0,412,position,0,"expected suitcase left of target, found right of target"
+cfg,4.0,413,position,1,
+cfg,4.0,414,position,0,"expected cat below target, found  target"
+cfg,4.0,415,position,1,
+cfg,4.0,416,position,1,
+cfg,4.0,417,position,0,"expected parking meter>=1, found 0 | no target for bicycle to be above"
+cfg,4.0,418,position,0,"expected knife right of target, found  target"
+cfg,4.0,419,position,1,
+cfg,4.0,420,position,0,"expected zebra right of target, found left of target"
+cfg,4.0,421,position,0,"expected chair left of target, found  target"
+cfg,4.0,422,position,1,
+cfg,4.0,423,position,1,
+cfg,4.0,424,position,0,"expected zebra below target, found above target"
+cfg,4.0,425,position,0,"expected zebra>=1, found 0"
+cfg,4.0,426,position,0,"expected laptop below target, found above target"
+cfg,4.0,427,position,0,"expected baseball bat>=1, found 0 | no target for truck to be left of"
+cfg,4.0,428,position,0,"expected baseball bat>=1, found 0 | no target for refrigerator to be above"
+cfg,4.0,429,position,1,
+cfg,4.0,430,position,0,"expected baseball glove right of target, found left of target"
+cfg,4.0,431,position,0,"expected refrigerator below target, found  target"
+cfg,4.0,432,position,0,"expected dining table above target, found  target"
+cfg,4.0,433,position,0,"expected parking meter>=1, found 0"
+cfg,4.0,434,position,1,
+cfg,4.0,435,position,0,"expected pizza right of target, found above target"
+cfg,4.0,436,position,1,
+cfg,4.0,437,position,1,
+cfg,4.0,438,position,0,"expected horse right of target, found left of target"
+cfg,4.0,439,position,1,
+cfg,4.0,440,position,0,"expected horse>=1, found 0 | no target for vase to be right of"
+cfg,4.0,441,position,1,
+cfg,4.0,442,position,0,"expected zebra right of target, found above target"
+cfg,4.0,443,position,1,
+cfg,4.0,444,position,0,"expected frisbee>=1, found 0 | no target for bed to be right of"
+cfg,4.0,445,position,0,"expected tie>=1, found 0"
+cfg,4.0,446,position,0,"expected laptop right of target, found below target"
+cfg,4.0,447,position,1,
+cfg,4.0,448,position,0,"expected couch below target, found left of target"
+cfg,4.0,449,position,1,
+cfg,4.0,450,position,0,"expected couch below target, found  target"
+cfg,4.0,451,position,0,"expected donut below target, found  target"
+cfg,4.0,452,position,0,"expected couch left of target, found right of target"
+cfg,4.0,453,color_attr,1,
+cfg,4.0,454,color_attr,1,
+cfg,4.0,455,color_attr,0,"expected brown airplane>=1, found 0 brown; and 1 orange"
+cfg,4.0,456,color_attr,0,"expected sink>=1, found 0"
+cfg,4.0,457,color_attr,1,
+cfg,4.0,458,color_attr,1,
+cfg,4.0,459,color_attr,0,"expected skateboard>=1, found 0"
+cfg,4.0,460,color_attr,1,
+cfg,4.0,461,color_attr,1,
+cfg,4.0,462,color_attr,0,"expected white handbag>=1, found 0 white; and 1 purple"
+cfg,4.0,463,color_attr,0,"expected brown sports ball>=1, found 0 brown; and 1 orange"
+cfg,4.0,464,color_attr,1,
+cfg,4.0,465,color_attr,1,
+cfg,4.0,466,color_attr,1,
+cfg,4.0,467,color_attr,1,
+cfg,4.0,468,color_attr,0,"expected carrot>=1, found 0 | expected white potted plant>=1, found 0 white; and 1 green"
+cfg,4.0,469,color_attr,1,
+cfg,4.0,470,color_attr,1,
+cfg,4.0,471,color_attr,0,"expected brown kite>=1, found 0 brown; and 1 orange"
+cfg,4.0,472,color_attr,1,
+cfg,4.0,473,color_attr,0,"expected cat>=1, found 0"
+cfg,4.0,474,color_attr,0,"expected orange truck>=1, found 0 orange; and 1 pink"
+cfg,4.0,475,color_attr,0,"expected brown hot dog>=1, found 0 brown; and 1 red"
+cfg,4.0,476,color_attr,1,
+cfg,4.0,477,color_attr,0,"expected brown bed>=1, found 0 brown; and 1 pink"
+cfg,4.0,478,color_attr,0,"expected black broccoli>=1, found 0 black; and 1 green | expected cake>=1, found 0"
+cfg,4.0,479,color_attr,0,"expected bear>=1, found 0"
+cfg,4.0,480,color_attr,0,"expected black sink>=1, found 0 black; and 1 purple"
+cfg,4.0,481,color_attr,0,"expected black banana>=1, found 0 black; and 1 blue"
+cfg,4.0,482,color_attr,1,
+cfg,4.0,483,color_attr,1,
+cfg,4.0,484,color_attr,1,
+cfg,4.0,485,color_attr,1,
+cfg,4.0,486,color_attr,1,
+cfg,4.0,487,color_attr,0,"expected brown car>=1, found 0 brown; and 1 pink"
+cfg,4.0,488,color_attr,0,"expected cell phone>=1, found 0"
+cfg,4.0,489,color_attr,0,"expected sheep>=1, found 0"
+cfg,4.0,490,color_attr,1,
+cfg,4.0,491,color_attr,0,"expected white pizza>=1, found 0 white; and 1 red"
+cfg,4.0,492,color_attr,0,"expected skateboard>=1, found 0"
+cfg,4.0,493,color_attr,1,
+cfg,4.0,494,color_attr,1,
+cfg,4.0,495,color_attr,0,"expected baseball glove>=1, found 0"
+cfg,4.0,496,color_attr,1,
+cfg,4.0,497,color_attr,1,
+cfg,4.0,498,color_attr,1,
+cfg,4.0,499,color_attr,1,
+cfg,4.0,500,color_attr,1,
+cfg,4.0,501,color_attr,1,
+cfg,4.0,502,color_attr,0,"expected pink dining table>=1, found 0 pink; and 1 blue"
+cfg,4.0,503,color_attr,0,"expected black computer keyboard>=1, found 0 black; and 1 blue"
+cfg,4.0,504,color_attr,1,
+cfg,4.0,505,color_attr,1,
+cfg,4.0,506,color_attr,1,
+cfg,4.0,507,color_attr,0,"expected orange oven>=1, found 0 orange; and 1 black"
+cfg,4.0,508,color_attr,1,
+cfg,4.0,509,color_attr,1,
+cfg,4.0,510,color_attr,0,"expected red umbrella>=1, found 0 red; and 1 pink"
+cfg,4.0,511,color_attr,0,"expected cell phone>=1, found 0"
+cfg,4.0,512,color_attr,1,
+cfg,4.0,513,color_attr,0,"expected baseball bat>=1, found 0"
+cfg,4.0,514,color_attr,1,
+cfg,4.0,515,color_attr,1,
+cfg,4.0,516,color_attr,1,
+cfg,4.0,517,color_attr,0,"expected baseball glove>=1, found 0"
+cfg,4.0,518,color_attr,0,"expected green carrot>=1, found 0 green; and 1 orange"
+cfg,4.0,519,color_attr,1,
+cfg,4.0,520,color_attr,1,
+cfg,4.0,521,color_attr,1,
+cfg,4.0,522,color_attr,1,
+cfg,4.0,523,color_attr,1,
+cfg,4.0,524,color_attr,0,"expected black potted plant>=1, found 0 black; and 1 green"
+cfg,4.0,525,color_attr,1,
+cfg,4.0,526,color_attr,0,"expected stop sign>=1, found 0"
+cfg,4.0,527,color_attr,0,"expected green suitcase>=1, found 0 green; and 1 blue | expected blue boat>=1, found 0 blue; and 1 brown"
+cfg,4.0,528,color_attr,1,
+cfg,4.0,529,color_attr,0,"expected red chair>=1, found 0 red; and 1 black"
+cfg,4.0,530,color_attr,0,"expected orange pizza>=1, found 0 orange; and 1 red"
+cfg,4.0,531,color_attr,1,
+cfg,4.0,532,color_attr,1,
+cfg,4.0,533,color_attr,0,"expected black spoon>=1, found 0 black; and 1 brown"
+cfg,4.0,534,color_attr,1,
+cfg,4.0,535,color_attr,1,
+cfg,4.0,536,color_attr,1,
+cfg,4.0,537,color_attr,1,
+cfg,4.0,538,color_attr,0,"expected white toilet>=1, found 0 white; and 1 brown"
+cfg,4.0,539,color_attr,0,"expected pink dining table>=1, found 0 pink; and 1 black"
+cfg,4.0,540,color_attr,1,
+cfg,4.0,541,color_attr,1,
+cfg,4.0,542,color_attr,0,"expected white stop sign>=1, found 0 white; and 1 red"
+cfg,4.0,543,color_attr,1,
+cfg,4.0,544,color_attr,1,
+cfg,4.0,545,color_attr,0,"expected black cell phone>=1, found 0 black; and 1 red"
+cfg,4.0,546,color_attr,1,
+cfg,4.0,547,color_attr,1,
+cfg,4.0,548,color_attr,1,
+cfg,4.0,549,color_attr,0,"expected orange>=1, found 0"
+cfg,4.0,550,color_attr,0,"expected white toilet>=1, found 0 white; and 1 brown"
+cfg,4.0,551,color_attr,1,
+cfg,4.0,552,color_attr,0,"expected yellow baseball glove>=1, found 0 yellow; and 1 blue"

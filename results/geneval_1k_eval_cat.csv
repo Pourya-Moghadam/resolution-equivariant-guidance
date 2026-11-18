@@ -1,0 +1,7 @@
+category,cfg,method,clip,clip_patch,clip_patch_se,clip_se,n
+color_attr,4.0,cfg,41.8445,41.8445,0.3853,0.3853,100
+colors,4.0,cfg,34.8983,34.8983,0.3017,0.3017,94
+counting,4.0,cfg,33.0481,33.0481,0.3342,0.3342,80
+position,4.0,cfg,37.9077,37.9077,0.4085,0.4085,100
+single_object,4.0,cfg,31.5485,31.5485,0.2937,0.2937,80
+two_object,4.0,cfg,37.838,37.838,0.5189,0.5189,99

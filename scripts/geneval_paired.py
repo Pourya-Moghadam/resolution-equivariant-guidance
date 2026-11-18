@@ -3,16 +3,17 @@
 Reports accuracy per tag and overall (mean of tags, as GenEval does) for each method, the paired difference with a
 percentile-bootstrap 95% CI over prompts (10k resamples, stratified by tag for the overall), and the discordant
 counts (prompts only REG gets right / only the reference gets right).
-  python scripts/geneval_paired.py --items results/geneval_4k_geneval_items.csv --ref cfg --cmp anchor_base_pyr_s12 \
+  python scripts/geneval_paired.py --items results/geneval_4k_geneval_items.csv [results/geneval_1k_geneval_items.csv] --ref cfg_w16 --cmp anchor_base_pyr_s12_w4 \
       --csv results/geneval_4k_paired.csv
 """
 import argparse, csv, collections, numpy as np
-ap = argparse.ArgumentParser(); ap.add_argument("--items", required=True); ap.add_argument("--ref", default="cfg")
-ap.add_argument("--cmp", default="anchor_base_pyr_s12"); ap.add_argument("--csv", required=True); ap.add_argument("--boot", type=int, default=10000)
+ap = argparse.ArgumentParser(); ap.add_argument("--items", required=True, nargs="+", help="one or more <stem>_items.csv (e.g. the 4K and the native-1K sets)"); ap.add_argument("--ref", default="cfg_w16")
+ap.add_argument("--cmp", default="anchor_base_pyr_s12_w4"); ap.add_argument("--csv", required=True); ap.add_argument("--boot", type=int, default=10000)
 a = ap.parse_args(); rng = np.random.default_rng(0)
-rows = list(csv.DictReader(open(a.items)))
+rows = [r for f in a.items for r in csv.DictReader(open(f))]
+key = lambda r: f"{r['method']}_w{int(float(r['cfg']))}"   # methods are keyed with their weight: cfg_w4 (native 1K), cfg_w16, anchor_base_pyr_s12_w4
 by = collections.defaultdict(dict)   # (tag, index) -> method -> correct
-for r in rows: by[(r["tag"], int(r["index"]))][r["method"]] = int(r["correct"])
+for r in rows: by[(r["tag"], int(r["index"]))][key(r)] = int(r["correct"])
 tags = sorted({t for t, _ in by})
 pairs = {t: np.array([(by[k][a.cmp], by[k][a.ref]) for k in by if k[0] == t and a.cmp in by[k] and a.ref in by[k]]) for t in tags}
 out = []

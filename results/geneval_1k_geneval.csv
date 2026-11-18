@@ -1,0 +1,9 @@
+method,cfg,tag,n,accuracy
+cfg,4.0,single_object,80,1.0
+cfg,4.0,two_object,99,0.899
+cfg,4.0,counting,80,0.65
+cfg,4.0,colors,94,0.8617
+cfg,4.0,position,100,0.32
+cfg,4.0,color_attr,100,0.58
+cfg,4.0,overall,553,0.7184
+cfg,4.0,images,553,0.7089
