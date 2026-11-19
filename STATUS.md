@@ -150,3 +150,7 @@ All four hosts switched to the NVMe scratch (reg5 Tue 22:09, reg3 23:19, reg4 We
 ### GenEval native-1K reference (2026-11-18 14:21; `results/geneval_1k_geneval.csv`, `geneval_4k_vs_native_paired.csv`, `geneval_4k_plain_vs_native_paired.csv`)
 
 553 rows on reg5 in 2.5 h (0 errors), scored by handoff36; the official evaluator ran on CPU (handoff39) because reg1's card holds the 6K job (the GPU attempt in handoff38 hit CUDA OOM). Native 1K w4: **0.72** overall (published 0.73); single 1.00, two 0.90, counting 0.65, colours 0.86, position 0.32, colour attribution 0.58; HPS 30.0, IR 1.06, CLIP 36.5. Paired against it: REG 4K −0.04 [−0.08, −0.00] (no task outside its interval; 47 prompts right only under REG, 68 only at native), plain 4K w16 −0.48 [−0.52, −0.43]. `scripts/geneval_paired.py` now keys on method and weight and takes several items files. Paper table gained the native column; paragraph, abstract, arXiv form abstract and README updated.
+
+### 5K/6K extension: reg5 OOM rerun (2026-11-19 14:46)
+
+reg1 (5K plain) and reg3 (5K REG) finished their 50-row shards Wed night; reg4 (6K plain) is at 36/50. reg5's shard held all 50 6K REG rows and lost 46 to CUDA OOM from Wed 16:31, while another user was logged in on that shared card (6K REG peaks at 26.7 GB of 32). handoff40 deleted the error records and reruns the 46 rows (`jobs/reg_5k6k_ext_redo.jsonl`) in four shards: reg1, reg3, reg5 now, reg4 after its shard; anything that fails again is rerun on reg1. ETA for all 200 records: Friday around noon; handoff37 then pulls and scores.
