@@ -9,6 +9,7 @@
                       the sub-native band of Δ (and of the base prediction if base) from native-resolution passes
                       (reg.guidance.anchor); ratio defaults to height/1024; levels = intermediate pyramid ratios;
                       super_scale = CFG weight above the native Nyquist (default scale)
+  apg                 {"eta": 0, "momentum": -0.5, "norm_threshold": 0} — Adaptive Projected Guidance at weight ``guidance``
   pag / seg / tpg     {"scale": 3.0, "layers": [..], "start": 0, "end": 1, "sigma": 10 (seg), "frac": 1.0 (tpg)}
   cfg_normalization   Lumina's norm rescale after guidance (default True)
   diag                {"downs": [2, 4, 8, 16]} — record per-step band norms and spectra (reg.diag)
@@ -20,7 +21,7 @@ from __future__ import annotations
 
 from .anchor import AnchorCFGTerm
 from .bands import LaplacianSplit
-from .base import CFGTerm, Guidance, PertTerm, Step, Term
+from .base import APGTerm, CFGTerm, Guidance, PertTerm, Step, Term
 from .perturb import PAG, SEG, TPG
 
 __all__ = ["Guidance", "Step", "Term", "CFGTerm", "PertTerm", "PAG", "SEG", "TPG", "LaplacianSplit", "AnchorCFGTerm", "build_guidance"]
@@ -38,6 +39,10 @@ def build_guidance(row: dict) -> Guidance:
         f = row["fdg"]
         split = LaplacianSplit(down=f.get("down", 2.0), sigma=f.get("sigma"))
         terms.append(CFGTerm(f["w_high"], start, end, split=split, band_scales=(f["w_low"], f["w_high"])))
+    elif "apg" in row:  # Adaptive Projected Guidance at CFG weight ``guidance`` (baseline)
+        a = row["apg"] or {}
+        terms.append(APGTerm(float(row["guidance"]), start, end, eta=a.get("eta", 0.0), momentum=a.get("momentum", -0.5),
+                             norm_threshold=a.get("norm_threshold", 0.0)))
     elif float(row.get("guidance", 1.0)) != 1.0:
         terms.append(CFGTerm(float(row["guidance"]), start, end))
     for key, cls in (("pag", PAG), ("seg", SEG), ("tpg", TPG)):

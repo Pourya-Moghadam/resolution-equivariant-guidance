@@ -11,6 +11,7 @@ import time
 
 import numpy as np
 import torch
+from PIL import Image
 from diffusers import Lumina2Pipeline
 from diffusers.pipelines.lumina2.pipeline_lumina2 import calculate_shift, retrieve_timesteps
 
@@ -86,6 +87,7 @@ class Lumina:
         shift: float | None = None,
         guidance: Guidance | None = None,
         use_pipeline: bool = False,
+        hires: dict | None = None,
     ):
         """Return (images, info). One seed per prompt (seed + index) so rows are reproducible alone.
 
@@ -99,6 +101,12 @@ class Lumina:
         shift=6 with use_dynamic_shifting=False, so its sigma schedule is the same at every
         resolution (the pipeline computes a token-count mu but the scheduler ignores it); FLUX
         instead shifts by token count. Restored afterwards.
+
+        ``hires`` = {"strength": 0.5, "base_size": 1024, "base_guidance": 4.0} runs the two-stage "hires fix"
+        baseline instead of sampling from noise: stage 1 samples at ``base_size`` with plain CFG at
+        ``base_guidance``; the decoded image is Lanczos-upscaled to (height, width), VAE-encoded, noised to the
+        sigma of step ``steps - round(steps * strength)`` of the schedule, and stage 2 runs the remaining steps
+        at the target size with ``guidance`` (the row's guidance). Time and peak memory cover both stages.
         """
         if guidance is None:
             guidance = build_guidance({"guidance": guidance_scale, "cfg_trunc_ratio": cfg_trunc_ratio, "cfg_normalization": cfg_normalization})
@@ -108,8 +116,10 @@ class Lumina:
         orig_shift = sched.config.shift
         if shift is not None:
             sched.register_to_config(shift=shift)
-        torch.cuda.reset_peak_memory_stats(self.device)
-        torch.cuda.synchronize(self.device)
+        cuda = self.device.type == "cuda"
+        if cuda:
+            torch.cuda.reset_peak_memory_stats(self.device)
+            torch.cuda.synchronize(self.device)
         t0 = time.perf_counter()
         try:
             if use_pipeline:
@@ -126,24 +136,42 @@ class Lumina:
                     output_type=output_type,
                     **embeds,
                 ).images
+            elif hires:
+                bs = int(hires.get("base_size", 1024))
+                g1 = build_guidance({"guidance": float(hires.get("base_guidance", 4.0)), "cfg_normalization": cfg_normalization})
+                base = self._sample(embeds, bs, bs, steps, generators, g1, seed, "pil")
+                init = self._encode_images([im.resize((width, height), Image.LANCZOS) for im in base])
+                del base
+                images = self._sample(embeds, height, width, steps, generators, guidance, seed, output_type,
+                                      init_latents=init, strength=float(hires.get("strength", 0.5)))
             else:
                 images = self._sample(embeds, height, width, steps, generators, guidance, seed, output_type)
         finally:
             if shift is not None:
                 sched.register_to_config(shift=orig_shift)
-        torch.cuda.synchronize(self.device)
+        if cuda:
+            torch.cuda.synchronize(self.device)
         info = {
             "model": NAME,
             "shift": shift if shift is not None else orig_shift,
             "guidance": guidance.describe(),
             "seconds": time.perf_counter() - t0,
-            "peak_vram_gb": torch.cuda.max_memory_allocated(self.device) / 2**30,
+            "peak_vram_gb": torch.cuda.max_memory_allocated(self.device) / 2**30 if cuda else 0.0,
+            **({"hires": dict(hires)} if hires else {}),
             "cache_hits": self.cache.hits,
             "cache_misses": self.cache.misses,
         }
         return images, info
 
-    def _sample(self, embeds: dict, height: int, width: int, steps: int, generators: list, guidance: Guidance, seed: int, output_type: str):
+    def _encode_images(self, images: list) -> torch.Tensor:
+        """PIL images -> scaled VAE latents (the inverse of the decode at the end of ``_sample``; tiled)."""
+        vae = self.pipe.vae
+        x = self.pipe.image_processor.preprocess(images).to(self.device, vae.dtype)
+        lat = vae.encode(x).latent_dist.mode()
+        return (lat - vae.config.shift_factor) * vae.config.scaling_factor
+
+    def _sample(self, embeds: dict, height: int, width: int, steps: int, generators: list, guidance: Guidance, seed: int, output_type: str,
+                init_latents: torch.Tensor | None = None, strength: float = 1.0):
         """Lumina2Pipeline.__call__ steps 4–7 with ``guidance`` deciding the passes per step and
         how they combine. Kept line-for-line close to the pipeline so the CFG case stays identical
         (including its mu computed from latents.shape[1], which the fixed-shift scheduler ignores)."""
@@ -161,7 +189,13 @@ class Lumina:
             sched.config.get("max_shift", 1.15),
         )
         timesteps, steps = retrieve_timesteps(sched, steps, self.device, sigmas=sigmas, mu=mu)
-        sched.set_begin_index(0)
+        first = 0
+        if init_latents is not None:  # hires fix: start from the noised upscaled image at step ``first`` of the same schedule
+            first = max(0, min(steps - 1, steps - round(steps * strength)))
+            s0 = float(sched.sigmas[first])
+            latents = (1.0 - s0) * init_latents.to(latents.dtype) + s0 * latents
+            timesteps = timesteps[first:]
+        sched.set_begin_index(first)
         attention_kwargs = getattr(pipe, "_attention_kwargs", None)
         p = tr.config.patch_size
         text_lens = pos["encoder_attention_mask"].sum(-1).tolist()
@@ -176,11 +210,11 @@ class Lumina:
             ts = current_timestep if ts is None else ts
             return tr(hidden_states=x, timestep=ts, return_dict=False, attention_kwargs=attention_kwargs, **cond)[0]
 
-        for i, t in enumerate(timesteps):
+        for i, t in enumerate(timesteps, start=first):
             step = Step(i, steps, float(t) / n_train)
             current_timestep = (1 - t / n_train).expand(latents.shape[0])  # Lumina: t=0 noise, t=1 image
             passes = guidance.passes(step)
-            preds = {"cond": run(pos)}
+            preds = {"cond": run(pos), "x": latents}  # "x": the noisy latent, for terms that work on the denoised estimate (APG)
             if "uncond" in passes:
                 preds["uncond"] = run(neg)
             if "pert" in passes:

@@ -101,6 +101,47 @@ class CFGTerm(Term):
         return self.start < step.frac <= self.end and any(s != 1.0 for s in self.band_scales)
 
 
+class APGTerm(Term):
+    """Adaptive Projected Guidance (Sadat et al., 2025) as a baseline against high-weight oversaturation.
+
+    APG works on the difference of the denoised estimates, d = x0_cond - x0_uncond (here sigma * (u_cond - u_uncond),
+    since x0 = x + sigma * u in the model's output units): (1) reverse momentum, d <- d + beta * running average
+    (beta < 0); (2) rescaling of d to an L2 norm of at most ``norm_threshold`` (0 = off; the norm is over C, H, W,
+    so the row gives the threshold already scaled to the output size); (3) projection on x0_cond, keeping the
+    orthogonal part and ``eta`` times the parallel part. The guided estimate is x0_cond + (w - 1) * d.
+    With eta = 1, beta = 0 and no threshold this is plain CFG."""
+
+    kind, name = "cfg", "apg"
+
+    def __init__(self, scale: float, start: float = 0.0, end: float = 1.0, eta: float = 0.0, momentum: float = -0.5, norm_threshold: float = 0.0):
+        super().__init__(scale, start, end)
+        self.eta, self.momentum, self.norm_threshold = float(eta), float(momentum), float(norm_threshold)
+        self._running = None
+
+    def active(self, step: Step) -> bool:
+        return self.start < step.frac <= self.end and self.scale != 1.0
+
+    def contribution(self, preds: dict[str, torch.Tensor], step: Step) -> torch.Tensor:
+        uc, uu, x = preds["cond"].double(), preds["uncond"].double(), preds["x"].double()
+        dims = tuple(range(1, uc.ndim))
+        d = step.sigma * (uc - uu)
+        if self._running is None or step.i == 0 or self._running.shape != d.shape:
+            self._running = torch.zeros_like(d)
+        self._running = d + self.momentum * self._running
+        d = self._running
+        if self.norm_threshold > 0:
+            d = d * torch.clamp(self.norm_threshold / torch.linalg.vector_norm(d, dim=dims, keepdim=True), max=1.0)
+        x0c = x + step.sigma * uc
+        unit = x0c / torch.linalg.vector_norm(x0c, dim=dims, keepdim=True)
+        par = (d * unit).sum(dim=dims, keepdim=True) * unit
+        d = (d - par) + self.eta * par
+        # the sampler's base is u_uncond: u = u_cond + (w - 1) * d / sigma = u_uncond + [(u_cond - u_uncond) + (w - 1) * d / sigma]
+        return ((uc - uu) + (self.scale - 1.0) * d / step.sigma).to(preds["cond"].dtype)
+
+    def describe(self) -> dict:
+        return {**super().describe(), "eta": self.eta, "momentum": self.momentum, "norm_threshold": self.norm_threshold}
+
+
 class PertTerm(Term):
     kind, name = "pert", "pert"
 
