@@ -154,3 +154,14 @@ All four hosts switched to the NVMe scratch (reg5 Tue 22:09, reg3 23:19, reg4 We
 ### 5K/6K extension: reg5 OOM rerun (2026-11-19 14:46)
 
 reg1 (5K plain) and reg3 (5K REG) finished their 50-row shards Wed night; reg4 (6K plain) is at 36/50. reg5's shard held all 50 6K REG rows and lost 46 to CUDA OOM from Wed 16:31, while another user was logged in on that shared card (6K REG peaks at 26.7 GB of 32). handoff40 deleted the error records and reruns the 46 rows (`jobs/reg_5k6k_ext_redo.jsonl`) in four shards: reg1, reg3, reg5 now, reg4 after its shard; anything that fails again is rerun on reg1. ETA for all 200 records: Friday around noon; handoff37 then pulls and scores.
+
+### 5K and 6K at n = 100 (2026-11-20 15:02; `results/lumina_{5k,6k}_n100_*.csv`, `reg_paired_{5k,6k}_n100_{hps,ir,clip}.csv`)
+
+The 46 rerun rows finished Fri 10:48 (0 errors); handoff37 pulled and scored reg_5k6k_ext (200 ok) at 11:13; `scripts/merge_5k6k_n100.py` merged the grids with the extension and `scripts/score_5k6k_n100.sh` scored them.
+
+| Lumina, n = 100 | plain w16 HPS | REG w4 HPS | paired REG − w16 | IR | CLIP | KID REG / w16 |
+|---|---|---|---|---|---|---|
+| 5K | 21.8 | 29.7 | **+7.9 [6.9, 9.0]** (100 %) | +1.48 [1.26, 1.72] | +5.8 [4.2, 7.4] | 0.038 / 0.099 |
+| 6K | 14.2 | 29.4 | **+15.2 [13.9, 16.5]** (100 %) | +2.71 [2.49, 2.93] | +14.5 [12.5, 16.5] | 0.062 / 0.168 |
+
+Duplicated subjects 5K: REG 0 % vs 8 %; 6K plain w16 missing the subject in 36 %. Every main-table cell is now at n = 100 except plain w4 at 5K (50). Paper (main and sweep tables, text, abstract, intro, limitations), form abstract and README updated; this is the arXiv v1 state.

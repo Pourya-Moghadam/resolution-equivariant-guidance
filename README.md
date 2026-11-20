@@ -29,19 +29,21 @@ HPSv2.1 (a learned predictor of human preference, ×100, higher is better) on th
 |---|---|---|---|---|---|---|
 | Lumina-Image 2.0 | 3K | 100 | 22.0 | 29.7 | **31.1** | +1.4 [1.0, 1.8] |
 | Lumina-Image 2.0 | 4K | 100 | 13.9 | 26.6 | **30.1** | +3.4 [2.8, 4.1] |
-| Lumina-Image 2.0 | 5K | 50 | 8.6 | 22.3 | **30.0** | +7.7 [6.3, 9.2] |
-| Lumina-Image 2.0 | 6K | 50 | not run † | 14.7 | **29.8** | +15.1 [13.3, 16.9] |
+| Lumina-Image 2.0 | 5K | 100 ‡ | 8.6 | 21.8 | **29.7** | +7.9 [6.9, 9.0] |
+| Lumina-Image 2.0 | 6K | 100 | not run † | 14.2 | **29.4** | +15.2 [13.9, 16.5] |
 | Qwen-Image | 3K | 50 | 24.7 | 26.7 | **29.2** | +2.5 [1.6, 3.5] |
 | Qwen-Image | 4K ‡ | 50 | 24.7 | 28.3 | **29.0** | +0.7 [−0.0, 1.4], not significant |
 
-† At 6K (6144 × 6144, 52 minutes per image) only the re-tuned plain weight was run; it has itself collapsed there, with the subject missing from 36 % of single-subject images, while REG at weight 4 is within 0.2 of its 5K score. ImageReward +2.7 [2.4, 3.0] and CLIP score +13.1 [10.3, 16.1] agree.
+† At 6K (6144 × 6144, 52 minutes per image) only the re-tuned plain weight was run; it has itself collapsed there, with the subject missing from 36 % of single-subject images, while REG at weight 4 is within 0.3 of its 5K score. ImageReward +2.7 [2.5, 2.9] and CLIP score +14.5 [12.5, 16.5] agree.
+
+‡ Plain CFG at weight 4 at 5K is on 50 prompts; every other cell is on 100.
 
 ‡ With Qwen's timestep shift capped at its 3K value for every method. Under the stock schedule the margin is +1.7 [0.8, 2.5]; part of that was REG tolerating a poor schedule better than the baseline, so the fair comparison is the one in the table. On this cell REG also leads on ImageReward (+0.25 [0.09, 0.41]) and has no duplicated subjects against 4 % for the baseline.
 
 What the table supports:
 
 - At the training-resolution weight REG is far ahead of plain CFG on both models (+4.2 to +21 HPSv2).
-- Against a baseline whose weight was re-tuned for each resolution, REG is ahead on five of six cells and level on the sixth, without any tuning. The margin grows with the extrapolation ratio, from +1.4 at 3K to +15.1 at 6K. The 3K and 4K rows are on 100 prompts, 5K and 6K on 50.
+- Against a baseline whose weight was re-tuned for each resolution, REG is ahead on five of six cells and level on the sixth, without any tuning. The margin grows with the extrapolation ratio, from +1.4 at 3K to +15.2 at 6K. Every row is on 100 prompts.
 - The other metrics agree: ImageReward, CLIP score, patch-KID and an object-detector count of missing or duplicated subjects. Full tables are in [08-phase1-pilot.md](08-phase1-pilot.md) and the CSVs in [results/](results/).
 - On Lumina at 4K, REG scores the same under two positional-encoding extrapolation schemes (dynamic NTK and YaRN).
 - Cost on Lumina-Image 2.0: +2 % time per image at 3K and +14 % at 4K, with the same peak memory. A 6K (6144 × 6144) image fits on one 32 GB GPU at 26.7 GB.
