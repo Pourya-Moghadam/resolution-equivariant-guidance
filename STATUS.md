@@ -165,3 +165,7 @@ The 46 rerun rows finished Fri 10:48 (0 errors); handoff37 pulled and scored reg
 | 6K | 14.2 | 29.4 | **+15.2 [13.9, 16.5]** (100 %) | +2.71 [2.49, 2.93] | +14.5 [12.5, 16.5] | 0.062 / 0.168 |
 
 Duplicated subjects 5K: REG 0 % vs 8 %; 6K plain w16 missing the subject in 36 %. Every main-table cell is now at n = 100 except plain w4 at 5K (50). Paper (main and sweep tables, text, abstract, intro, limitations), form abstract and README updated; this is the arXiv v1 state.
+
+### 4K under DyPE-YaRN, launched (2026-11-20 15:29; `jobs/reg_4k_yarn.jsonl`, `scripts/make_reg_4k_yarn.py`)
+
+The "dynamic YaRN" robustness check (reg_generality_grid) is DyPE in its authors' default configuration, but it compared REG only with plain CFG at w4. This run adds the comparison the claim rests on: plain w16 under DyPE-YaRN on all 100 4K prompts, REG w4 and plain w4 on the other 50 (so all three cells reach n = 100 with the generality-grid rows), and plain w8 on the first 50 to check that w16 is still the best plain weight under YaRN. 250 rows on reg1/3/4/5 (handoff41), ~12 h; handoff42 pulls and scores (refs). Then merge with reg_generality_grid, paired REG − plain w16 under YaRN, and a sentence plus table row in the robustness paragraph.
