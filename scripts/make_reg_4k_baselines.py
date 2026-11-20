@@ -4,10 +4,12 @@
               sigma of step 30 - round(30 * strength) and run the remaining steps at 4K with plain CFG at the native
               weight (reg.models.lumina, ``hires``). The practitioners' two-stage pipeline and the simplest member
               of the latent-anchoring family. Strengths 0.35 and 0.6, 100 prompts each.
-  APG         Adaptive Projected Guidance (eta 0, momentum -0.5) at the re-tuned plain weight w = 16: does a fix for
-              high-weight oversaturation rescue the re-tuned weight? Without a norm threshold and with one of 120
-              (SDXL's default 15 at equal per-element size: x2 for 16 latent channels, x4 for 4K), on the 50 prompts
-              of the original 4K cells.
+  APG         Adaptive Projected Guidance at the re-tuned plain weight w = 16: does a fix for high-weight oversaturation
+              rescue the re-tuned weight? Two variants on the 50 prompts of the original 4K cells: "apg_proj", the
+              projection alone (eta 0, no momentum, no norm threshold), and "apg_full", the published recipe (eta 0,
+              momentum -0.5, norm threshold 120 = SDXL's default 15 at equal per-element size: x2 for 16 latent
+              channels, x4 for 4K). A 12-step CPU check at 512 px showed the momentum without a threshold diverging
+              at w = 16, so that combination is not run.
 Output: jobs/reg_4k_baselines.jsonl (300 rows) -> outputs/reg_4k_baselines.
 """
 import json
@@ -29,8 +31,8 @@ for p in sorted(src):
         out.append({"id": f"{name}_4096_w4_{p}", **base, "guidance": 4.0, "cfg_trunc_ratio": 1.0,
                     "hires": {"strength": st, "base_size": 1024, "base_guidance": 4.0}, "tags": {**tags, "cfg": 4.0, "method": name}})
     if p in first:
-        for nt, name in ((0.0, "apg"), (120.0, "apg_nt120")):
+        for mom, nt, name in ((0.0, 0.0, "apg_proj"), (-0.5, 120.0, "apg_full")):
             out.append({"id": f"{name}_4096_w16_{p}", **base, "guidance": 16.0, "cfg_trunc_ratio": 1.0,
-                        "apg": {"eta": 0.0, "momentum": -0.5, "norm_threshold": nt}, "tags": {**tags, "cfg": 16.0, "method": name}})
+                        "apg": {"eta": 0.0, "momentum": mom, "norm_threshold": nt}, "tags": {**tags, "cfg": 16.0, "method": name}})
 (ROOT / "jobs/reg_4k_baselines.jsonl").write_text("".join(json.dumps(r) + "\n" for r in out))
 import collections; print(len(out), collections.Counter(r["tags"]["method"] for r in out))
