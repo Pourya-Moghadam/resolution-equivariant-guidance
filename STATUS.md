@@ -184,3 +184,12 @@ After the user's read-through ("confirmed") and a request to strengthen the pape
 - REG − plain w16: +4.8 [4.2, 5.4] HPS (97 %), +0.82 [0.65, 1.00] IR, +2.3 [1.6, 3.1] CLIP. w16 − w8: +0.9 [0.2, 1.6] on 50 prompts, so 16 stays the re-tuned weight.
 - Duplicated subject (single-subject prompts): REG 12 %, plain w4 36 %, w8 48 %, w16 68 %. REG under NTK is 4 %.
 - Paper: "Extrapolation method" paragraph rewritten at n = 100; intro wording adjusted. reg_4k_baselines running on four cards since ~04:00.
+
+## 2026-11-21 (Sat, afternoon): hires fix and APG baselines at 4K
+
+- reg_4k_baselines finished (300 of 300 ok), scored; paired against REG and plain w16 (results/reg_paired_4k_baselines_*.csv, cfg16_paired_4k_baselines_hps.csv).
+- Hires fix s0.35 (n = 100): 30.8 HPS / 1.48 IR / 37.6 CLIP / KID 0.033 / detail 3.6 / 253 s. REG − row: −0.8 [−1.1, −0.4] HPS, −0.16 IR, CLIP tied. Same pattern as the upscale baseline: wins on the downscaled scorers, no native detail (REG detail 41.7, KID 0.023).
+- Hires fix s0.60: 28.4 HPS, KID 0.046, detail 3.6, out-of-focus blobs; REG +1.7 [1.2, 2.1].
+- APG at w16 (n = 50): projection only 23.6 HPS, full recipe 21.3; plain w16 on the same prompts 27.2. REG +6.7 [5.6, 8.0] and +9.1 [7.7, 10.6]. Published defaults, not tuned.
+- Paper: paragraphs "Hires fix" and "Adaptive Projected Guidance", Table tab:baselines4k (make_tables.baselines4k_table), limitations cross-reference, apg2025 in refs. 17 pages; arXiv bundle rebuilt and compiled standalone; web draft v11.
+- All planned experiments for v1 are done. Cluster idle.
