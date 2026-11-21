@@ -45,7 +45,7 @@ What the table supports:
 - At the training-resolution weight REG is far ahead of plain CFG on both models (+4.2 to +21 HPSv2).
 - Against a baseline whose weight was re-tuned for each resolution, REG is ahead on five of six cells and level on the sixth, without any tuning. The margin grows with the extrapolation ratio, from +1.4 at 3K to +15.2 at 6K. Every row is on 100 prompts.
 - The other metrics agree: ImageReward, CLIP score, patch-KID and an object-detector count of missing or duplicated subjects. Full tables are in [08-phase1-pilot.md](08-phase1-pilot.md) and the CSVs in [results/](results/).
-- On Lumina at 4K, REG scores the same under two positional-encoding extrapolation schemes (dynamic NTK and YaRN).
+- On Lumina at 4K, REG scores the same under both DyPE extrapolation branches (dynamic NTK and YaRN; 30.1 and 30.2 HPS, n = 100). Under YaRN it is +4.8 [4.2, 5.4] HPS over the re-tuned weight 16, which duplicates the subject in 68 % of single-subject images against 12 % for REG.
 - Cost on Lumina-Image 2.0: +2 % time per image at 3K and +14 % at 4K, with the same peak memory. A 6K (6144 × 6144) image fits on one 32 GB GPU at 26.7 GB.
 
 ## How REG works

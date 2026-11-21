@@ -176,3 +176,11 @@ After the user's read-through ("confirmed") and a request to strengthen the pape
 - **Paper** (16 pages, 12 figures): new figures `method.png` (band diagram of one REG step), `diagnosis.png` (flat coarse-band ratio, native-weight collapse, 4K replacement experiment), `scaling.png` (HPS vs size, paired gain vs r) from `paper/make_figures_data.py`; `qwen_qualitative.jpg`, `geneval_pairs.jpg`, `failures.jpg`, `gallery_uncurated.jpg`, `crops_4k.jpg` from `paper/make_figures_qual.py` (all selections rule-based, ids in `figures/*.txt`). Conclusion section, failure-case paragraph, DyPE named as the extrapolation used (NTK branch main, YaRN branch robustness), stale 50-prompt numbers fixed.
 - **Baselines implemented**: hires fix (`hires` row key: 1K sample, Lanczos 4x, VAE encode, re-noise, finish at 4K with the native weight) and Adaptive Projected Guidance (`apg` row key, `APGTerm`). CPU checks: APG with eta 1, no momentum equals CFG to 4e-6; eta 0 update orthogonal to x0_cond; hires at 512 -> 768 keeps the layout; APG momentum -0.5 without a norm threshold diverges at w16 in a 12-step 512-px test, so the grid runs projection-only and the full recipe with threshold.
 - **Queued**: `jobs/reg_4k_baselines.jsonl` (300 rows: hires strengths 0.35 and 0.6 on 100 prompts, APG two variants on 50) starts on each host when its reg_4k_yarn shard ends (handoff43); handoff44 pulls and scores.
+
+## 2026-11-21 (Sat): 4K under DyPE-YaRN at n = 100
+
+- reg_4k_yarn finished (250 of 250 ok); merged with the reg_generality_grid YaRN cells to outputs/lumina_4k_yarn_n100 (scripts/merge_4k_yarn_n100.py, scripts/score_4k_yarn_n100.sh; subject labels copied from lumina_4k_n100).
+- REG w4 30.2 HPS / 1.31 IR / 37.4 CLIP / KID 0.018 (NTK: 30.1 / 1.32 / 37.4 / 0.023). Plain w16 25.4, w8 24.5 (n = 50), w4 19.5.
+- REG − plain w16: +4.8 [4.2, 5.4] HPS (97 %), +0.82 [0.65, 1.00] IR, +2.3 [1.6, 3.1] CLIP. w16 − w8: +0.9 [0.2, 1.6] on 50 prompts, so 16 stays the re-tuned weight.
+- Duplicated subject (single-subject prompts): REG 12 %, plain w4 36 %, w8 48 %, w16 68 %. REG under NTK is 4 %.
+- Paper: "Extrapolation method" paragraph rewritten at n = 100; intro wording adjusted. reg_4k_baselines running on four cards since ~04:00.
