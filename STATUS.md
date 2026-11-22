@@ -193,3 +193,10 @@ After the user's read-through ("confirmed") and a request to strengthen the pape
 - APG at w16 (n = 50): projection only 23.6 HPS, full recipe 21.3; plain w16 on the same prompts 27.2. REG +6.7 [5.6, 8.0] and +9.1 [7.7, 10.6]. Published defaults, not tuned.
 - Paper: paragraphs "Hires fix" and "Adaptive Projected Guidance", Table tab:baselines4k (make_tables.baselines4k_table), limitations cross-reference, apg2025 in refs. 17 pages; arXiv bundle rebuilt and compiled standalone; web draft v11.
 - All planned experiments for v1 are done. Cluster idle.
+
+## 2026-11-22 (Sun): 4K ablation at n = 100
+
+- reg_4k_ablation_ext finished (150 of 150 ok); merged with the first-50 ablation rows (scripts/merge_4k_ablation_n100.py, scripts/score_4k_ablation_n100.sh -> outputs/lumina_4k_ablation_n100).
+- HPS / KID: single anchor 28.9 / 0.043, + pyramid 30.0 / 0.027, + super-native 29.7 / 0.027, REG 30.1 / 0.023.
+- Paired: pyramid − single anchor +1.02 [0.74, 1.32] (75 %); REG − single anchor +1.13 [0.81, 1.47]; REG − pyramid +0.11 [−0.05, 0.28] HPS, −0.03 [−0.06, −0.01] IR. Same conclusions as at n = 50.
+- Paper: Table tab:ablation, its caption and text at n = 100; Upsample Guidance sentence and limitations updated. All v1 experiments are done.
