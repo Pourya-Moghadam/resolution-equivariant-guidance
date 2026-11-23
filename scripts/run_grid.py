@@ -70,7 +70,7 @@ def load_model(model: str, quant: str | None):
 def generate_kwargs(row: dict) -> dict:
     kw = dict(height=row["height"], width=row["width"], steps=row["steps"], guidance_scale=row["guidance"],
               seed=row["seed"], negative_prompt=row["negative"])
-    extra = {"lumina": ("cfg_trunc_ratio", "cfg_normalization", "shift", "hires"),
+    extra = {"lumina": ("cfg_trunc_ratio", "cfg_normalization", "shift", "hires", "hiflow"),
              "flux": ("true_cfg_scale", "shift_mu"),
              "qwen": ("shift_mu",)}[row["model"]]
     for k in extra:
