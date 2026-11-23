@@ -200,3 +200,11 @@ After the user's read-through ("confirmed") and a request to strengthen the pape
 - HPS / KID: single anchor 28.9 / 0.043, + pyramid 30.0 / 0.027, + super-native 29.7 / 0.027, REG 30.1 / 0.023.
 - Paired: pyramid − single anchor +1.02 [0.74, 1.32] (75 %); REG − single anchor +1.13 [0.81, 1.47]; REG − pyramid +0.11 [−0.05, 0.28] HPS, −0.03 [−0.06, −0.01] IR. Same conclusions as at n = 50.
 - Paper: Table tab:ablation, its caption and text at n = 100; Upsample Guidance sentence and limitations updated. All v1 experiments are done.
+
+## 2026-11-23 (Mon): second baselines job; human-study pipeline built
+
+- reg_4k_baselines2 launched 15:09 on four cards (handoff47/48): APG on the other 50 prompts; hires fix s0.35 with a re-tuned second stage (w8, w16) on 100 prompts. For v2 / ICML, not arXiv v1.
+- Human study (user: "Go ahead with the plan", raters are lab members). Code in study/: build_pairs.py (blind pairs by rule, hashed file names, 1400-px and full-resolution JPEG q95), make_raters.py (per-rater subsets, even coverage, no 4K prompt twice per rater, repeats with sides swapped), server.py (standard library; one item at a time, answers appended per rater, resume), static/index.html (whole-image and synced 1:1 views, two questions), analyze.py (preference rates, bootstrap over raters and prompts, agreement, self-consistency), tests/test_study.py.
+- Built: $REG_DATA/human_study/v1, 350 pairs (4K: REG vs plain w16 100, vs Real-ESRGAN upscale 50, vs hires fix s0.35 100; 6K: REG vs plain w16 100), 7 GB. Server in tmux "study" on reg1 port 8347 (hospital network only); pilot link created. Raters, labels and responses live under $REG_DATA only.
+- Workload: 3 ratings per pair needs 1,050 ratings: 10 raters x 105 pairs (~45 min), 12 x 88, 15 x 70.
+- Open: ethics check with the research ethics office before raters are recruited; pilot by the user; HiFlow port next.

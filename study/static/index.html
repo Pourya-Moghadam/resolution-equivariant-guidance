@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image comparison study</title>
+<style>
+  :root { --bg:#16181c; --panel:#1f2228; --ink:#e9eaec; --muted:#9aa0aa; --line:#343843; --accent:#6ea8fe; --ok:#3fb27f; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 16px; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+  header .bar { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  header .bar i { display: block; height: 100%; background: var(--accent); width: 0; }
+  header .count { color: var(--muted); font-variant-numeric: tabular-nums; }
+  #prompt { padding: 8px 16px; color: var(--ink); max-height: 4.6em; overflow: auto; }
+  #prompt b { color: var(--muted); font-weight: 500; margin-right: 6px; }
+  .tabs { display: flex; gap: 8px; padding: 0 16px 8px; align-items: center; }
+  .tabs button { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px 14px; cursor: pointer; font: inherit; }
+  .tabs button.on { border-color: var(--accent); color: var(--accent); }
+  .tabs .hint { color: var(--muted); font-size: 13px; margin-left: 8px; }
+  #stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; }
+  .view { position: relative; background: #000; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; min-height: 200px; }
+  .view .tag { position: absolute; left: 8px; top: 8px; background: rgba(0,0,0,.65); padding: 2px 10px; border-radius: 4px; font-weight: 600; z-index: 3; }
+  .view img.fit { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+  .view img.full { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; cursor: grab; user-select: none; -webkit-user-drag: none; }
+  .view.dragging img.full { cursor: grabbing; }
+  .view .loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); z-index: 2; background: #000; }
+  .view .box { position: absolute; border: 2px solid var(--accent); pointer-events: none; z-index: 2; display: none; }
+  .mini { position: absolute; right: 8px; bottom: 8px; width: 110px; height: 110px; border: 1px solid var(--line); background: #000; z-index: 3; cursor: pointer; }
+  .mini img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .mini i { position: absolute; border: 2px solid var(--accent); pointer-events: none; }
+  footer { padding: 10px 16px 14px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end; border-top: 1px solid var(--line); margin-top: 10px; }
+  .q p { margin: 0 0 6px; }
+  .q .opts { display: flex; gap: 8px; }
+  .q button, #next, .start { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; cursor: pointer; font: inherit; flex: 1; }
+  .q button.on { background: var(--accent); border-color: var(--accent); color: #0b1220; font-weight: 600; }
+  #next { flex: none; padding: 10px 22px; }
+  #next:enabled { background: var(--ok); border-color: var(--ok); color: #06140d; font-weight: 600; }
+  #next:disabled { opacity: .45; cursor: not-allowed; }
+  #why { color: var(--muted); font-size: 13px; text-align: right; min-height: 1.4em; grid-column: 1 / -1; margin-top: -8px; }
+  .card { max-width: 720px; margin: 8vh auto; padding: 24px 28px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+  .card h1 { margin-top: 0; font-size: 22px; }
+  .card li { margin: 6px 0; }
+  .start { background: var(--ok); border-color: var(--ok); color: #06140d; font-weight: 600; padding: 10px 24px; }
+  kbd { background: #000; border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; font: 12px ui-monospace, monospace; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="intro" class="card" hidden>
+  <h1>Image comparison study</h1>
+  <p>Thank you for helping. You will see pairs of images made from the same text description by two different methods, and say which one you prefer.</p>
+  <ul>
+    <li>Each pair has two views. <b>Whole image</b> shows both images fitted to the screen. <b>Detail (1:1)</b> shows the same region of both at full resolution; drag either image to move both.</li>
+    <li>Please look at both views before answering. The questions unlock once you have opened the detail view.</li>
+    <li>There are two questions per pair: which image you prefer overall, and which has better fine detail. "No difference" is a valid answer.</li>
+    <li>Which method is on the left or right changes randomly from pair to pair. There are no right answers; we want your own judgement.</li>
+    <li>Your answers are saved after every pair. You can close the page and come back to the same link later.</li>
+    <li>Please use a desktop or laptop screen with the browser window maximised and the browser zoom at 100&nbsp;%.</li>
+  </ul>
+  <p id="introcount"></p>
+  <button class="start" id="start">Start</button>
+</div>
+<div id="done" class="card" hidden><h1>All done</h1><p>Thank you. Your answers are saved and you can close this page.</p></div>
+<div id="err" class="card" hidden><h1>This link is not valid</h1><p>Please check that you opened the full personal link you were sent.</p></div>
+
+<div id="app" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <header><span class="count" id="count"></span><div class="bar"><i id="bar"></i></div></header>
+  <div id="prompt"></div>
+  <div class="tabs">
+    <button id="tabfit" class="on">Whole image</button>
+    <button id="tabfull">Detail (1:1)</button>
+    <span class="hint">Switch with <kbd>Space</kbd>. In the detail view, drag to move both images; click the small map to jump.</span>
+  </div>
+  <div id="stage">
+    <div class="view" data-side="left"><span class="tag">A</span><div class="loading">loading…</div><img class="fit" alt="Image A"><img class="full" alt="" hidden draggable="false"><div class="mini" hidden><img alt=""><i></i></div></div>
+    <div class="view" data-side="right"><span class="tag">B</span><div class="loading">loading…</div><img class="fit" alt="Image B"><img class="full" alt="" hidden draggable="false"><div class="mini" hidden><img alt=""><i></i></div></div>
+  </div>
+  <footer>
+    <div class="q" data-q="overall"><p>1. Which image do you prefer overall?</p><div class="opts"><button data-v="left">A</button><button data-v="same">No difference</button><button data-v="right">B</button></div></div>
+    <div class="q" data-q="detail"><p>2. Which image has better fine detail?</p><div class="opts"><button data-v="left">A</button><button data-v="same">No difference</button><button data-v="right">B</button></div></div>
+    <button id="next" disabled>Next pair</button>
+    <div id="why"></div>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const tok = new URLSearchParams(location.search).get("t") || "";
+  const views = $$(".view");
+  let item = null, mode = "fit", ans = {}, t0 = 0, sawDetail = false, panned = false, busy = false;
+  let cx = 0.5, cy = 0.5;            // centre of the detail window, as a fraction of the image
+  let fullReady = { left: false, right: false };
+
+  const show = id => { for (const x of ["intro", "done", "err", "app"]) $("#" + x).hidden = x !== id; if (id !== "app") $("#app").style.display = "none"; else $("#app").style.display = "flex"; };
+
+  async function api(path, body) {
+    const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }
+
+  function scale() { return 1 / (window.devicePixelRatio || 1); }   // one image pixel = one screen pixel
+
+  function layout() {
+    if (!item) return;
+    const s = scale();
+    for (const v of views) {
+      const img = $("img.full", v), w = v.clientWidth, h = v.clientHeight;
+      if (!img.naturalWidth) continue;
+      const iw = img.naturalWidth * s, ih = img.naturalHeight * s;
+      const fx = Math.min(0.5, w / 2 / iw), fy = Math.min(0.5, h / 2 / ih);   // keep the window inside the image
+      cx = Math.min(1 - fx, Math.max(fx, cx)); cy = Math.min(1 - fy, Math.max(fy, cy));
+      img.style.width = iw + "px"; img.style.height = ih + "px";
+      img.style.transform = `translate(${Math.round(w / 2 - cx * iw)}px, ${Math.round(h / 2 - cy * ih)}px)`;
+      const box = $(".mini i", v), m = 110;
+      box.style.width = Math.min(m, m * w / iw) + "px"; box.style.height = Math.min(m, m * h / ih) + "px";
+      box.style.left = Math.max(0, m * (cx - w / 2 / iw)) + "px"; box.style.top = Math.max(0, m * (cy - h / 2 / ih)) + "px";
+    }
+  }
+
+  function setMode(m) {
+    mode = m;
+    $("#tabfit").classList.toggle("on", m === "fit"); $("#tabfull").classList.toggle("on", m === "full");
+    for (const v of views) {
+      const side = v.dataset.side;
+      $("img.fit", v).hidden = m !== "fit"; $("img.full", v).hidden = m !== "full"; $(".mini", v).hidden = m !== "full";
+      $(".loading", v).hidden = m === "fit" ? $("img.fit", v).complete && $("img.fit", v).naturalWidth > 0 : fullReady[side];
+    }
+    if (m === "full") { if (fullReady.left && fullReady.right) sawDetail = true; layout(); }
+    gate();
+  }
+
+  function gate() {
+    const b = $("#next"); let why = "";
+    if (!sawDetail) why = "Open the detail view to unlock the answers.";
+    else if (!ans.overall || !ans.detail) why = "Answer both questions to continue.";
+    b.disabled = !!why || busy; $("#why").textContent = why;
+    for (const q of $$(".q")) for (const x of $$("button", q)) { x.disabled = !sawDetail; x.classList.toggle("on", ans[q.dataset.q] === x.dataset.v); }
+  }
+
+  function load(state) {
+    if (!state.item) return show("done");
+    item = state.item; ans = {}; sawDetail = false; panned = false; cx = cy = 0.5; fullReady = { left: false, right: false };
+    $("#count").textContent = `Pair ${state.done + 1} of ${state.total}`; $("#bar").style.width = (100 * state.done / state.total) + "%";
+    $("#prompt").innerHTML = ""; const b = document.createElement("b"); b.textContent = "Description:"; $("#prompt").append(b, document.createTextNode(item.prompt));
+    for (const v of views) {
+      const side = v.dataset.side, fit = $("img.fit", v), full = $("img.full", v);
+      $(".loading", v).hidden = false;
+      fit.onload = () => { if (mode === "fit") $(".loading", v).hidden = true; };
+      fit.src = item[side].fit; $(".mini img", v).src = item[side].fit;
+      full.onload = () => { fullReady[side] = true; if (mode === "full") { $(".loading", v).hidden = true; if (fullReady.left && fullReady.right) sawDetail = true; layout(); gate(); } };
+      full.removeAttribute("src"); full.src = item[side].full;      // starts loading in the background while the rater looks at the whole image
+    }
+    for (const u of state.preload || []) { const i = new Image(); i.src = u; }
+    setMode("fit"); t0 = performance.now(); show("app");
+  }
+
+  async function submit() {
+    if ($("#next").disabled) return;
+    busy = true; gate();
+    try {
+      const st = await api("/api/answer", { t: tok, idx: item.idx, overall: ans.overall, detail: ans.detail, ms: Math.round(performance.now() - t0),
+        saw_detail: sawDetail, panned, dpr: window.devicePixelRatio || 1, screen: `${innerWidth}x${innerHeight}` });
+      busy = false; load(st);
+    } catch (e) { busy = false; gate(); $("#why").textContent = "Could not save the answer. Check your connection and press Next again."; }
+  }
+
+  // --- interactions ---
+  $("#tabfit").onclick = () => setMode("fit"); $("#tabfull").onclick = () => setMode("full");
+  for (const q of $$(".q")) for (const x of $$("button", q)) x.onclick = () => { ans[q.dataset.q] = x.dataset.v; gate(); };
+  $("#next").onclick = submit;
+  for (const v of views) {
+    $("img.fit", v).onclick = e => {           // click on the whole image: open the detail view centred there
+      const r = e.target.getBoundingClientRect(), n = e.target, k = Math.min(r.width / n.naturalWidth, r.height / n.naturalHeight);
+      const w = n.naturalWidth * k, h = n.naturalHeight * k;
+      cx = Math.min(1, Math.max(0, (e.clientX - r.left - (r.width - w) / 2) / w)); cy = Math.min(1, Math.max(0, (e.clientY - r.top - (r.height - h) / 2) / h));
+      setMode("full");
+    };
+    $(".mini", v).onclick = e => { const r = e.currentTarget.getBoundingClientRect(); cx = (e.clientX - r.left) / r.width; cy = (e.clientY - r.top) / r.height; panned = true; layout(); };
+    const full = $("img.full", v); let drag = null;
+    full.onpointerdown = e => { drag = { x: e.clientX, y: e.clientY, cx, cy }; full.setPointerCapture(e.pointerId); v.classList.add("dragging"); e.preventDefault(); };
+    full.onpointermove = e => { if (!drag) return; const s = scale(); cx = drag.cx - (e.clientX - drag.x) / (full.naturalWidth * s); cy = drag.cy - (e.clientY - drag.y) / (full.naturalHeight * s); panned = true; layout(); };
+    full.onpointerup = full.onpointercancel = () => { drag = null; v.classList.remove("dragging"); };
+  }
+  addEventListener("resize", layout);
+  addEventListener("keydown", e => {
+    if ($("#app").hidden) return;
+    if (e.key === " ") { e.preventDefault(); setMode(mode === "fit" ? "full" : "fit"); }
+    else if (e.key === "Enter") { e.preventDefault(); submit(); }
+    else if (mode === "full" && e.key.startsWith("Arrow")) { e.preventDefault(); const d = 0.04; cx += e.key === "ArrowLeft" ? -d : e.key === "ArrowRight" ? d : 0; cy += e.key === "ArrowUp" ? -d : e.key === "ArrowDown" ? d : 0; panned = true; layout(); }
+  });
+
+  api("/api/state?t=" + encodeURIComponent(tok)).then(st => {
+    if (!st.item) return show("done");
+    $("#introcount").textContent = st.done ? `You have rated ${st.done} of ${st.total} pairs. Press Start to continue.` : `You have ${st.total} pairs; it takes about ${Math.round(st.total * 0.4)} minutes.`;
+    $("#start").onclick = () => load(st); show("intro");
+  }).catch(() => show("err"));
+})();
+</script>
+</body>
+</html>
