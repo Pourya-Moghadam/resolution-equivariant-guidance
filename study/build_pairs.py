@@ -23,7 +23,8 @@ REG = "anchor_base_pyr_s12"
 COMPARISONS = [
     ("4k_cfg16", 4096, "lumina_4k_n100", "lumina_4k_n100", "cfg", 16.0, "REG vs plain CFG at the re-tuned weight 16, 4K"),
     ("4k_esrgan", 4096, "lumina_4k_n100", "upscale_4k", "up_realesrgan", 4.0, "REG vs 1K image upscaled 4x by Real-ESRGAN, 4K"),
-    ("4k_hires", 4096, "lumina_4k_n100", "reg_4k_baselines", "hires_s035", 4.0, "REG vs hires fix (strength 0.35, native weight), 4K"),
+    ("4k_hires16", 4096, "lumina_4k_n100", "reg_4k_baselines2", "hires_s035", 16.0, "REG vs hires fix (strength 0.35, second-stage weight 16: the strongest hires-fix setting by HPS and KID), 4K"),
+    ("4k_hiflow", 4096, "lumina_4k_n100", "reg_4k_hiflow", "hiflow_scaled", 4.0, "REG vs HiFlow (official stage ratios), 4K"),
     ("6k_cfg16", 6144, "lumina_6k_n100", "lumina_6k_n100", "cfg", 16.0, "REG vs plain CFG at the re-tuned weight 16, 6K"),
 ]
 

@@ -6,12 +6,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "study"))
 import analyze, make_raters  # noqa: E402
 from server import Study  # noqa: E402
 
-COMPS = {"4k_cfg16": 4096, "4k_esrgan": 4096, "4k_hires": 4096, "6k_cfg16": 6144}
+COMPS = {"4k_cfg16": 4096, "4k_esrgan": 4096, "4k_hires16": 4096, "4k_hiflow": 4096, "6k_cfg16": 6144}
 
 
 def build(tmp: Path, n_raters=9, per=40, p_reg=None):
     pairs = [{"pair": f"{c}-{i}", "comparison": c, "size": s, "prompt_id": f"p{i:02d}", "prompt": f"prompt {i}", "seed": i,
-              "reg": {"hash": f"r-{c}-{i}"}, "other": {"hash": f"o-{c}-{i}"}} for c, s in COMPS.items() for i in range(30)]
+              "reg": {"hash": f"r-{c}-{i}"}, "other": {"hash": f"o-{c}-{i}"}} for c, s in COMPS.items() for i in range(40)]
     (tmp / "manifest.json").write_text(json.dumps({"salt": "x", "comparisons": {c: {} for c in COMPS}, "pairs": pairs}))
     rng = random.Random(0); counts = collections.Counter(); raters = {}
     for k in range(n_raters):
@@ -45,12 +45,12 @@ def test_assignment_rules(tmp_path):
 
 
 def test_analysis_recovers_preference(tmp_path):
-    build(tmp_path, p_reg={"4k_cfg16": 1.0, "4k_esrgan": 0.0, "4k_hires": 0.7, "6k_cfg16": 0.5})
+    build(tmp_path, p_reg={"4k_cfg16": 1.0, "4k_esrgan": 0.0, "4k_hires16": 0.7, "6k_cfg16": 0.5})
     man, rows, repeats, info = analyze.load(tmp_path)
     assert all(x["rater"].startswith("R") for x in info) and len(rows) == 9 * 40
     table, extra = analyze.summarise(man, rows, repeats, nboot=500)
     s = {(t["comparison"], t["question"]): t for t in table}
     assert s[("4k_cfg16", "overall")]["score"] == 1.0 and s[("4k_esrgan", "detail")]["score"] == 0.0
-    t = s[("4k_hires", "overall")]
+    t = s[("4k_hires16", "overall")]
     assert 0.55 < t["score"] < 0.85 and t["lo"] <= t["score"] <= t["hi"]
     assert abs(s[("6k_cfg16", "overall")]["score"] - 0.5) < 0.15
