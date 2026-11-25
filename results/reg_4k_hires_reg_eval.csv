@@ -1,0 +1,4 @@
+cfg,method,size,clip,clip_patch,clip_patch_se,clip_se,n,n_patches,patch_fid,patch_kid,patch_kid_std,rep_dup_frac,rep_mean,rep_zero_frac
+4.0,hires_reg_s035,4096,37.3848,24.7406,0.2629,0.3158,100,1600,88.906,0.02809,0.00141,0.02,1.02,0.0
+4.0,hires_reg_s060,4096,37.4635,24.5778,0.2602,0.3176,100,1600,88.223,0.02638,0.00129,0.0,1,0.0
+4.0,hires_reg_s080,4096,37.2665,24.3034,0.2814,0.3143,100,1600,86.889,0.02488,0.00127,0.0,1,0.0
